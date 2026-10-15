@@ -74,7 +74,7 @@ The NIV is copyrighted by Biblica, so free Bible services aren't allowed to shar
 1. Go to [platform.youversion.com](https://platform.youversion.com) and sign in with your Bible App account (or create one).
 2. Create an app (call it "Biblos") and copy its **App Key**. If the portal lists Bible licences, enable the NIV for your app.
 3. Pick one way to use the key:
-   - **On every device (recommended):** in Vercel, open your project → **Settings → Environment Variables**. Add `YVP_APP_KEY` with your key as the value, then go to **Deployments → ⋯ → Redeploy**.
+   - **On every device (recommended):** in Vercel, open your project → **Settings → Environment Variables**. Add `YVP_APP_KEY` with your key as the value, and make sure **Production** is ticked. Then go to **Deployments → ⋯ → Redeploy**, because a new key only takes effect after a redeploy. To check it worked, open `https://YOUR-APP.vercel.app/api/yv?path=status`, which should say `"serverKey":true`.
    - **Just this phone:** in Biblos, go to **Me → NIV access**, paste the key and tap **Connect**.
 
 Until then, every other translation works straight away. You can also paste NIV text for any verse by hand: open the verse and tap **Edit text**.

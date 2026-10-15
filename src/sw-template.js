@@ -59,6 +59,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Live answers from our own server (e.g. the NIV) must never come from the cache.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/api/')) return;
+
   // App files have hashed names, so a cached copy is always correct.
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request, RUNTIME));

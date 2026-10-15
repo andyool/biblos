@@ -4,14 +4,23 @@
 
 const PATH = /^bibles\/\d+(\/passages\/[1-3A-Z]{3}\.\d{1,3}\.\d{1,3}(-\d{1,3})?)?$/;
 
+// YVP_APP_KEY is the documented name, but accept close variants (YVP_KEY, VITE_YVP_APP_KEY,
+// YOUVERSION_KEY…) so a small naming slip in Vercel doesn't silently switch the NIV off.
+function findServerKey() {
+  if (process.env.YVP_APP_KEY?.trim()) return { name: 'YVP_APP_KEY', value: process.env.YVP_APP_KEY.trim() };
+  const match = Object.entries(process.env).find(([name, value]) => /YVP|YOUVERSION/i.test(name) && String(value || '').trim());
+  return match ? { name: match[0], value: String(match[1]).trim() } : null;
+}
+
 export default async function handler(req, res) {
   const path = String(req.query.path || '');
-  const serverKey = process.env.YVP_APP_KEY || '';
+  const found = findServerKey();
+  const serverKey = found?.value || '';
 
   if (path === 'status') {
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).send(JSON.stringify({ serverKey: Boolean(serverKey) }));
+    return res.status(200).send(JSON.stringify({ serverKey: Boolean(serverKey), variable: found?.name || null }));
   }
   if (!PATH.test(path)) {
     return res.status(400).json({ error: 'Unsupported path' });
