@@ -36,9 +36,13 @@ export function freshState() {
       letters: 0,
       morning: false,
       night: false,
+      readings: 0,
+      booksRead: 0,
     },
     verses: {},
     custom: [],
+    // Reading whole books in order: the current book, which sections are done, and your notes.
+    reading: { book: null, books: {}, notes: {} },
     owned: {
       theme: ['midnight', 'parchment'],
       font: ['cormorant', 'garamond'],
@@ -61,6 +65,7 @@ export function migrate(data) {
     owned: { ...base.owned, ...data.owned },
     verses: data.verses || {},
     custom: data.custom || [],
+    reading: { ...base.reading, ...data.reading },
     achievements: data.achievements || {},
   };
 }

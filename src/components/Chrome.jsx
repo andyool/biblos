@@ -53,6 +53,7 @@ export function TopBar() {
 
 const TABS = [
   { id: 'path', label: 'Path', icon: 'path' },
+  { id: 'read', label: 'Read', icon: 'scroll' },
   { id: 'verses', label: 'Verses', icon: 'book' },
   { id: 'treasury', label: 'Treasury', icon: 'treasury' },
   { id: 'me', label: 'Me', icon: null },

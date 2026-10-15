@@ -4,6 +4,7 @@ Biblos is a phone app for learning Bible verses by heart, a few minutes at a tim
 
 - **Paths**: 16 curated collections (Foundations, Psalm 23, the Lord's Prayer, the Beatitudes, the Armour of God…), plus any verse you add yourself.
 - **Lessons**: each verse grows through *Sown → Rooted → Growing → Fruitful → Hidden in the Heart*. The exercises are reading, ordering phrases, filling gaps, a word bank and first-letter recall on a gold keyboard.
+- **Read through**: read whole books of the Bible in order, one passage at a sitting, for the meaning rather than the words. Guided books give each passage a focus, questions on the meaning (with an explanation after each answer), a summary to choose and something to reflect on. Every other book goes a chapter at a time, and you sum each one up in your own words. A new chapter starts by recalling the story so far, and any verse you read can be added to your memory path.
 - **Spaced review**: memorised verses come back just before you'd forget them. A verse is *Hidden in the Heart* once you can still recall it after a gap of three weeks.
 - **Rewards**: XP, a daily goal, a streak lamp (with "flasks of oil" that keep a streak alive if you miss a day), talents to spend, and 27 seals to earn.
 - **Customisation**: 7 themes, 5 verse letterings, 3 card frames and 19 emblems.
@@ -95,9 +96,11 @@ Then open the address it prints.
 
 | Folder | What lives there |
 | --- | --- |
-| `src/data/` | Books of the Bible, translations, the 16 paths, levels, seals and the shop |
+| `src/data/` | Books of the Bible and their chapter lengths, translations, the 16 paths, levels, seals and the shop |
+| `src/data/guides/` | The guided books for reading through, one file per book (check them with `npm run check:guides`) |
 | `src/lib/` | Fetching Bible text, building lessons, spaced repetition, streaks and rewards, saving progress |
 | `src/exercises/` | The six exercise types and the on-screen keyboard |
+| `src/reading/` | The steps of a reading: the passage, questions, ordering, a heading and reflection |
 | `src/screens/`, `src/sheets/` | The pages and the slide-up panels |
 | `src/components/` | Gold ornaments, frames, seals, icons |
 | `api/yv.js` | A tiny Vercel function that fetches NIV text from YouVersion |

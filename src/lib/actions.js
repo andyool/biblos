@@ -111,6 +111,44 @@ function awardAchievements(state) {
 
 const STREAK_BONUS = { 7: 25, 30: 75, 100: 200, 365: 500 };
 
+/** Count practice towards today: XP, the daily goal, the streak and the early/late seals. */
+function creditDay(stats, xp, dailyGoal, now) {
+  const today = dayKey(now);
+  const hour = new Date(now).getHours();
+  const before = stats.days[today] || 0;
+  const after = before + xp;
+  const goalReached = before < dailyGoal && after >= dailyGoal;
+  let talents = goalReached ? 5 : 0;
+
+  let streakExtended = false;
+  let streak = stats.streak;
+  if (stats.lastActiveDay !== today) {
+    const gap = stats.lastActiveDay ? daysBetween(stats.lastActiveDay, today) : null;
+    streak = gap === 1 ? stats.streak + 1 : 1;
+    streakExtended = true;
+    talents += STREAK_BONUS[streak] || 0;
+  }
+
+  return {
+    stats: {
+      ...stats,
+      xp: stats.xp + xp,
+      streak,
+      bestStreak: Math.max(stats.bestStreak, streak),
+      lastActiveDay: today,
+      days: { ...stats.days, [today]: after },
+      goalDays: stats.goalDays + (goalReached ? 1 : 0),
+      morning: stats.morning || hour < 7,
+      night: stats.night || hour >= 22,
+    },
+    talents,
+    streak,
+    streakExtended,
+    goalReached,
+    dailyXp: after,
+  };
+}
+
 /**
  * Apply a finished session. results: [{ verseId, type, hint, correct, mistakes }]
  * Returns a summary for the celebration screen.
@@ -118,7 +156,6 @@ const STREAK_BONUS = { 7: 25, 30: 75, 100: 200, 365: 500 };
 export function finishSession(session, results) {
   const now = Date.now();
   const today = dayKey(now);
-  const hour = new Date(now).getHours();
   let summary = null;
 
   setState((s0) => {
@@ -186,36 +223,16 @@ export function finishSession(session, results) {
     }
 
     const xp = results.reduce((sum, r) => sum + (r.xp ?? stepXp(r)), 0) + 5 + (perfect ? 5 : 0);
-    const before = stats.days[today] || 0;
-    const after = before + xp;
-    const goalReached = before < s0.settings.dailyGoal && after >= s0.settings.dailyGoal;
-    if (goalReached) talents += 5;
-
-    let streakExtended = false;
-    let streak = stats.streak;
-    if (stats.lastActiveDay !== today) {
-      const gap = stats.lastActiveDay ? daysBetween(stats.lastActiveDay, today) : null;
-      streak = gap === 1 ? stats.streak + 1 : 1;
-      streakExtended = true;
-      talents += STREAK_BONUS[streak] || 0;
-    }
-
+    const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
+    talents += day.talents;
     const letters = results.filter((r) => r.type === 'letters').reduce((a, r) => a + r.correct, 0);
 
     stats = {
-      ...stats,
-      xp: stats.xp + xp,
+      ...day.stats,
       talents: stats.talents + talents,
-      streak,
-      bestStreak: Math.max(stats.bestStreak, streak),
-      lastActiveDay: today,
-      days: { ...stats.days, [today]: after },
-      goalDays: stats.goalDays + (goalReached ? 1 : 0),
       lessons: stats.lessons + 1,
       perfect: stats.perfect + (perfect ? 1 : 0),
       letters: stats.letters + letters,
-      morning: stats.morning || hour < 7,
-      night: stats.night || hour >= 22,
     };
 
     const awarded = awardAchievements({ ...s0, verses, stats });
@@ -227,10 +244,82 @@ export function finishSession(session, results) {
       accuracy,
       perfect,
       changes,
-      streak,
-      streakExtended,
-      goalReached,
-      dailyXp: after,
+      streak: day.streak,
+      streakExtended: day.streakExtended,
+      goalReached: day.goalReached,
+      dailyXp: day.dailyXp,
+      dailyGoal: s0.settings.dailyGoal,
+      earned: awarded.earned,
+    };
+    return awarded.state;
+  });
+  return summary;
+}
+
+// ── Reading through a book ─────────────────────────────────────────────────────
+
+export function setReadingBook(code) {
+  setState((s) => ({ ...s, reading: { ...s.reading, book: code } }));
+}
+
+/** Finishing a whole book of the Bible. */
+export const BOOK_BONUS = 25;
+
+/**
+ * Apply a finished reading. results: [{ type, correct, mistakes, xp, heading?, note? }]
+ * Returns a summary for the celebration screen.
+ */
+export function finishReading(session, results) {
+  const now = Date.now();
+  const { sec } = session;
+  let summary = null;
+
+  setState((s0) => {
+    let { stats } = reconcileStats(s0.stats, dayKey(now));
+    const correct = results.reduce((a, r) => a + (r.correct || 0), 0);
+    const mistakes = results.reduce((a, r) => a + (r.mistakes || 0), 0);
+    const perfect = mistakes === 0;
+    const xp = results.reduce((sum, r) => sum + (r.xp || 0), 0) + 5 + (perfect ? 5 : 0);
+    let talents = 3 + (perfect ? 2 : 0);
+
+    const book = s0.reading.books[sec.book] || { done: {}, started: now };
+    const done = { ...book.done, [sec.id]: book.done[sec.id] || now };
+    const bookDone = !book.finished && session.sectionIds.every((id) => done[id]);
+    if (bookDone) talents += BOOK_BONUS;
+
+    const notes = { ...s0.reading.notes };
+    const heading = results.find((r) => r.heading)?.heading;
+    const note = results.find((r) => r.note)?.note;
+    if (heading || note) notes[sec.id] = { ...notes[sec.id], ...(heading && { heading }), ...(note && { note }), at: now };
+
+    const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
+    talents += day.talents;
+    stats = {
+      ...day.stats,
+      talents: stats.talents + talents,
+      readings: (stats.readings || 0) + 1,
+      booksRead: (stats.booksRead || 0) + (bookDone ? 1 : 0),
+    };
+
+    const reading = {
+      ...s0.reading,
+      book: sec.book,
+      books: { ...s0.reading.books, [sec.book]: { ...book, done, ...(bookDone && { finished: now }) } },
+      notes,
+    };
+    const awarded = awardAchievements({ ...s0, stats, reading });
+    summary = {
+      kind: 'reading',
+      xp,
+      talents: talents + awarded.earned.reduce((a, e) => a + e.reward, 0),
+      accuracy: correct + mistakes ? correct / (correct + mistakes) : 1,
+      perfect,
+      changes: [],
+      reading: { id: sec.id, ref: session.ref, title: session.title || heading || null, bookDone, book: sec.book },
+      streak: day.streak,
+      streakExtended: day.streakExtended,
+      goalReached: day.goalReached,
+      dailyXp: day.dailyXp,
       dailyGoal: s0.settings.dailyGoal,
       earned: awarded.earned,
     };

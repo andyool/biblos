@@ -11,14 +11,20 @@ import Profile from './screens/Profile.jsx';
 import Onboarding from './screens/Onboarding.jsx';
 import Lesson from './screens/Lesson.jsx';
 import LessonComplete from './screens/LessonComplete.jsx';
+import Read from './screens/Read.jsx';
+import Reading from './screens/Reading.jsx';
 import VerseSheet from './sheets/VerseSheet.jsx';
 import AddVerseSheet from './sheets/AddVerseSheet.jsx';
 import PathsSheet from './sheets/PathsSheet.jsx';
 import NivSheet from './sheets/NivSheet.jsx';
 import TextProblemSheet from './sheets/TextProblemSheet.jsx';
+import BooksSheet from './sheets/BooksSheet.jsx';
+import SectionSheet from './sheets/SectionSheet.jsx';
 import { buildSession, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
-import { checkStreak, finishSession, setActivePath } from './lib/actions.js';
+import { checkStreak, finishReading, finishSession, setActivePath } from './lib/actions.js';
+import { bookProgress, bookSections, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
+import { guideNow } from './data/guides/index.js';
 import { fontFor, THEMES } from './data/shop.js';
 import { toast } from './lib/ui.js';
 
@@ -43,6 +49,7 @@ export default function App() {
   const [tab, setTab] = useState('path');
   const [sheets, setSheets] = useState([]);
   const [session, setSession] = useState(null);
+  const [reading, setReading] = useState(null);
   const [summary, setSummary] = useState(null);
   const [preparing, setPreparing] = useState(false);
   const mainRef = useRef(null);
@@ -101,13 +108,32 @@ export default function App() {
     [],
   );
 
+  // Open one passage of the book being read through.
+  const read = useCallback(async (sec) => {
+    const state = getState();
+    const tr = readingTr(state);
+    setPreparing(true);
+    try {
+      const verses = await loadSection(tr, sec);
+      const guide = guideNow(sec.book) || null;
+      setSheets([]);
+      setSummary(null);
+      setReading(buildReading({ sec, sections: bookSections(sec.book, guide), guide, verses, tr, notes: getState().reading.notes }));
+    } catch (error) {
+      toast(error?.message || 'The passage could not be loaded.');
+      if (['needs-key', 'auth', 'license'].includes(error?.kind)) setSheets([{ type: 'niv' }]);
+    } finally {
+      setPreparing(false);
+    }
+  }, []);
+
   const go = useCallback((next) => {
     setTab(next);
     setSheets([]);
     mainRef.current?.scrollTo({ top: 0 });
   }, []);
 
-  const ctx = useMemo(() => ({ start, openSheet, closeSheet, go, openVerse: (id) => openSheet({ type: 'verse', id }) }), [start, openSheet, closeSheet, go]);
+  const ctx = useMemo(() => ({ start, read, openSheet, closeSheet, go, openVerse: (id) => openSheet({ type: 'verse', id }) }), [start, read, openSheet, closeSheet, go]);
 
   const sheetView = sheets.map((s) => {
     const close = () => closeSheet(s.type);
@@ -122,6 +148,10 @@ export default function App() {
         return <NivSheet key="niv" onClose={close} />;
       case 'problem':
         return <TextProblemSheet key="problem" {...s} onClose={close} />;
+      case 'books':
+        return <BooksSheet key="books" onClose={close} />;
+      case 'section':
+        return <SectionSheet key="section" id={s.id} onClose={close} />;
       default:
         return null;
     }
@@ -142,6 +172,35 @@ export default function App() {
         }}
       />
     );
+  } else if (reading) {
+    body = (
+      <Reading
+        key={reading.startedAt}
+        session={reading}
+        onExit={() => setReading(null)}
+        onFinish={(results) => {
+          const result = finishReading(reading, results);
+          const { book } = result.reading;
+          prefetchSection(reading.tr, bookProgress(getState(), book, bookSections(book, guideNow(book))).next);
+          setSummary(result);
+          setReading(null);
+        }}
+      />
+    );
+  } else if (summary?.kind === 'reading') {
+    const { book } = summary.reading;
+    const next = bookProgress(getState(), book, bookSections(book, guideNow(book))).next;
+    body = (
+      <LessonComplete
+        summary={summary}
+        onDone={() => {
+          setSummary(null);
+          mainRef.current?.scrollTo({ top: 0 });
+        }}
+        onMore={next ? () => read(next) : null}
+        moreLabel="Read the next passage"
+      />
+    );
   } else if (summary) {
     const more = planNext(getState());
     body = (
@@ -160,6 +219,7 @@ export default function App() {
       <div className="app">
         <main className="app-main" ref={mainRef}>
           {tab === 'path' && <Home />}
+          {tab === 'read' && <Read />}
           {tab === 'verses' && <Library />}
           {tab === 'treasury' && <Treasury />}
           {tab === 'me' && <Profile />}

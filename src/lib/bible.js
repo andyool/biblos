@@ -170,6 +170,35 @@ export function loadPassage(tr, id) {
   return job;
 }
 
+/**
+ * Every verse in a range that the translation has, for reading through a book.
+ * Unlike loadPassage, verses a translation leaves out (e.g. Mark 9:44) are skipped, not errors.
+ * Resolves to [{ v, t }]. Nothing is cached here; see lib/reading.js.
+ */
+export async function loadRange(tr, book, chapter, start, end) {
+  const translation = getTranslation(tr);
+  if (translation.source === 'yv') {
+    const key = youVersionKey();
+    const verses = [];
+    // A few at a time, so a long passage doesn't flood the connection.
+    for (let v = start; v <= end; v += 6) {
+      const batch = Array.from({ length: Math.min(6, end - v + 1) }, (_, i) => v + i);
+      const results = await Promise.allSettled(batch.map((n) => youVersionVerse(translation.yv, `${book}.${chapter}.${n}`, key)));
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled') verses.push({ v: batch[i], t: cleanVerseText(r.value, { book, verse: batch[i] }) });
+        else if (r.reason?.kind !== 'not-found') throw r.reason;
+      });
+    }
+    if (!verses.length) throw new BibleError('not-found', 'That passage could not be found.');
+    return verses;
+  }
+  const data = await bollsChapter(translation.code, BOOK_BY_CODE[book].number, chapter);
+  const rows = Array.isArray(data) ? data.filter((r) => r.verse >= start && r.verse <= end) : [];
+  if (!rows.length) throw new BibleError('not-found', 'That chapter is not available in this translation.');
+  if (rows.some((r) => /prohibited me from using/i.test(r.text))) throw new BibleError('needs-key', 'This translation needs a YouVersion key.');
+  return rows.map((r) => ({ v: r.verse, t: cleanVerseText(r.text, { book, verse: r.verse }) })).filter((r) => r.t);
+}
+
 /** Check a YouVersion key by fetching one NIV verse. */
 export async function testYouVersionKey(key, yvId = 111) {
   const content = await youVersionVerse(yvId, 'JHN.3.16', key.trim());

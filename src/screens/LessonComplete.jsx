@@ -3,10 +3,12 @@ import { Laurel, Seal, Sparkles, Divider, LevelRing } from '../components/Orname
 import Glyph from '../components/Glyph.jsx';
 import { play } from '../lib/sound.js';
 import { LEVELS } from '../data/levels.js';
-import { formatRef } from '../data/books.js';
+import { BOOK_BY_CODE, formatRef } from '../data/books.js';
 import { whenText } from '../lib/dates.js';
+import { BOOK_BONUS } from '../lib/actions.js';
 
 function headline(summary) {
+  if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
   if (summary.changes.some((c) => c.to === 5 && c.from === 4)) return 'Hidden in your heart';
   if (summary.changes.some((c) => c.to === 4 && c.from === 3)) return 'It bears fruit!';
   if (summary.perfect) return 'Flawless';
@@ -77,6 +79,22 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
             </div>
           </div>
         ))}
+        {summary.reading && (
+          <div className="complete-verse">
+            <div className="complete-verse-medal">
+              <Glyph name="scroll" size={24} />
+            </div>
+            <div className="complete-verse-text">
+              <strong>{summary.reading.title || summary.reading.ref}</strong>
+              <span>{summary.reading.title ? summary.reading.ref : 'Read and reflected on'}</span>
+            </div>
+          </div>
+        )}
+        {summary.reading?.bookDone && (
+          <div className="complete-banner">
+            <Glyph name="crown" size={20} /> You have read all of {BOOK_BY_CODE[summary.reading.book].name} — +{BOOK_BONUS} talents
+          </div>
+        )}
         {summary.goalReached && (
           <div className="complete-banner">
             <Glyph name="target" size={20} /> Daily goal reached — +5 talents
