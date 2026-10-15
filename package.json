@@ -1,0 +1,26 @@
+{
+  "name": "biblos",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hide God's word in your heart — a beautiful Bible memory app.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/cinzel-decorative": "^5.3.0",
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/eb-garamond": "^5.3.0",
+    "@fontsource/im-fell-english": "^5.3.0",
+    "@fontsource/pinyon-script": "^5.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "vite": "^6.4.4"
+  }
+}

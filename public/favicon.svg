@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.38" r="0.75">
+      <stop offset="0" stop-color="#1f2c52"/>
+      <stop offset="0.6" stop-color="#0d1427"/>
+      <stop offset="1" stop-color="#070b17"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9c7421"/>
+      <stop offset="0.3" stop-color="#f8e7a8"/>
+      <stop offset="0.55" stop-color="#d4af37"/>
+      <stop offset="0.8" stop-color="#f3dc8e"/>
+      <stop offset="1" stop-color="#8f6a1d"/>
+    </linearGradient>
+    <linearGradient id="goldline" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4af37"/>
+      <stop offset="0.5" stop-color="#f8e7a8"/>
+      <stop offset="1" stop-color="#a37c25"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f8e7a8" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#d4af37" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <circle cx="256" cy="200" r="150" fill="url(#glow)"/>
+  <circle cx="256" cy="256" r="196" fill="none" stroke="url(#goldline)" stroke-width="5"/>
+  <circle cx="256" cy="256" r="181" fill="none" stroke="url(#goldline)" stroke-width="2.4" stroke-dasharray="1.5 11" stroke-linecap="round"/>
+  <g transform="translate(256 256) scale(3.05) translate(-60 -60)">
+    <path d="M60 50 C 60 50, 46 41, 46 33 C 46 28, 50 25, 54 25 C 57 25, 59 27, 60 29 C 61 27, 63 25, 66 25 C 70 25, 74 28, 74 33 C 74 41, 60 50, 60 50 Z" fill="url(#gold)"/>
+    <path d="M60 18 v -6 M 47 22 l -4 -4 M 73 22 l 4 -4 M 42 33 h -6 M 78 33 h 6" stroke="url(#goldline)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    <path d="M58 88 C 48 81, 36 79, 24 82 V 57 C 36 54, 48 56, 58 63 Z" fill="url(#gold)"/>
+    <path d="M62 88 C 72 81, 84 79, 96 82 V 57 C 84 54, 72 56, 62 63 Z" fill="url(#gold)"/>
+    <path d="M29 63.5 C 37 61.5, 45 62.5, 52 66 M 29 69.5 C 37 67.5, 45 68.5, 52 72 M 29 75.5 C 37 73.5, 45 74.5, 52 78" stroke="#0d1427" stroke-opacity="0.55" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M91 63.5 C 83 61.5, 75 62.5, 68 66 M 91 69.5 C 83 67.5, 75 68.5, 68 72 M 91 75.5 C 83 73.5, 75 74.5, 68 78" stroke="#0d1427" stroke-opacity="0.55" stroke-width="1" fill="none" stroke-linecap="round"/>
+    <path d="M20 86 C 34 82, 48 84, 60 92 C 72 84, 86 82, 100 86" stroke="url(#goldline)" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
