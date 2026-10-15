@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Glyph from '../components/Glyph.jsx';
+import Sheet from '../components/Sheet.jsx';
 import { renderWord } from '../components/VerseText.jsx';
 import { useStore } from '../lib/store.js';
 import { addCustomVerses } from '../lib/actions.js';
@@ -11,16 +12,16 @@ import { getTranslation } from '../data/translations.js';
 export default function ReflectStep({ step, session, onComplete }) {
   const verses = useStore((s) => s.verses);
   const [note, setNote] = useState('');
-  const [picked, setPicked] = useState(null);
+  const [choosing, setChoosing] = useState(false);
   const { sec, tr } = session;
-  const chosen = session.verses.find((v) => v.v === picked);
-  const chosenId = chosen ? `${sec.book}.${sec.chapter}.${chosen.v}` : null;
-  const kept = chosenId && verses[chosenId];
+  const idOf = (v) => `${sec.book}.${sec.chapter}.${v.v}`;
+  const kept = session.verses.filter((v) => verses[idOf(v)]);
 
-  const memorise = () => {
-    setText(tr, chosenId, { verses: [{ v: chosen.v, t: chosen.t }], src: getTranslation(tr).source });
-    addCustomVerses([chosenId], tr);
-    toast('Added to My Verses — learn it from the Path tab.', 'heart');
+  const memorise = (v) => {
+    const id = idOf(v);
+    setText(tr, id, { verses: [{ v: v.v, t: v.t }], src: getTranslation(tr).source });
+    addCustomVerses([id], tr);
+    toast(`Verse ${v.v} added to My Verses — learn it from the Path tab.`, 'heart');
   };
 
   return (
@@ -40,36 +41,43 @@ export default function ReflectStep({ step, session, onComplete }) {
         autoCapitalize="sentences"
       />
 
-      <div className="keep-verse">
-        <p className="keep-verse-label">Memorise a verse from it?</p>
-        <div className="verse-chips">
-          {session.verses.map((v) => (
-            <button key={v.v} className={`chip ${picked === v.v ? 'is-on' : ''}`} onClick={() => setPicked(picked === v.v ? null : v.v)}>
-              {v.v}
-            </button>
-          ))}
-        </div>
-        {chosen && (
-          <div className="keep-verse-preview">
-            <p className="verse-text is-compact">{renderWord(chosen.t)}</p>
-            {kept ? (
-              <p className="small-print">
-                <Glyph name="check" size={14} /> In My Verses
-              </p>
-            ) : (
-              <button className="btn btn-ghost btn-small" onClick={memorise}>
-                <Glyph name="plus" size={16} /> Add to My Verses
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      <button className="btn btn-ghost btn-block" onClick={() => setChoosing(true)}>
+        <Glyph name="heart" size={18} /> Memorise a verse from it
+      </button>
+      {kept.length > 0 && (
+        <p className="keep-verse-note">
+          <Glyph name="check" size={14} /> In My Verses: {kept.map((v) => `v. ${v.v}`).join(', ')}
+        </p>
+      )}
 
       <div className="ex-footer">
         <button className="btn btn-gold btn-block" onClick={() => onComplete({ correct: 0, mistakes: 0, note: note.trim() || undefined })}>
           Finish reading
         </button>
       </div>
+
+      {choosing && (
+        <Sheet title="Memorise a verse" onClose={() => setChoosing(false)} className="verse-pick-sheet">
+          <p className="small-print">Read through and tap the verse you would like to learn by heart. It goes into My Verses, ready on the Path tab.</p>
+          <div className="verse-pick-list">
+            {session.verses.map((v) => {
+              const isKept = Boolean(verses[idOf(v)]);
+              return (
+                <button key={v.v} className={`verse-pick ${isKept ? 'is-kept' : ''}`} onClick={() => !isKept && memorise(v)} aria-pressed={isKept}>
+                  <span className="verse-pick-num">{v.v}</span>
+                  <span className="verse-pick-text">{renderWord(v.t)}</span>
+                  <span className="verse-pick-mark">{isKept ? <Glyph name="check" size={18} strokeWidth={2} /> : <Glyph name="plus" size={18} />}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="sheet-actions">
+            <button className="btn btn-gold btn-block" onClick={() => setChoosing(false)}>
+              Done
+            </button>
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }
