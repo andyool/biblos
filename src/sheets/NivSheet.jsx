@@ -6,6 +6,8 @@ import { serverKeyConfigured, testYouVersionKey } from '../lib/bible.js';
 import { updateSettings } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
 
+const LICENCES = 'https://platform.youversion.com/platform/licenses';
+
 export default function NivSheet({ onClose }) {
   const saved = useStore((s) => s.settings.yvKey);
   const [key, setKey] = useState(saved);
@@ -24,13 +26,19 @@ export default function NivSheet({ onClose }) {
       toast('NIV connected', 'check');
       setTimeout(onClose, 900);
     } catch (err) {
-      setStatus({
-        ok: false,
-        text:
-          err.kind === 'auth' || err.kind === 'needs-key'
-            ? 'YouVersion did not accept that key for the NIV. Check the key, and that the NIV is enabled for your app in the YouVersion Platform.'
-            : err.message,
-      });
+      if (err.kind === 'license') {
+        // The key itself is good — keep it, so the NIV switches on as soon as the licence is accepted.
+        updateSettings({ yvKey: key.trim() });
+        setStatus({ ok: false, license: true });
+      } else {
+        setStatus({
+          ok: false,
+          text:
+            err.kind === 'auth' || err.kind === 'needs-key'
+              ? 'YouVersion did not recognise that key. Copy the App Key again from your app on platform.youversion.com and paste it here.'
+              : err.message,
+        });
+      }
     } finally {
       setBusy(false);
     }
@@ -56,7 +64,13 @@ export default function NivSheet({ onClose }) {
           and sign in with your Bible App account (or create one — it’s free).
         </li>
         <li>Create an app (call it “Biblos”) and copy its <strong>App Key</strong>.</li>
-        <li>If the portal lists Bible licences, enable the NIV for your app.</li>
+        <li>
+          Open{' '}
+          <a href={LICENCES} target="_blank" rel="noreferrer">
+            Licenses
+          </a>{' '}
+          in the portal and accept the <strong>Biblica</strong> licence (it covers the NIV).
+        </li>
         <li>Paste the key below.</li>
       </ol>
       {fromServer && (
@@ -68,7 +82,22 @@ export default function NivSheet({ onClose }) {
         <span>YouVersion App Key</span>
         <input className="input" value={key} onChange={(e) => setKey(e.target.value)} placeholder="Paste your key" autoCapitalize="none" autoCorrect="off" spellCheck={false} />
       </label>
-      {status && <div className={`note ${status.ok ? 'note-ok' : 'note-error'}`}>{status.text}</div>}
+      {status?.license ? (
+        <div className="note note-error">
+          <p>
+            <strong>Your key works</strong> and is saved — but your YouVersion app hasn’t accepted the NIV licence yet.
+          </p>
+          <p>
+            Open{' '}
+            <a href={LICENCES} target="_blank" rel="noreferrer">
+              Licenses on platform.youversion.com
+            </a>
+            , accept the <strong>Biblica</strong> licence (NIV), then come back and tap Connect again.
+          </p>
+        </div>
+      ) : (
+        status && <div className={`note ${status.ok ? 'note-ok' : 'note-error'}`}>{status.text}</div>
+      )}
       <div className="sheet-actions">
         <button className="btn btn-gold btn-block" onClick={connect} disabled={busy || !key.trim()}>
           {busy ? 'Checking…' : 'Connect'}

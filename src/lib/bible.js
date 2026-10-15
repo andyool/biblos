@@ -47,7 +47,7 @@ export function useYouVersionReady() {
 export class BibleError extends Error {
   constructor(kind, message) {
     super(message);
-    this.kind = kind; // 'needs-key' | 'auth' | 'not-found' | 'offline' | 'network'
+    this.kind = kind; // 'needs-key' | 'auth' | 'license' | 'not-found' | 'offline' | 'network'
   }
 }
 
@@ -60,7 +60,7 @@ async function fetchJSON(url, options = {}) {
   try {
     const res = await fetch(url, { ...options, signal: ctrl.signal });
     if (res.status === 401) throw new BibleError('auth', 'That YouVersion key was not accepted.');
-    if (res.status === 403) throw new BibleError('auth', 'This key is not licensed for this translation yet.');
+    if (res.status === 403) throw new BibleError('license', 'Your YouVersion app has not accepted the licence for this translation yet.');
     if (res.status === 404) throw new BibleError('not-found', 'That passage could not be found.');
     if (!res.ok) throw new BibleError('network', `The Bible service answered with an error (${res.status}).`);
     return await res.json();
@@ -122,7 +122,7 @@ async function youVersionVerse(yvId, usfm, key) {
     if (res.status === 401) {
       throw key ? new BibleError('auth', 'YouVersion did not accept that key.') : new BibleError('needs-key', 'The NIV needs a free YouVersion key.');
     }
-    if (res.status === 403) throw new BibleError('auth', 'Your YouVersion key is not licensed for this translation yet.');
+    if (res.status === 403) throw new BibleError('license', 'Your YouVersion app has not accepted the licence for this translation yet.');
     if (res.status === 404) throw new BibleError('not-found', 'That passage could not be found.');
     if (!res.ok) throw new BibleError('network', `YouVersion answered with an error (${res.status}). Please try again.`);
     const content = contentOf(await res.json());

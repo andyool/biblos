@@ -24,7 +24,7 @@ function ErrorNote({ error, retry, tr, onConnect }) {
     <div className="note note-error">
       <p>{error?.message || 'The words could not be loaded.'}</p>
       <div className="note-actions">
-        {(error?.kind === 'needs-key' || error?.kind === 'auth') && (
+        {(['needs-key', 'auth', 'license'].includes(error?.kind)) && (
           <button className="btn btn-gold btn-small" onClick={onConnect}>
             Connect the {tr}
           </button>

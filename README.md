@@ -72,8 +72,9 @@ Always open Biblos from the new icon. On iPhone, the Home Screen app keeps its p
 The NIV is copyrighted by Biblica, so free Bible services aren't allowed to share it. YouVersion (the Bible App) offers a **free developer key** that unlocks it:
 
 1. Go to [platform.youversion.com](https://platform.youversion.com) and sign in with your Bible App account (or create one).
-2. Create an app (call it "Biblos") and copy its **App Key**. If the portal lists Bible licences, enable the NIV for your app.
-3. Pick one way to use the key:
+2. Create an app (call it "Biblos") and copy its **App Key**.
+3. Open **Licenses** in the portal ([platform.youversion.com/platform/licenses](https://platform.youversion.com/platform/licenses)) and accept the **Biblica** licence, which covers the NIV. Without it, the key works for other Bibles but YouVersion refuses the NIV.
+4. Pick one way to use the key:
    - **On every device (recommended):** in Vercel, open your project → **Settings → Environment Variables**. Add `YVP_APP_KEY` with your key as the value, and make sure **Production** is ticked. Then go to **Deployments → ⋯ → Redeploy**, because a new key only takes effect after a redeploy. To check it worked, open `https://YOUR-APP.vercel.app/api/yv?path=status`, which should say `"serverKey":true`.
    - **Just this phone:** in Biblos, go to **Me → NIV access**, paste the key and tap **Connect**.
 

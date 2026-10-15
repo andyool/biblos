@@ -8,7 +8,7 @@ import { formatRef } from '../data/books.js';
 
 export default function TextProblemSheet({ id, tr, error, plan, onClose }) {
   const { start, openSheet } = useApp();
-  const needsKey = error?.kind === 'needs-key' || error?.kind === 'auth';
+  const needsKey = ['needs-key', 'auth', 'license'].includes(error?.kind);
   const fallback = 'ESV';
 
   const retry = () => {
