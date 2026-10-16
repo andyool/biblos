@@ -111,14 +111,14 @@ export default function App() {
   // Open one passage of the book being read through.
   const read = useCallback(async (sec) => {
     const state = getState();
-    const tr = readingTr(state);
+    const tr = readingTr(state, sec.book);
     setPreparing(true);
     try {
       const verses = await loadSection(tr, sec);
       const guide = guideNow(sec.book) || null;
       setSheets([]);
       setSummary(null);
-      setReading(buildReading({ sec, sections: bookSections(sec.book, guide), guide, verses, tr, notes: getState().reading.notes }));
+      setReading(buildReading({ sec, sections: bookSections(sec.book, guide, tr), guide, verses, tr, notes: getState().reading.notes }));
     } catch (error) {
       toast(error?.message || 'The passage could not be loaded.');
       if (['needs-key', 'auth', 'license'].includes(error?.kind)) setSheets([{ type: 'niv' }]);
@@ -181,7 +181,7 @@ export default function App() {
         onFinish={(results) => {
           const result = finishReading(reading, results);
           const { book } = result.reading;
-          prefetchSection(reading.tr, bookProgress(getState(), book, bookSections(book, guideNow(book))).next);
+          prefetchSection(reading.tr, bookProgress(getState(), book, bookSections(book, guideNow(book), reading.tr)).next);
           setSummary(result);
           setReading(null);
         }}
@@ -189,7 +189,7 @@ export default function App() {
     );
   } else if (summary?.kind === 'reading') {
     const { book } = summary.reading;
-    const next = bookProgress(getState(), book, bookSections(book, guideNow(book))).next;
+    const next = bookProgress(getState(), book, bookSections(book, guideNow(book), readingTr(getState(), book))).next;
     body = (
       <LessonComplete
         summary={summary}

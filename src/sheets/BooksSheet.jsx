@@ -4,19 +4,21 @@ import Glyph from '../components/Glyph.jsx';
 import { EmblemBadge } from '../components/Ornaments.jsx';
 import { useStore } from '../lib/store.js';
 import { setReadingBook } from '../lib/actions.js';
-import { bookProgress, bookSections } from '../lib/reading.js';
+import { bookProgress, bookSections, readingTr } from '../lib/reading.js';
 import { GUIDED, guideNow, isGuided, loadGuide } from '../data/guides/index.js';
-import { BOOKS, BOOK_BY_CODE } from '../data/books.js';
-
-const TESTAMENTS = [
-  { title: 'Old Testament', books: BOOKS.slice(0, 39) },
-  { title: 'New Testament', books: BOOKS.slice(39) },
-];
+import { BOOK_BY_CODE, NEW_TESTAMENT, oldTestament } from '../data/books.js';
+import { getTranslation } from '../data/translations.js';
 
 /** Choose which book to read through. */
 export default function BooksSheet({ onClose }) {
   const state = useStore();
   const current = state.reading.book;
+  // A Catholic Bible adds Tobit, Judith, Wisdom, Sirach, Baruch and 1–2 Maccabees to the Old Testament.
+  const catholic = Boolean(getTranslation(state.settings.translation).catholic);
+  const testaments = [
+    { title: 'Old Testament', books: oldTestament(catholic) },
+    { title: 'New Testament', books: NEW_TESTAMENT },
+  ];
   const [, setLoaded] = useState(0);
 
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function BooksSheet({ onClose }) {
   // Progress is only known once a guided book's sections have loaded.
   const progressOf = (code) => {
     if (isGuided(code) && !guideNow(code)) return null;
-    return bookProgress(state, code, bookSections(code));
+    return bookProgress(state, code, bookSections(code, guideNow(code), readingTr(state, code)));
   };
 
   const choose = (code) => {
@@ -63,7 +65,7 @@ export default function BooksSheet({ onClose }) {
         })}
       </div>
 
-      {TESTAMENTS.map((t) => (
+      {testaments.map((t) => (
         <div key={t.title}>
           <h3 className="section-heading">{t.title}</h3>
           <div className="book-grid">

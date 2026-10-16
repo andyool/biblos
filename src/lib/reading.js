@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { BOOK_BY_CODE, formatRef } from '../data/books.js';
+import { BOOK_BY_CODE, chaptersIn, formatRef } from '../data/books.js';
 import { versesIn } from '../data/chapters.js';
 import { guideNow, isGuided, loadGuide } from '../data/guides/index.js';
-import { getTranslation } from '../data/translations.js';
+import { CATHOLIC_BIBLE, getTranslation } from '../data/translations.js';
 import { hasYouVersion, loadRange } from './bible.js';
 import { shuffle } from './text.js';
 
@@ -14,8 +14,8 @@ import { shuffle } from './text.js';
 const LONG_CHAPTER = 45;
 const PART = 30;
 
-function chapterParts(code, chapter) {
-  const n = versesIn(code, chapter);
+function chapterParts(code, chapter, catholic) {
+  const n = versesIn(code, chapter, catholic);
   if (n <= LONG_CHAPTER) return [[1, n]];
   const size = Math.ceil(n / Math.ceil(n / PART));
   const parts = [];
@@ -26,11 +26,13 @@ function chapterParts(code, chapter) {
 const sectionCache = new Map();
 
 /**
- * A book's sections in reading order: { id, book, chapter, start, end, index, part, parts }
+ * A book's sections in reading order: { id, book, chapter, start, end, whole, index, part, parts }
  * plus, for guided books, { title, summary, look, questions, reflect }.
+ * A Catholic translation (tr) reads the longer Esther and Daniel.
  */
-export function bookSections(code, guide = guideNow(code)) {
-  const key = guide ? `${code}+guide` : code;
+export function bookSections(code, guide = guideNow(code), tr = null) {
+  const catholic = Boolean(tr && getTranslation(tr).catholic);
+  const key = `${code}${guide ? '+guide' : ''}${catholic ? '+catholic' : ''}`;
   if (sectionCache.has(key)) return sectionCache.get(key);
   let list = [];
   if (guide) {
@@ -40,18 +42,24 @@ export function bookSections(code, guide = guideNow(code)) {
       return { ...s, chapter: Number(chapter), start, end };
     });
   } else {
-    for (let c = 1; c <= BOOK_BY_CODE[code].chapters; c += 1) {
-      const parts = chapterParts(code, c);
+    for (let c = 1; c <= chaptersIn(code, catholic); c += 1) {
+      const parts = chapterParts(code, c, catholic);
       parts.forEach(([start, end], p) => list.push({ chapter: c, start, end, part: parts.length > 1 ? p + 1 : 0, parts: parts.length }));
     }
   }
-  list = list.map((s, index) => ({ ...s, book: code, index, id: `${code}.${s.chapter}.${s.start}-${s.end}` }));
+  list = list.map((s, index) => ({
+    ...s,
+    book: code,
+    index,
+    id: `${code}.${s.chapter}.${s.start}-${s.end}`,
+    whole: s.start === 1 && s.end === versesIn(code, s.chapter, catholic),
+  }));
   sectionCache.set(key, list);
   return list;
 }
 
-/** A book's sections, loading its guide first when it has one. */
-export function useBook(code) {
+/** A book's sections in a translation, loading its guide first when it has one. */
+export function useBook(code, tr) {
   const [failed, setFailed] = useState(false);
   const [, force] = useState(0);
   const guided = Boolean(code) && isGuided(code);
@@ -70,14 +78,14 @@ export function useBook(code) {
   }, [code, guided, guide]);
 
   if (!code || (guided && !guide)) return { ready: false, failed, guide: null, sections: [] };
-  return { ready: true, failed: false, guide: guide || null, sections: bookSections(code, guide) };
+  return { ready: true, failed: false, guide: guide || null, sections: bookSections(code, guide, tr) };
 }
 
 const bookLabel = (code) => (code === 'PSA' ? 'Psalm' : BOOK_BY_CODE[code]?.name || code);
 
 /** "Mark 2:1–12", or "Psalm 23" for a whole chapter. */
 export function sectionRef(sec) {
-  if (sec.start === 1 && sec.end === versesIn(sec.book, sec.chapter)) return `${bookLabel(sec.book)} ${sec.chapter}`;
+  if (sec.whole) return `${bookLabel(sec.book)} ${sec.chapter}`;
   return formatRef(sec.id);
 }
 
@@ -93,9 +101,10 @@ export function bookProgress(state, code, sections) {
   return { done, count, total: sections.length, next, finished: sections.length > 0 && !next };
 }
 
-/** Your chosen translation — or the ESV until the NIV is connected. */
-export function readingTr(state) {
+/** Your chosen translation — or the ESV until the NIV is connected, and a Catholic Bible for the books only it has. */
+export function readingTr(state, code = state.reading.book) {
   const chosen = state.settings.translation;
+  if (BOOK_BY_CODE[code]?.deutero && !getTranslation(chosen).catholic) return CATHOLIC_BIBLE.id;
   return getTranslation(chosen).source === 'yv' && !hasYouVersion() ? 'ESV' : chosen;
 }
 

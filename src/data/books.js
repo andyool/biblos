@@ -68,16 +68,47 @@ const RAW = [
   ['REV', 'Revelation', 'Rev', 22, 're rv revelations apocalypse'],
 ];
 
-export const BOOKS = RAW.map(([code, name, short, chapters, aliases], index) => ({
+// The deuterocanonical books, which only Catholic Bibles have.
+// [USFM code, name, short name, chapters, extra aliases, bolls.life book number, the book it follows]
+const DEUTERO = [
+  ['TOB', 'Tobit', 'Tob', 14, 'tb', 68, 'NEH'],
+  ['JDT', 'Judith', 'Jdt', 16, 'jdth', 69, 'NEH'],
+  ['1MA', '1 Maccabees', '1 Macc', 16, '1ma 1mac', 74, 'EST'],
+  ['2MA', '2 Maccabees', '2 Macc', 15, '2ma 2mac', 75, 'EST'],
+  ['WIS', 'Wisdom', 'Wis', 19, 'ws wisdomofsolomon', 70, 'SNG'],
+  ['SIR', 'Sirach', 'Sir', 51, 'ecclesiasticus ecclus', 71, 'SNG'],
+  ['BAR', 'Baruch', 'Bar', 6, '', 73, 'LAM'],
+];
+
+// Catholic Bibles also have Susanna and Bel and the Dragon, as Daniel 13 and 14.
+const CATHOLIC_CHAPTERS = { DAN: 14 };
+
+const toBook = ([code, name, short, chapters, aliases], number, extra) => ({
   code,
   name,
   short,
   chapters,
-  number: index + 1,
+  number,
   aliases: aliases.split(' ').filter(Boolean),
-}));
+  ...(CATHOLIC_CHAPTERS[code] && { catholicChapters: CATHOLIC_CHAPTERS[code] }),
+  ...extra,
+});
+
+const PROTESTANT = RAW.map((row, index) => toBook(row, index + 1));
+const DEUTERO_BOOKS = DEUTERO.map((row) => toBook(row, row[5], { deutero: true, follows: row[6] }));
+
+export const BOOKS = [...PROTESTANT, ...DEUTERO_BOOKS];
+
+/** The Old Testament: 39 books, or 46 in a Catholic Bible, with the deuterocanonical books in their places. */
+export const oldTestament = (catholic) =>
+  PROTESTANT.slice(0, 39).flatMap((b) => (catholic ? [b, ...DEUTERO_BOOKS.filter((d) => d.follows === b.code)] : [b]));
+
+export const NEW_TESTAMENT = PROTESTANT.slice(39);
 
 export const BOOK_BY_CODE = Object.fromEntries(BOOKS.map((b) => [b.code, b]));
+
+/** How many chapters a book has, in a Catholic Bible or not. */
+export const chaptersIn = (code, catholic) => (catholic && BOOK_BY_CODE[code].catholicChapters) || BOOK_BY_CODE[code].chapters;
 
 const squash = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -110,8 +141,9 @@ export function parseReference(input) {
   const book = findBook(m[1]);
   if (!book) return { error: `I don’t recognise the book “${m[1].trim()}”.` };
   const chapter = Number(m[2]);
-  if (chapter < 1 || chapter > book.chapters) {
-    return { error: `${book.name} has ${book.chapters} chapter${book.chapters > 1 ? 's' : ''}.` };
+  const most = book.catholicChapters || book.chapters;
+  if (chapter < 1 || chapter > most) {
+    return { error: `${book.name} has ${most} chapter${most > 1 ? 's' : ''}.` };
   }
   if (!m[3]) return { book: book.code, chapter, start: 1, end: null, wholeChapter: true };
   const start = Number(m[3]);

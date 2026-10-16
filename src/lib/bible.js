@@ -1,5 +1,5 @@
 import { BOOK_BY_CODE, parseId } from '../data/books.js';
-import { getTranslation } from '../data/translations.js';
+import { CATHOLIC_BIBLE, getTranslation } from '../data/translations.js';
 import { cleanVerseText } from './text.js';
 import { getText, setText } from './texts.js';
 import { useEffect, useState } from 'react';
@@ -72,6 +72,13 @@ async function fetchJSON(url, options = {}) {
   }
 }
 
+/** The deuterocanonical books, and Daniel 13–14, are only in Catholic Bibles. */
+function checkCanon(translation, book, chapter) {
+  const b = BOOK_BY_CODE[book];
+  if (translation.catholic || (!b.deutero && chapter <= b.chapters)) return;
+  throw new BibleError('not-found', `${b.deutero ? b.name : `${b.name} ${chapter}`} is only in Catholic Bibles. Choose the ${CATHOLIC_BIBLE.id} to read it.`);
+}
+
 const chapters = new Map();
 
 function bollsChapter(code, bookNumber, chapter) {
@@ -88,6 +95,7 @@ function bollsChapter(code, bookNumber, chapter) {
 
 async function fromBolls(translation, id) {
   const { book, chapter, start, end } = parseId(id);
+  checkCanon(translation, book, chapter);
   const data = await bollsChapter(translation.code, BOOK_BY_CODE[book].number, chapter);
   if (!Array.isArray(data) || !data.length) throw new BibleError('not-found', 'That chapter is not available in this translation.');
   const verses = [];
@@ -97,7 +105,7 @@ async function fromBolls(translation, id) {
       throw new BibleError('not-found', `${BOOK_BY_CODE[book].name} ${chapter} has ${data[data.length - 1].verse} verses in the ${translation.id}.`);
     }
     if (/prohibited me from using/i.test(row.text)) throw new BibleError('needs-key', 'This translation needs a YouVersion key.');
-    verses.push({ v, t: cleanVerseText(row.text, { book, verse: v }) });
+    verses.push({ v, t: cleanVerseText(row.text, { book, chapter, verse: v, boldHeadings: translation.boldHeadings }) });
   }
   return verses;
 }
@@ -145,6 +153,7 @@ async function youVersionVerse(yvId, usfm, key) {
 async function fromYouVersion(translation, id) {
   const key = youVersionKey();
   const { book, chapter, start, end } = parseId(id);
+  checkCanon(translation, book, chapter);
   const nums = Array.from({ length: end - start + 1 }, (_, i) => start + i);
   const texts = await Promise.all(nums.map((v) => youVersionVerse(translation.yv, `${book}.${chapter}.${v}`, key)));
   return nums.map((v, i) => ({ v, t: cleanVerseText(texts[i], { book, verse: v }) }));
@@ -177,6 +186,7 @@ export function loadPassage(tr, id) {
  */
 export async function loadRange(tr, book, chapter, start, end) {
   const translation = getTranslation(tr);
+  checkCanon(translation, book, chapter);
   if (translation.source === 'yv') {
     const key = youVersionKey();
     const verses = [];
@@ -196,7 +206,7 @@ export async function loadRange(tr, book, chapter, start, end) {
   const rows = Array.isArray(data) ? data.filter((r) => r.verse >= start && r.verse <= end) : [];
   if (!rows.length) throw new BibleError('not-found', 'That chapter is not available in this translation.');
   if (rows.some((r) => /prohibited me from using/i.test(r.text))) throw new BibleError('needs-key', 'This translation needs a YouVersion key.');
-  return rows.map((r) => ({ v: r.verse, t: cleanVerseText(r.text, { book, verse: r.verse }) })).filter((r) => r.t);
+  return rows.map((r) => ({ v: r.verse, t: cleanVerseText(r.text, { book, chapter, verse: r.verse, boldHeadings: translation.boldHeadings }) })).filter((r) => r.t);
 }
 
 /** Check a YouVersion key by fetching one NIV verse. */
@@ -209,7 +219,7 @@ export async function testYouVersionKey(key, yvId = 111) {
 export function bibleComUrl(tr, id) {
   const translation = getTranslation(tr);
   const { book, chapter, start, end } = parseId(id);
-  const versionId = translation.yv || { ESV: 59, NKJV: 114, NLT: 116, CSB: 1713, NASB: 100, KJV: 1, AMP: 1588, MSG: 97, NET: 107, BSB: 3034, WEB: 206, LSB: 3345 }[tr] || 111;
+  const versionId = translation.yv || { ESV: 59, NKJV: 114, NLT: 116, CSB: 1713, NASB: 100, KJV: 1, AMP: 1588, MSG: 97, NET: 107, BSB: 3034, WEB: 206, LSB: 3345, NRSVCE: 2015 }[tr] || 111;
   return `https://www.bible.com/bible/${versionId}/${book}.${chapter}.${start}${end > start ? `-${end}` : ''}.${tr}`;
 }
 

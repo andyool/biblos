@@ -27,12 +27,19 @@ function stripPsalmHeading(s) {
   return rest.length > 12 ? rest : s;
 }
 
-/** Strip markup, footnote markers and psalm titles from API text. */
-export function cleanVerseText(raw, { book, verse } = {}) {
+/** Strip markup, footnote markers and psalm titles from API text (and section headings, for a translation with boldHeadings). */
+export function cleanVerseText(raw, { book, chapter, verse, boldHeadings = false } = {}) {
   let s = String(raw || '');
   const psalmOpening = book === 'PSA' && verse === 1;
   s = s.replace(/<S>\s*\d+\s*<\/S>/gi, '');
   s = s.replace(/<sup>[\s\S]*?<\/sup>/gi, '');
+  if (boldHeadings) {
+    // Sirach's prologue comes in front of 1:1, up to the first heading.
+    if (book === 'SIR' && chapter === 1 && verse === 1) s = s.replace(/^[\s\S]*?<\/b>/i, '');
+    // Headings can fall mid-verse ("…stopped weeping. <b>Journey to Rages</b> The young man…").
+    // Bold lines of poetry end in punctuation, so they stay.
+    s = s.replace(/<b>([^<]*)<\/b>/gi, (m, inner) => (/[.,;:!?”’"')\]]\s*$|^\s*$/.test(inner) ? m : ' '));
+  }
   if (psalmOpening) {
     s = s.replace(/^\s*(<(b|i)>[\s\S]*?<\/\2>\s*)+/i, '');
     // A short heading line ending in <br> ("A David psalm<br/>")

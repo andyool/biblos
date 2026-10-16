@@ -7,7 +7,7 @@ import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
 import { bookProgress, prefetchSection, readingTr, sectionRef, sectionTitle, useBook } from '../lib/reading.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { setReadingBook } from '../lib/actions.js';
-import { BOOK_BY_CODE } from '../data/books.js';
+import { BOOK_BY_CODE, chaptersIn } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 
 const STARTS = [
@@ -116,7 +116,7 @@ export default function Read() {
   const nivReady = useYouVersionReady();
   const code = state.reading.book;
   const tr = readingTr(state);
-  const { ready, failed, guide, sections } = useBook(code);
+  const { ready, failed, guide, sections } = useBook(code, tr);
   const progress = bookProgress(state, code, sections);
   const { next } = progress;
   const book = code ? BOOK_BY_CODE[code] : null;
@@ -137,6 +137,7 @@ export default function Read() {
 
   const chosen = getTranslation(state.settings.translation);
   const fallback = chosen.source === 'yv' && !nivReady;
+  const chapters = chaptersIn(code, getTranslation(tr).catholic);
   const pct = progress.total ? Math.round((progress.count / progress.total) * 100) : 0;
 
   return (
@@ -151,6 +152,15 @@ export default function Read() {
           </div>
           <Glyph name="chevron" size={18} />
         </button>
+      )}
+      {book.deutero && !chosen.catholic && (
+        <div className="hint-card">
+          <Glyph name="book" size={24} />
+          <div>
+            <strong>Reading in the {tr}</strong>
+            <p>{book.name} is only in Catholic Bibles, so it is read in the {getTranslation(tr).name}, {getTranslation(tr).note}.</p>
+          </div>
+        </div>
       )}
 
       <Frame className="today" size={40}>
@@ -191,7 +201,7 @@ export default function Read() {
         <div className="path-head-text">
           <h2>{book.name}</h2>
           <p>
-            {guide ? guide.tagline : code === 'PSA' ? '150 psalms' : `${book.chapters} chapter${book.chapters > 1 ? 's' : ''}`}
+            {guide ? guide.tagline : code === 'PSA' ? '150 psalms' : `${chapters} chapter${chapters > 1 ? 's' : ''}`}
             {ready && ` · ${progress.count}/${progress.total} read`}
           </p>
         </div>

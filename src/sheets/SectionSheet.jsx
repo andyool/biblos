@@ -2,14 +2,15 @@ import Sheet from '../components/Sheet.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { useStore } from '../lib/store.js';
 import { useApp } from '../AppContext.js';
-import { sectionRef, useBook } from '../lib/reading.js';
+import { readingTr, sectionRef, useBook } from '../lib/reading.js';
 
 /** One passage of the book you are reading: what you made of it, and a way back in. */
 export default function SectionSheet({ id, onClose }) {
   const reading = useStore((s) => s.reading);
   const { read } = useApp();
   const book = id.split('.')[0];
-  const { sections } = useBook(book);
+  const tr = useStore((s) => readingTr(s, book));
+  const { sections } = useBook(book, tr);
   const sec = sections.find((s) => s.id === id);
   if (!sec) return null;
   const doneAt = reading.books[book]?.done?.[id];

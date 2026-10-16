@@ -68,9 +68,21 @@ const RAW = {
   '3JN': '15',
   JUD: '25',
   REV: '20 29 22 11 14 17 17 13 21 11 19 17 18 20 8 21 18 24 21 15 27 21',
+  // The deuterocanonical books, numbered as in the NRSV Catholic Edition (which leaves out a few verses of Sirach).
+  TOB: '22 14 17 21 22 18 16 21 6 13 18 22 17 15',
+  JDT: '16 28 10 15 24 21 32 36 14 23 23 20 20 19 14 25',
+  '1MA': '64 70 60 61 68 63 50 32 73 89 74 53 53 49 41 24',
+  '2MA': '36 32 40 50 27 31 42 36 29 38 38 45 26 46 39',
+  WIS: '16 24 19 20 23 25 30 21 18 21 26 27 19 31 19 29 21 25 22',
+  SIR: '30 18 31 31 15 37 36 19 18 31 34 18 26 27 20 30 32 33 30 31 28 27 27 34 26 29 30 26 28 25 31 24 33 31 26 31 31 34 35 30 22 25 33 23 26 20 25 25 16 29 30',
+  BAR: '22 35 37 37 9 73',
 };
+
+// Chapters that are longer in a Catholic Bible: the Greek ending of Esther, the Prayer of Azariah
+// and the Song of the Three Young Men in Daniel 3, and Susanna and Bel and the Dragon (Daniel 13–14).
+const CATHOLIC = { EST: { 10: 13 }, DAN: { 3: 97, 13: 64, 14: 42 } };
 
 export const VERSE_COUNTS = Object.fromEntries(Object.entries(RAW).map(([code, list]) => [code, list.split(' ').map(Number)]));
 
-/** Verses in a chapter (0 if unknown). */
-export const versesIn = (book, chapter) => VERSE_COUNTS[book]?.[chapter - 1] || 0;
+/** Verses in a chapter (0 if unknown), in a Catholic Bible or not. */
+export const versesIn = (book, chapter, catholic = false) => (catholic && CATHOLIC[book]?.[chapter]) || VERSE_COUNTS[book]?.[chapter - 1] || 0;

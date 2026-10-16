@@ -1120,7 +1120,7 @@ input[type='range'] {
   font-size: 13px;
   letter-spacing: 0.08em;
   color: var(--gold);
-  min-width: 52px;
+  min-width: 62px;
 }
 
 .tr-name {

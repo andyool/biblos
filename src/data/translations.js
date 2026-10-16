@@ -23,6 +23,16 @@ export const TRANSLATIONS = [
   { id: 'ESV', name: 'English Standard Version', source: 'bolls', code: 'ESV', copyright: 'ESV® Bible © 2001 by Crossway, a publishing ministry of Good News Publishers.' },
   { id: 'NKJV', name: 'New King James Version', source: 'bolls', code: 'NKJV', copyright: 'New King James Version® © 1982 by Thomas Nelson.' },
   { id: 'NLT', name: 'New Living Translation', source: 'bolls', code: 'NLT', copyright: 'Holy Bible, New Living Translation © 1996, 2004, 2015 by Tyndale House Foundation.' },
+  {
+    id: 'NRSVCE',
+    name: 'New Revised Standard Version',
+    note: 'Catholic Edition',
+    source: 'bolls',
+    code: 'NRSVCE',
+    catholic: true, // has Tobit, Judith, Wisdom, Sirach, Baruch, 1–2 Maccabees and the Greek parts of Esther and Daniel
+    boldHeadings: true, // section headings come in the text as <b>…</b>
+    copyright: 'New Revised Standard Version Bible: Catholic Edition © 1989, 1993 by the Division of Christian Education of the National Council of the Churches of Christ in the United States of America. Used by permission. All rights reserved.',
+  },
   { id: 'CSB', name: 'Christian Standard Bible', source: 'bolls', code: 'CSB17', copyright: 'Christian Standard Bible® © 2017 by Holman Bible Publishers.' },
   { id: 'NASB', name: 'New American Standard Bible', note: '1995', source: 'bolls', code: 'NASB', copyright: 'New American Standard Bible® © 1960–1995 by The Lockman Foundation.' },
   { id: 'LSB', name: 'Legacy Standard Bible', source: 'bolls', code: 'LSB', copyright: 'Legacy Standard Bible® © 2021 by The Lockman Foundation.' },
@@ -37,3 +47,6 @@ export const TRANSLATIONS = [
 export const TRANSLATION_BY_ID = Object.fromEntries(TRANSLATIONS.map((t) => [t.id, t]));
 
 export const getTranslation = (id) => TRANSLATION_BY_ID[id] || TRANSLATION_BY_ID.ESV;
+
+/** The Bible to read the books only Catholic Bibles have in, when another is chosen. */
+export const CATHOLIC_BIBLE = TRANSLATION_BY_ID.NRSVCE;
