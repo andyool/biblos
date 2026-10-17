@@ -27,7 +27,7 @@ export default {
             'Ask God, who gives generously, and ask in faith without doubting',
             'Study hard until they can work out the answer on their own',
             'Wait until their trials are over before asking God for help',
-            'Seek advice from church leaders instead of troubling God',
+            'Seek advice from church leaders rather than troubling God with it',
           ],
           why: 'God gives generously to all without finding fault (v. 5). But we must ask in faith, not like a wave of the sea tossed by the wind, double-minded and unstable (vv. 6–8).',
         },
@@ -104,7 +104,7 @@ export default {
           q: 'What is wrong with how the rich and poor visitors are treated?',
           a: [
             'It judges by appearance, unlike God, who has chosen the poor',
-            'The rich man should have been asked to stand at the back',
+            'The rich man should have been asked to stand at the back like the others',
             'Visitors should not be offered seats at all in the assembly',
             'The poor man ought to have dressed better for the meeting',
           ],
@@ -270,7 +270,7 @@ export default {
           q: 'How can you recognise wisdom that comes from above?',
           a: [
             'It is pure, peace-loving, gentle, and full of mercy and good fruit',
-            'It always wins the argument and impresses everyone who hears it',
+            'It always wins the argument and impresses everyone who hears it speak',
             'It comes with great knowledge and many years of learning',
             'It is ambitious and pushes hard to get its own way',
           ],

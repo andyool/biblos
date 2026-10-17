@@ -36,7 +36,9 @@ export function bookSections(code, guide = guideNow(code), tr = null) {
   if (sectionCache.has(key)) return sectionCache.get(key);
   let list = [];
   if (guide) {
-    list = guide.sections.map((s) => {
+    // A few sections belong to one kind of Bible only, e.g. Susanna (Daniel 13) to a Catholic one.
+    const edition = catholic ? 'catholic' : 'protestant';
+    list = guide.sections.filter((s) => !s.only || s.only === edition).map((s) => {
       const [chapter, verses] = s.ref.split(':');
       const [start, end] = verses.split('-').map(Number);
       return { ...s, chapter: Number(chapter), start, end };
@@ -92,6 +94,33 @@ export function sectionRef(sec) {
 /** The guide's heading, else the one you wrote, else the reference. */
 export function sectionTitle(sec, notes) {
   return sec.title || notes?.[sec.id]?.heading || sectionRef(sec);
+}
+
+/**
+ * Readings done before a book had its guide (or in another Bible) have other section ids.
+ * Returns the done map with every section they cover in full marked as read, or null if
+ * there's nothing to add.
+ */
+export function carryOver(done, sections) {
+  const known = new Set(sections.map((s) => s.id));
+  const old = Object.keys(done)
+    .filter((id) => !known.has(id))
+    .map((id) => {
+      const [, chapter, verses] = id.split('.');
+      const [start, end] = verses.split('-').map(Number);
+      return { id, chapter: Number(chapter), start, end: end || start };
+    })
+    .sort((x, y) => x.start - y.start);
+  if (!old.length) return null;
+  const added = {};
+  for (const s of sections) {
+    if (done[s.id]) continue;
+    const over = old.filter((o) => o.chapter === s.chapter && o.end >= s.start && o.start <= s.end);
+    let verse = s.start;
+    for (const o of over) if (o.start <= verse) verse = Math.max(verse, o.end + 1);
+    if (verse > s.end) added[s.id] = Math.max(...over.map((o) => done[o.id]));
+  }
+  return Object.keys(added).length ? { ...done, ...added } : null;
 }
 
 export function bookProgress(state, code, sections) {

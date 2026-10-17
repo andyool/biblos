@@ -6,7 +6,7 @@ import Glyph from '../components/Glyph.jsx';
 import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
 import { bookProgress, prefetchSection, readingTr, sectionRef, sectionTitle, useBook } from '../lib/reading.js';
 import { useYouVersionReady } from '../lib/bible.js';
-import { setReadingBook } from '../lib/actions.js';
+import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { BOOK_BY_CODE, chaptersIn } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 
@@ -120,6 +120,11 @@ export default function Read() {
   const progress = bookProgress(state, code, sections);
   const { next } = progress;
   const book = code ? BOOK_BY_CODE[code] : null;
+
+  // Keep what was read before the book had its guide.
+  useEffect(() => {
+    if (ready) carryOverReading(code, sections);
+  }, [ready, code, sections]);
 
   // Fetch the next passage quietly so it opens at once.
   useEffect(() => {

@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import Sheet from '../components/Sheet.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { EmblemBadge } from '../components/Ornaments.jsx';
-import { useStore } from '../lib/store.js';
-import { setReadingBook } from '../lib/actions.js';
+import { getState, useStore } from '../lib/store.js';
+import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { bookProgress, bookSections, readingTr } from '../lib/reading.js';
-import { GUIDED, guideNow, isGuided, loadGuide } from '../data/guides/index.js';
+import { SUGGESTED, guideNow, isGuided, loadGuide } from '../data/guides/index.js';
 import { BOOK_BY_CODE, NEW_TESTAMENT, oldTestament } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 
@@ -21,15 +21,24 @@ export default function BooksSheet({ onClose }) {
   ];
   const [, setLoaded] = useState(0);
 
+  // Load the guides of the suggested books and of every book you have started, for their
+  // taglines and progress; a book you haven't started has nothing to show yet.
+  const started = Object.keys(state.reading.books);
+  const wanted = [...new Set([...SUGGESTED, ...started])].join(' ');
   useEffect(() => {
     let alive = true;
-    Promise.allSettled(GUIDED.map(loadGuide)).then(() => alive && setLoaded((n) => n + 1));
+    const codes = wanted.split(' ');
+    Promise.allSettled(codes.map(loadGuide)).then(() => {
+      if (!alive) return;
+      codes.forEach((code) => guideNow(code) && carryOverReading(code, bookSections(code, guideNow(code), readingTr(getState(), code))));
+      setLoaded((n) => n + 1);
+    });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [wanted]);
 
-  // Progress is only known once a guided book's sections have loaded.
+  // Progress is only known once a book's guide has loaded.
   const progressOf = (code) => {
     if (isGuided(code) && !guideNow(code)) return null;
     return bookProgress(state, code, bookSections(code, guideNow(code), readingTr(state, code)));
@@ -42,11 +51,11 @@ export default function BooksSheet({ onClose }) {
 
   return (
     <Sheet title="Choose a book" onClose={onClose} className="books-sheet">
-      <p className="small-print">Guided books come with a focus for each reading, questions on the meaning and a summary to choose. Any other book can be read a chapter at a time, summed up in your own words.</p>
+      <p className="small-print">Every book comes with a focus for each reading, questions on the meaning and a summary to choose.</p>
 
-      <h3 className="section-heading">Guided</h3>
+      <h3 className="section-heading">Good places to start</h3>
       <div className="path-list">
-        {GUIDED.map((code) => {
+        {SUGGESTED.map((code) => {
           const p = progressOf(code);
           const guide = guideNow(code);
           return (
@@ -73,10 +82,7 @@ export default function BooksSheet({ onClose }) {
               const p = progressOf(b.code);
               return (
                 <button key={b.code} className={`book-cell ${current === b.code ? 'is-active' : ''} ${p?.finished ? 'is-done' : ''}`} onClick={() => choose(b.code)}>
-                  <span className="book-cell-name">
-                    {b.name}
-                    {isGuided(b.code) && <Glyph name="sparkle" size={11} className="book-cell-guided" />}
-                  </span>
+                  <span className="book-cell-name">{b.name}</span>
                   <span className="mini-bar">
                     <span className="mini-bar-done" style={{ width: `${p ? (p.count / Math.max(1, p.total)) * 100 : 0}%` }} />
                   </span>

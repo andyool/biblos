@@ -232,13 +232,6 @@
   color: var(--gold);
 }
 
-.book-cell-guided {
-  display: inline-block;
-  margin-left: 4px;
-  vertical-align: 0.1em;
-  color: var(--gold);
-}
-
 .book-cell .mini-bar {
   margin-top: 6px;
 }

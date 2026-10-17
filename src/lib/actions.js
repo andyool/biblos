@@ -5,6 +5,7 @@ import { stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
 import { OIL, SHOP } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
+import { carryOver } from './reading.js';
 
 // ── Settings & profile ─────────────────────────────────────────────────────────
 
@@ -260,6 +261,14 @@ export function finishSession(session, results) {
 
 export function setReadingBook(code) {
   setState((s) => ({ ...s, reading: { ...s.reading, book: code } }));
+}
+
+/** Keep what was read of a book under its old sections (see carryOver). */
+export function carryOverReading(code, sections) {
+  const book = getState().reading.books[code];
+  const done = book && carryOver(book.done, sections);
+  if (!done) return;
+  setState((s) => ({ ...s, reading: { ...s.reading, books: { ...s.reading.books, [code]: { ...book, done } } } }));
 }
 
 /** Finishing a whole book of the Bible. */

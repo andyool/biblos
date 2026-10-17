@@ -4,7 +4,7 @@
 import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { BOOK_BY_CODE } from '../src/data/books.js';
+import { BOOKS, BOOK_BY_CODE, chaptersIn } from '../src/data/books.js';
 import { versesIn } from '../src/data/chapters.js';
 
 const DIR = resolve(import.meta.dirname, '../src/data/guides');
@@ -50,16 +50,14 @@ async function check(file) {
   text('intro', guide.intro, LIMITS.intro);
   if (!Array.isArray(guide.sections) || !guide.sections.length) errors.push('no sections');
 
-  const byChapter = new Map();
   (guide.sections || []).forEach((s, i) => {
     const where = `section ${i + 1} (${s?.ref})`;
+    if (s?.only !== undefined && s.only !== 'catholic' && s.only !== 'protestant') errors.push(`${where}: only must be “catholic” or “protestant”`);
     const m = String(s?.ref || '').match(/^(\d+):(\d+)-(\d+)$/);
     if (!m) return errors.push(`${where}: ref must look like “3:1-12”`);
-    const [chapter, start, end] = m.slice(1).map(Number);
+    const [start, end] = m.slice(2).map(Number);
     if (end < start) errors.push(`${where}: range runs backwards`);
     if (end - start + 1 > 40) errors.push(`${where}: ${end - start + 1} verses — split it (≤ 40)`);
-    if (!byChapter.has(chapter)) byChapter.set(chapter, []);
-    byChapter.get(chapter).push({ start, end, i });
 
     text(`${where} title`, s.title, LIMITS.title);
     text(`${where} summary`, s.summary, LIMITS.summary);
@@ -79,28 +77,52 @@ async function check(file) {
     });
   });
 
-  // Every chapter, in order, covered verse by verse with no gaps or overlaps.
-  let lastChapter = 0;
-  for (const s of guide.sections || []) {
-    const c = Number(String(s.ref).split(':')[0]);
-    if (c < lastChapter) errors.push(`section ${s.ref}: out of order`);
-    lastChapter = c;
-  }
-  for (let c = 1; c <= book.chapters; c += 1) {
-    const list = byChapter.get(c);
-    if (!list) {
-      errors.push(`chapter ${c}: no sections`);
-      continue;
+  // Every chapter, in order, covered verse by verse with no gaps or overlaps — in a Protestant
+  // Bible and, where the book is longer there (Esther, Daniel), in a Catholic one. A section
+  // marked only: 'catholic' or only: 'protestant' counts in that Bible alone.
+  const cover = (catholic) => {
+    const label = catholic ? 'Catholic Bible: ' : '';
+    const list = (guide.sections || []).filter((s) => !s.only || s.only === (catholic ? 'catholic' : 'protestant'));
+    const byChapter = new Map();
+    let lastChapter = 0;
+    for (const s of list) {
+      const m = String(s.ref).match(/^(\d+):(\d+)-(\d+)$/);
+      if (!m) continue;
+      const [chapter, start, end] = m.slice(1).map(Number);
+      if (chapter < lastChapter) errors.push(`${label}section ${s.ref}: out of order`);
+      lastChapter = chapter;
+      if (!byChapter.has(chapter)) byChapter.set(chapter, []);
+      byChapter.get(chapter).push({ start, end });
     }
-    let expect = 1;
-    for (const { start, end } of list) {
-      if (start !== expect) errors.push(`chapter ${c}: expected a section starting at verse ${expect}, found ${start}`);
-      expect = end + 1;
+    const chapters = chaptersIn(book.code, catholic);
+    for (let c = 1; c <= chapters; c += 1) {
+      const parts = byChapter.get(c);
+      if (!parts) {
+        errors.push(`${label}chapter ${c}: no sections`);
+        continue;
+      }
+      let expect = 1;
+      for (const { start, end } of parts) {
+        if (start !== expect) errors.push(`${label}chapter ${c}: expected a section starting at verse ${expect}, found ${start}`);
+        expect = end + 1;
+      }
+      const last = versesIn(book.code, c, catholic);
+      if (expect - 1 !== last) errors.push(`${label}chapter ${c}: sections end at verse ${expect - 1}, but the chapter has ${last}`);
     }
-    const last = versesIn(book.code, c);
-    if (expect - 1 !== last) errors.push(`chapter ${c}: sections end at verse ${expect - 1}, but the chapter has ${last}`);
-  }
-  for (const c of byChapter.keys()) if (c < 1 || c > book.chapters) errors.push(`chapter ${c}: ${book.name} has ${book.chapters} chapters`);
+    for (const c of byChapter.keys()) if (c < 1 || c > chapters) errors.push(`${label}chapter ${c}: ${book.name} has ${chapters} chapters`);
+  };
+  const longerInCatholic = !book.deutero && Array.from({ length: chaptersIn(book.code, true) }, (_, i) => i + 1).some((c) => versesIn(book.code, c, true) !== versesIn(book.code, c));
+  cover(false);
+  if (longerInCatholic) cover(true);
+  else if ((guide.sections || []).some((s) => s.only)) errors.push(`${book.name} is the same in every Bible, so no section needs “only”`);
+
+  // The right answer shouldn't give itself away by being the longest (or the shortest) most of the time.
+  const qs = (guide.sections || []).flatMap((s) => s.questions || []).filter((q) => Array.isArray(q.a) && q.a.length === 4);
+  const rank = (cmp) => qs.filter((q) => q.a.slice(1).every((a) => cmp(q.a[0].length, a.length))).length;
+  const longest = rank((x, y) => x > y);
+  const shortest = rank((x, y) => x < y);
+  if (longest > 2 && longest > 0.35 * qs.length) warnings.push(`the right answer is the longest in ${longest} of ${qs.length} questions (aim for ≤ 35%)`);
+  if (shortest > 2 && shortest > 0.35 * qs.length) warnings.push(`the right answer is the shortest in ${shortest} of ${qs.length} questions (aim for ≤ 35%)`);
 
   const n = guide.sections?.length || 0;
   console.log(`${errors.length ? '✗' : '✓'} ${book.name} — ${n} sections${warnings.length ? `, ${warnings.length} warning${warnings.length > 1 ? 's' : ''}` : ''}`);
@@ -110,4 +132,14 @@ async function check(file) {
 }
 
 for (const file of files) await check(file);
+
+// Every book of the Bible has a guide.
+if (!process.argv.slice(2).length) {
+  const have = new Set(files.map((f) => f.split('/').pop()));
+  const missing = BOOKS.filter((b) => !have.has(`${b.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.js`));
+  if (missing.length) {
+    console.log(`✗ No guide yet for ${missing.map((b) => b.name).join(', ')}`);
+    failed = true;
+  }
+}
 process.exit(failed ? 1 : 0);

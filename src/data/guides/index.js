@@ -1,6 +1,6 @@
-// Guided books: each is split into sections with a reading focus, questions on the
-// meaning and a prompt to reflect. Every other book can still be read in order, a
-// chapter at a time. The guides load only when they are needed.
+// Every book has a guide: it is split into sections with a reading focus, questions on
+// the meaning and a prompt to reflect. (A book without a guide file would still be read
+// in order, a chapter at a time.) The guides load only when they are needed.
 // Check them with `npm run check:guides` after editing.
 import { BOOKS } from '../books.js';
 
@@ -9,9 +9,8 @@ const files = import.meta.glob(['./*.js', '!./index.js']);
 const fileFor = (book) => `./${book.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.js`;
 const LOADERS = Object.fromEntries(BOOKS.filter((b) => files[fileFor(b)]).map((b) => [b.code, files[fileFor(b)]]));
 
-// A suggested order for someone new to reading the Bible through; any others follow.
-const SUGGESTED = ['MRK', 'GEN', 'JHN', 'ACT', 'RUT', 'JON', 'PHP', 'JAS', 'ROM'];
-export const GUIDED = [...SUGGESTED.filter((c) => LOADERS[c]), ...Object.keys(LOADERS).filter((c) => !SUGGESTED.includes(c))];
+// Good places to start for someone new to reading the Bible through, in order.
+export const SUGGESTED = ['MRK', 'GEN', 'JHN', 'ACT', 'RUT', 'JON', 'PHP', 'JAS', 'ROM'].filter((c) => LOADERS[c]);
 
 export const isGuided = (code) => Boolean(LOADERS[code]);
 
