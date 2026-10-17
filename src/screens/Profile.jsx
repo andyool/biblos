@@ -14,6 +14,7 @@ import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
+import { SKILLS, weakestSkill } from '../lib/adapt.js';
 
 function ThemeChips({ themes, isOn }) {
   return (
@@ -67,6 +68,44 @@ function Row({ icon, label, value, onClick, children }) {
       {children}
       {onClick && <Glyph name="chevron" size={16} className="row-chev" />}
     </Tag>
+  );
+}
+
+const SKILL_ICONS = { flow: 'path', wording: 'quill', recall: 'heart', reference: 'scroll', distinct: 'key', fluency: 'bolt' };
+
+/** How each memory skill is going, and which one lessons are leaning towards. */
+function Skills({ skills }) {
+  const shown = Object.keys(SKILLS).filter((k) => skills?.[k]?.n);
+  if (!shown.length) return null;
+  const weakest = weakestSkill(skills);
+  return (
+    <>
+      <h2 className="section-heading">How you remember</h2>
+      <div className="rows">
+        {shown.map((k) => {
+          const pct = Math.round(skills[k].a * 100);
+          return (
+            <div className={`row skill-row ${k === weakest ? 'is-focus' : ''}`} key={k}>
+              <Glyph name={SKILL_ICONS[k]} size={20} />
+              <div className="row-label">
+                {SKILLS[k].name}
+                {k === weakest && <span className="skill-tag">Focus</span>}
+                <span className="row-note">{SKILLS[k].desc}</span>
+                <span className="mini-bar">
+                  <span className="mini-bar-done" style={{ width: `${pct}%` }} />
+                </span>
+              </div>
+              <span className="row-value">{pct}%</span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="small-print">
+        {weakest
+          ? `Lessons lean towards ${SKILLS[weakest].name.toLowerCase()} for now — ${SKILLS[weakest].desc.toLowerCase()} — and aim at the words you stumble on.`
+          : 'Lessons give every kind of exercise its turn, and aim at the words you stumble on.'}
+      </p>
+    </>
   );
 }
 
@@ -239,6 +278,8 @@ export default function Profile() {
           </div>
         ))}
       </div>
+
+      <Skills skills={stats.skills} />
 
       <Divider width={200} className="center spaced" />
 

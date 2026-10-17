@@ -1414,6 +1414,20 @@ button.row:active {
   background: var(--surface-2);
 }
 
+.skill-tag {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  vertical-align: 2px;
+  font-family: var(--font-display);
+  font-size: calc(10px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold-ink);
+  background: var(--grad-shine);
+}
+
 .stat-tile {
   display: flex;
   flex-direction: column;

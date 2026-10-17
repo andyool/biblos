@@ -2,9 +2,11 @@ import { CURATED_IDS, PATHS, getPath } from '../data/paths.js';
 import { LESSON_NAMES, LEVELS } from '../data/levels.js';
 import { formatRef, parseId } from '../data/books.js';
 import { allTexts, getText } from './texts.js';
-import { STOP, bare, norm, orderGroups, phrases, pick, shuffle, tokenize } from './text.js';
+import { STOP, bare, midSentence, norm, orderGroups, phrases, pick, shuffle, tokenize } from './text.js';
 import { isDue } from './srs.js';
 import { dayKey } from './dates.js';
+import { choose, pickContext, weakIndices } from './adapt.js';
+import { chainStep, glimpseStep, openingStep, pairsStep, rushStep, slipStep, sortStep, spellStep } from './activities.js';
 
 export const verseTr = (state, id) => state.verses[id]?.tr || state.settings.translation;
 export const verseLevel = (state, id) => state.verses[id]?.level || 0;
@@ -84,16 +86,6 @@ const FALLBACK_WORDS =
     ' ',
   );
 
-const SENTENCE_END = /[.!?:;"“”]["”’']*$/;
-
-/** A word as it would appear mid-sentence: names keep their capital, other words go lower case. */
-function midSentence(word, prevRaw) {
-  const capital = /^\p{Lu}/u.test(word);
-  const startsSentence = !prevRaw || SENTENCE_END.test(prevRaw);
-  if (capital && !startsSentence) return word.length > 1 && word === word.toUpperCase() ? word : word[0] + word.slice(1).toLowerCase();
-  return word.toLowerCase();
-}
-
 function distractorPool(excludeNorms) {
   const words = new Map();
   for (const entry of Object.values(allTexts())) {
@@ -111,7 +103,7 @@ function distractorPool(excludeNorms) {
   return [...words.values()];
 }
 
-function clozeStep(id, tokens, used, pool) {
+function clozeStep(id, tokens, used, pool, weak = []) {
   const inVerse = new Map();
   tokens.forEach((t) => inVerse.set(t.n, (inVerse.get(t.n) || 0) + 1));
   let candidates = tokens.filter((t) => t.n.length >= 4 && !STOP.has(t.n) && !used.has(t.i));
@@ -119,7 +111,9 @@ function clozeStep(id, tokens, used, pool) {
   if (!candidates.length) candidates = tokens;
   // A word that appears only once, so the answer isn't showing elsewhere in the verse.
   const once = candidates.filter((t) => inVerse.get(t.n) === 1);
-  const target = pick(once.length ? once : candidates);
+  // Most of the time, a word you have stumbled on before.
+  const shaky = once.filter((t) => weak.includes(t.i));
+  const target = shaky.length && Math.random() < 0.7 ? shaky[0] : pick(once.length ? once : candidates);
   used.add(target.i);
   const word = midSentence(bare(target.w), tokens[target.i - 1]?.w);
   const isName = /^\p{Lu}/u.test(word);
@@ -143,7 +137,7 @@ function clozeStep(id, tokens, used, pool) {
   return { type: 'cloze', verseId: id, target: target.i, options: shuffle(options) };
 }
 
-function bankStep(id, tokens, size, avoid, pool, distractors = 0) {
+function bankStep(id, tokens, size, avoid, pool, distractors = 0, weak = []) {
   const n = tokens.length;
   size = Math.max(2, Math.min(size, 12, n));
   const starts = phrases(tokens)
@@ -154,6 +148,9 @@ function bankStep(id, tokens, size, avoid, pool, distractors = 0) {
     const apart = candidates.filter((s) => s > avoid[1] || s + size - 1 < avoid[0]);
     if (apart.length) candidates = apart;
   }
+  // Most of the time, a gap over a word you have stumbled on.
+  const covering = candidates.filter((s) => weak.some((i) => i >= s && i < s + size));
+  if (covering.length && Math.random() < 0.7) candidates = covering;
   const start = pick(candidates);
   const end = Math.min(n - 1, start + size - 1);
   const inGap = new Set(tokens.slice(start, end + 1).map((t) => t.n));
@@ -161,13 +158,15 @@ function bankStep(id, tokens, size, avoid, pool, distractors = 0) {
   return { type: 'bank', verseId: id, start, end, distractors: extra };
 }
 
-function lettersStep(id, tokens, hint, part = 'all') {
+function lettersStep(id, tokens, hint, part = 'all', weak = []) {
   const n = tokens.length;
   let start = 0;
   let end = n - 1;
   if (part === 'first') end = Math.max(0, Math.ceil(n / 2) - 1);
   if (part === 'second') start = Math.ceil(n / 2);
-  const visible = hint === 'partial' ? shuffle(tokens.slice(start, end + 1).map((t) => t.i)).slice(0, Math.ceil((end - start + 1) * 0.5)) : [];
+  // Half the words show as hints; the shaky ones are kept hidden, to be recalled.
+  const range = tokens.slice(start, end + 1).map((t) => t.i);
+  const visible = hint === 'partial' ? shuffle(range.filter((i) => !weak.includes(i))).slice(0, Math.ceil(range.length * 0.5)) : [];
   return { type: 'letters', verseId: id, start, end, hint, visible };
 }
 
@@ -240,73 +239,162 @@ function referenceStep(id, refPool) {
   return { type: 'reference', verseId: id, options: shuffle([id, ...others]) };
 }
 
-function learnSteps(id, tokens, level, pool, refPool) {
+/** Other verses whose words are at hand, the most alike first: { id, tokens }. */
+function otherVerses(state, id, tokens) {
+  const tr = verseTr(state, id);
+  const mine = new Set(tokens.filter((t) => t.n.length >= 3 && !STOP.has(t.n)).map((t) => t.n));
+  const book = parseId(id).book;
+  const seen = new Set([id]);
+  const found = [];
+  const consider = (otherId, otherTr, known) => {
+    if (seen.has(otherId)) return;
+    seen.add(otherId);
+    const entry = getText(otherTr, otherId);
+    if (!entry) return;
+    const ts = tokenize(entry.verses);
+    if (ts.length < 4) return;
+    const shared = new Set(ts.filter((t) => mine.has(t.n)).map((t) => t.n)).size;
+    found.push({ id: otherId, tokens: ts, score: shared * 2 + (parseId(otherId).book === book ? 1 : 0) + (known ? 1.5 : 0) + Math.random() });
+  };
+  for (const v of Object.values(state.verses)) if (v.level >= 1) consider(v.id, verseTr(state, v.id), true);
+  if (found.length < 3) {
+    for (const key of Object.keys(allTexts())) {
+      const [keyTr, otherId] = key.split('|');
+      if (keyTr === tr) consider(otherId, keyTr, false);
+      if (found.length >= 6) break;
+    }
+  }
+  return found.sort((a, b) => b.score - a.score);
+}
+
+/**
+ * The steps of one lesson. Each lesson has its shape (read, take in, fill gaps, recall), and
+ * at each place one of a few fitting exercises is chosen: in turn, aimed at your weakest
+ * skill and at the words of this verse you stumble on.
+ */
+function learnSteps(c, id, tokens, level) {
+  const { pool, refPool, pk } = c;
   const n = tokens.length;
+  const weak = c.weak[id];
   const used = new Set();
   const steps = [];
-  const groups = orderGroups(tokens);
-  const order = groups.length >= 3 ? { type: 'order', verseId: id, groups } : null;
   const push = (s) => s && steps.push(s);
+  const others = () => (c.others[id] ||= otherVerses(c.state, id, tokens));
+  const groups = orderGroups(tokens);
+  const order = () => (groups.length >= 3 ? { type: 'order', verseId: id, groups } : null);
+  const pickOne = (...cands) => choose(cands, pk, weak.length > 0);
+
+  const glimpse = ['glimpse', () => glimpseStep(id, tokens, pool, weak)];
+  const pairs = ['pairs', () => pairsStep(id, tokens, weak)];
+  const chain = ['chain', () => chainStep(id, tokens, pool, weak)];
+  const slip = (k) => ['slip', () => slipStep(id, tokens, pool, weak, k)];
+  const spell = (k) => ['spell', () => spellStep(id, tokens, weak, k)];
+  const rush = ['rush', () => rushStep(id, tokens, pool, weak)];
+  const sort = ['sort', () => sortStep(id, tokens, others()[0])];
+  const opening = ['opening', () => openingStep(id, tokens, pool, weak, others())];
+  const reference = ['reference', () => referenceStep(id, refPool)];
+  const cloze = ['cloze', () => clozeStep(id, tokens, used, pool, weak)];
+  const bank = (share, extra = 0, avoid = null) => ['bank', () => bankStep(id, tokens, share, avoid, pool, extra, weak)];
 
   if (level === 0) {
     push({ type: 'read', verseId: id, intro: true });
-    push(order);
-    push(clozeStep(id, tokens, used, pool));
-    const gap = bankStep(id, tokens, n < 10 ? 2 : 4, null, pool);
-    push(gap);
-    push(clozeStep(id, tokens, used, pool));
+    push(pickOne(['order', order], glimpse, pairs));
+    push(pickOne(cloze, bank(n < 10 ? 2 : 4)));
+    push(pickOne(['order', order], glimpse, pairs));
+    push(pickOne(cloze, bank(n < 10 ? 2 : 4)));
     push(lettersStep(id, tokens, 'faded'));
   } else if (level === 1) {
     push({ type: 'read', verseId: id });
-    push(order);
-    const a = bankStep(id, tokens, Math.round(n * 0.35), null, pool);
+    push(pickOne(['order', order], chain, pairs, glimpse));
+    const a = pickOne(bank(Math.round(n * 0.35)), glimpse);
     push(a);
-    push(clozeStep(id, tokens, used, pool));
-    push(lettersStep(id, tokens, 'partial'));
-    push(bankStep(id, tokens, Math.round(n * 0.35), [a.start, a.end], pool, 1));
+    push(pickOne(cloze, slip(1), spell(2)));
+    push(lettersStep(id, tokens, 'partial', 'all', weak));
+    push(pickOne(bank(Math.round(n * 0.35), 1, a?.type === 'bank' ? [a.start, a.end] : null), chain));
   } else if (level === 2) {
-    push(order);
-    push(bankStep(id, tokens, Math.round(n * 0.5), null, pool, 1));
-    push(lettersStep(id, tokens, 'partial'));
-    push(referenceStep(id, refPool));
+    push(pickOne(['order', order], chain));
+    push(pickOne(bank(Math.round(n * 0.5), 1), spell()));
+    push(lettersStep(id, tokens, 'partial', 'all', weak));
+    push(pickOne(reference, opening));
+    push(pickOne(slip(), sort, chain, rush));
     push(lettersStep(id, tokens, 'blank', n > 24 ? 'first' : 'all'));
     if (n > 24) push(lettersStep(id, tokens, 'blank', 'second'));
   } else {
-    push(lettersStep(id, tokens, 'partial'));
-    push(bankStep(id, tokens, Math.round(n * 0.7), null, pool, 2));
-    push(referenceStep(id, refPool));
+    push(lettersStep(id, tokens, 'partial', 'all', weak));
+    push(pickOne(bank(Math.round(n * 0.7), 2), rush, slip(), sort));
+    push(pickOne(reference, opening));
+    push(pickOne(slip(), spell(), chain, sort, rush));
     push(lettersStep(id, tokens, 'blank'));
   }
   return steps;
+}
+
+/** After the recalls in a review or a practice: an exercise picked for what you find hardest. */
+function extraStep(c, id) {
+  const { pool, refPool, pk, tokens } = c;
+  const ts = tokens[id];
+  const weak = c.weak[id];
+  const others = () => (c.others[id] ||= otherVerses(c.state, id, ts));
+  // In a session of several verses, sort between two of them; otherwise the most alike.
+  const partner = () => {
+    const mates = c.verseIds.filter((v) => v !== id);
+    return mates.length ? { id: mates[0], tokens: tokens[mates[0]] } : others()[0];
+  };
+  // A verse still being learned is spared the hardest.
+  const settled = (c.state.verses[id]?.level || 0) >= 3;
+  return choose(
+    [
+      ['slip', () => slipStep(id, ts, pool, weak, settled ? 0 : 1)],
+      ['chain', () => chainStep(id, ts, pool, weak)],
+      ['spell', () => spellStep(id, ts, weak)],
+      settled && ['rush', () => rushStep(id, ts, pool, weak)],
+      settled && ['sort', () => sortStep(id, ts, partner())],
+      ['opening', () => openingStep(id, ts, pool, weak, others())],
+      ['reference', () => referenceStep(id, refPool)],
+    ],
+    pk,
+    weak.length > 0,
+  );
 }
 
 export function buildSession(plan, state) {
   const tokens = {};
   const trs = {};
   const levels = {};
+  const weak = {};
   for (const id of plan.verseIds) {
     trs[id] = verseTr(state, id);
     levels[id] = verseLevel(state, id);
     tokens[id] = tokenize(getText(trs[id], id).verses);
+    weak[id] = weakIndices(state.verses[id], tokens[id]);
   }
   const exclude = new Set(Object.values(tokens).flatMap((ts) => ts.map((t) => t.n)));
   const pool = distractorPool(exclude);
   const refPool = [...new Set([...CURATED_IDS, ...state.custom])];
+  const c = { state, pool, refPool, tokens, weak, others: {}, verseIds: plan.verseIds, pk: pickContext(state) };
 
   let steps = [];
   if (plan.kind === 'learn') {
     const id = plan.verseIds[0];
-    steps = learnSteps(id, tokens[id], levels[id], pool, refPool);
+    steps = learnSteps(c, id, tokens[id], levels[id]);
     // Bearing fruit: join it to the verses either side, before the last recall.
     if (levels[id] === 3) steps.splice(steps.length - 1, 0, ...linkSteps(state, [id]));
-  } else {
+  } else if (plan.kind === 'practice') {
+    // Practice is unhurried: something new to do with each verse, then recall it.
     for (const id of plan.verseIds) {
-      const hint = plan.kind === 'practice' && levels[id] < 3 ? 'partial' : 'blank';
-      steps.push(lettersStep(id, tokens[id], hint));
+      const extra = extraStep(c, id);
+      if (extra) steps.push(extra);
+      steps.push(lettersStep(id, tokens[id], levels[id] < 3 ? 'partial' : 'blank', 'all', weak[id]));
     }
-    if (plan.kind !== 'recite') {
-      const ref = referenceStep(pick(plan.verseIds), refPool);
-      if (ref && Math.random() < 0.6) steps.splice(Math.floor(Math.random() * (steps.length + 1)), 0, ref);
+  } else {
+    for (const id of plan.verseIds) steps.push(lettersStep(id, tokens[id], 'blank'));
+    if (plan.kind === 'review') {
+      // Only once every verse has been recalled, so nothing gives a recall away.
+      const ids = [...plan.verseIds].sort((a, b) => weak[b].length - weak[a].length);
+      ids.slice(0, ids.length >= 3 ? 2 : 1).forEach((id) => {
+        const extra = extraStep(c, id);
+        if (extra) steps.push(extra);
+      });
       // A recitation joins its verses already; a review practises up to two joins.
       steps.push(...shuffle(linkSteps(state, plan.verseIds)).slice(0, 2));
     }
@@ -315,7 +403,7 @@ export function buildSession(plan, state) {
   return { ...plan, tokens, trs, levels, steps, startedAt: Date.now() };
 }
 
-const XP = { read: 1, order: 3, cloze: 2, bank: 3, reference: 2, link: 4 };
+const XP = { read: 1, order: 3, cloze: 2, bank: 3, reference: 2, link: 4, glimpse: 3, pairs: 2, chain: 3, slip: 4, sort: 3, opening: 2, rush: 4, spell: 4 };
 
 export function stepXp(step) {
   if (step.type === 'letters') return step.hint === 'blank' ? 6 : step.hint === 'partial' ? 4 : 3;

@@ -12,8 +12,33 @@ import ClozeStep from '../exercises/ClozeStep.jsx';
 import BankStep from '../exercises/BankStep.jsx';
 import LettersStep from '../exercises/LettersStep.jsx';
 import ReferenceStep from '../exercises/ReferenceStep.jsx';
+import GlimpseStep from '../exercises/GlimpseStep.jsx';
+import PairsStep from '../exercises/PairsStep.jsx';
+import ChainStep from '../exercises/ChainStep.jsx';
+import SlipStep from '../exercises/SlipStep.jsx';
+import SortStep from '../exercises/SortStep.jsx';
+import OpeningStep from '../exercises/OpeningStep.jsx';
+import RushStep from '../exercises/RushStep.jsx';
+import SpellStep from '../exercises/SpellStep.jsx';
+import { ACTIVITY_NAMES, SKILLS } from '../lib/adapt.js';
 
-const EXERCISES = { read: ReadStep, order: OrderStep, cloze: ClozeStep, bank: BankStep, letters: LettersStep, link: LettersStep, reference: ReferenceStep };
+const EXERCISES = {
+  read: ReadStep,
+  order: OrderStep,
+  cloze: ClozeStep,
+  bank: BankStep,
+  letters: LettersStep,
+  link: LettersStep,
+  reference: ReferenceStep,
+  glimpse: GlimpseStep,
+  pairs: PairsStep,
+  chain: ChainStep,
+  slip: SlipStep,
+  sort: SortStep,
+  opening: OpeningStep,
+  rush: RushStep,
+  spell: SpellStep,
+};
 
 const PRAISE = {
   perfect: ['Excellent!', 'Beautifully done!', 'Flawless!', 'Splendid!', 'Well done!', 'Wonderful!'],
@@ -21,12 +46,12 @@ const PRAISE = {
   learning: ['Keep pressing on', 'Line upon line', 'Little by little', 'It will come'],
 };
 
-const REDO_TYPES = new Set(['letters', 'bank', 'order']);
+const REDO_TYPES = new Set(['letters', 'bank', 'order', 'glimpse', 'spell']);
 
-// How hard a step is. Reading, references and joins are other skills, so they have none.
+// How hard a step is. Reading, references, joins and sorting are other skills, so they have none.
 function difficulty(s) {
   if (s.type === 'letters') return s.hint === 'blank' ? 4 : s.hint === 'partial' ? 3 : 2;
-  return { order: 1, cloze: 1, bank: 2 }[s.type] ?? null;
+  return { order: 1, cloze: 1, pairs: 1, glimpse: 1, bank: 2, chain: 2, slip: 3, spell: 3, rush: 3 }[s.type] ?? null;
 }
 
 /**
@@ -66,7 +91,7 @@ export default function Lesson({ session, onExit, onFinish }) {
   const finish = (all) => onFinish(all);
 
   const complete = (result) => {
-    const r = { ...result, type: step.type, hint: step.hint, verseId: step.verseId, xp: stepXp(step), relearn: step.relearn };
+    const r = { ...result, type: step.type, hint: step.hint, verseId: step.verseId, xp: stepXp(step) + (result.bonus || 0), relearn: step.relearn, redo: step.redo };
     const all = [...results, r];
     setResults(all);
     if (step.type === 'read') {
@@ -84,10 +109,10 @@ export default function Lesson({ session, onExit, onFinish }) {
     }
     if (nextQueue !== queue) setQueue(nextQueue);
     const after = nextIndex(session, nextQueue, index + 1, all);
-    const tone = result.mistakes === 0 ? 'perfect' : result.mistakes <= 2 ? 'good' : 'learning';
+    const tone = result.mistakes === 0 ? 'perfect' : result.mistakes <= 2 && result.correct > 0 ? 'good' : 'learning';
     setCombo((c) => (tone === 'perfect' ? c + 1 : 0));
     if (tone !== 'learning') play('correct');
-    setFeedback({ tone, title: pick(PRAISE[tone]), result: r, after, last: after >= nextQueue.length });
+    setFeedback({ tone, title: result.swift ? 'Swift and sure!' : pick(PRAISE[tone]), result: r, after, last: after >= nextQueue.length });
   };
 
   const next = () => {
@@ -120,7 +145,21 @@ export default function Lesson({ session, onExit, onFinish }) {
           {combo}
         </div>
       </header>
-      <div className="lesson-sub">{step.redo ? 'Once more, to make it stick' : step.relearn ? 'Once more, with a little help' : subtitle}</div>
+      <div className="lesson-sub">
+        {step.redo ? (
+          'Once more, to make it stick'
+        ) : step.relearn ? (
+          'Once more, with a little help'
+        ) : step.isNew ? (
+          <span className="lesson-new">New · {ACTIVITY_NAMES[step.type]}</span>
+        ) : step.focus ? (
+          <>
+            {subtitle} · <span className="lesson-focus">Focus: {SKILLS[step.focus].name}</span>
+          </>
+        ) : (
+          subtitle
+        )}
+      </div>
 
       <main className="lesson-body" key={step.key}>
         <Exercise step={step} tokens={tokens} tr={session.trs[step.verseId]} locked={!!feedback} onComplete={complete} />
@@ -137,6 +176,7 @@ export default function Lesson({ session, onExit, onFinish }) {
                 <h3 className="feedback-title">{feedback.title}</h3>
                 <p className="feedback-sub">
                   +{feedback.result.xp} XP
+                  {feedback.result.bonus > 0 && ` (${feedback.result.bonus} for speed)`}
                   {feedback.result.mistakes > 0 && ` · ${feedback.result.mistakes} slip${feedback.result.mistakes === 1 ? '' : 's'}`}
                 </p>
               </div>

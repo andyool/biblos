@@ -146,6 +146,18 @@ export function orderGroups(tokens) {
   return groups;
 }
 
+const SENTENCE_END = /[.!?:;"“”]["”’']*$/;
+
+/** Whether a word starts a sentence, judging by the word before it. */
+export const startsSentence = (prevRaw) => !prevRaw || SENTENCE_END.test(prevRaw);
+
+/** A word as it would appear mid-sentence: names keep their capital, other words go lower case. */
+export function midSentence(word, prevRaw) {
+  const capital = /^\p{Lu}/u.test(word);
+  if (capital && !startsSentence(prevRaw)) return word.length > 1 && word === word.toUpperCase() ? word : word[0] + word.slice(1).toLowerCase();
+  return word.toLowerCase();
+}
+
 export const STOP = new Set(
   'a an and are as at be but by for from had has have he her him his i in is it its me my of on or our she so that the their them they this to us was we were will with you your shall not unto thee thou thy who which what when then than there these those into upon all ye do did does no nor if am been being o'.split(
     ' ',

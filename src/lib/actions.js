@@ -7,6 +7,7 @@ import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
 import { carryOver } from './reading.js';
 import { planProgress } from './plans.js';
+import { updateSkills, updateWeak } from './adapt.js';
 
 // ── Settings & profile ─────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ export function setVerseTranslation(id, tr) {
     const level = Math.min(old?.level || 0, 1);
     return {
       ...s,
-      verses: { ...s.verses, [id]: { ...(old || { id, added: Date.now() }), id, tr, level, srs: undefined } },
+      verses: { ...s.verses, [id]: { ...(old || { id, added: Date.now() }), id, tr, level, srs: undefined, weak: undefined } },
     };
   });
 }
@@ -112,6 +113,8 @@ function awardAchievements(state) {
 // ── Finishing a lesson ─────────────────────────────────────────────────────────
 
 const STREAK_BONUS = { 7: 25, 30: 75, 100: 200, 365: 500 };
+
+const REVIEW_GRADED = new Set(['letters', 'reference', 'opening']);
 
 /** Count practice towards today: XP, the daily goal, the streak and the early/late seals. */
 function creditDay(stats, xp, dailyGoal, now) {
@@ -166,10 +169,15 @@ export function finishSession(session, results) {
 
     // Accuracy per verse grades it. Reading steps don't count, nor do joins with the verses
     // either side, nor a second try after a poor recall: a review is graded on the first.
+    // A review is graded on recall and the reference alone: the exercises after the recalls
+    // are practice.
     const graded = results.filter((r) => r.type !== 'read');
     const per = {};
+    const missed = {};
     for (const r of graded) {
+      if (r.missed?.length && r.type !== 'link') (missed[r.verseId] ||= []).push(...new Set(r.missed));
       if (r.type === 'link' || r.relearn) continue;
+      if (session.kind === 'review' && !REVIEW_GRADED.has(r.type)) continue;
       per[r.verseId] ||= { correct: 0, mistakes: 0 };
       per[r.verseId].correct += r.correct;
       per[r.verseId].mistakes += r.mistakes;
@@ -190,6 +198,8 @@ export function finishSession(session, results) {
       if (!per[id] && session.kind !== 'learn') continue;
       const old = verses[id] || { id, tr: session.trs[id], level: 0, added: now };
       const v = { ...old, tr: session.trs[id], lastPracticed: now, lessons: (old.lessons || 0) + 1, started: old.started || now };
+      // The words stumbled on, so the next lessons can aim at them.
+      v.weak = updateWeak(old.weak, missed[id]);
       const acc = accOf(id);
       const from = old.level || 0;
       let to = from;
@@ -235,12 +245,21 @@ export function finishSession(session, results) {
     talents += day.talents;
     const letters = results.filter((r) => r.type === 'letters' || r.type === 'link').reduce((a, r) => a + r.correct, 0);
 
+    // How each skill is going, and which exercises were done, so the next lessons can lean
+    // towards the weakest skill and give every exercise its turn.
+    const done = results.filter((r) => r.type !== 'read').map((r) => r.type);
+    const acts = { ...stats.acts };
+    done.forEach((t) => (acts[t] = (acts[t] || 0) + 1));
+
     stats = {
       ...day.stats,
       talents: stats.talents + talents,
       lessons: stats.lessons + 1,
       perfect: stats.perfect + (perfect ? 1 : 0),
       letters: stats.letters + letters,
+      skills: updateSkills(stats.skills, results),
+      recent: [...(stats.recent || []), ...done].slice(-24),
+      acts,
     };
 
     const awarded = awardAchievements({ ...s0, verses, stats });

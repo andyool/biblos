@@ -49,6 +49,11 @@ export function freshState() {
       night: false,
       readings: 0,
       booksRead: 0,
+      // How each memory skill is going ({ [skill]: { a, n } }), the exercises done lately and
+      // how often each has been done: lessons lean towards the weakest skill (see lib/adapt.js).
+      skills: {},
+      recent: [],
+      acts: {},
     },
     verses: {},
     custom: [],
