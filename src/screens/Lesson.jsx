@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import Glyph from '../components/Glyph.jsx';
 import { ask } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
-import { stepXp } from '../lib/lesson.js';
+import { relearnStep, stepXp } from '../lib/lesson.js';
 import { pick } from '../lib/text.js';
 import { stopSpeaking } from '../lib/speech.js';
+import { useBack } from '../lib/nav.js';
 import ReadStep from '../exercises/ReadStep.jsx';
 import OrderStep from '../exercises/OrderStep.jsx';
 import ClozeStep from '../exercises/ClozeStep.jsx';
@@ -12,7 +13,7 @@ import BankStep from '../exercises/BankStep.jsx';
 import LettersStep from '../exercises/LettersStep.jsx';
 import ReferenceStep from '../exercises/ReferenceStep.jsx';
 
-const EXERCISES = { read: ReadStep, order: OrderStep, cloze: ClozeStep, bank: BankStep, letters: LettersStep, reference: ReferenceStep };
+const EXERCISES = { read: ReadStep, order: OrderStep, cloze: ClozeStep, bank: BankStep, letters: LettersStep, link: LettersStep, reference: ReferenceStep };
 
 const PRAISE = {
   perfect: ['Excellent!', 'Beautifully done!', 'Flawless!', 'Splendid!', 'Well done!', 'Wonderful!'],
@@ -22,6 +23,26 @@ const PRAISE = {
 
 const REDO_TYPES = new Set(['letters', 'bank', 'order']);
 
+// How hard a step is. Reading, references and joins are other skills, so they have none.
+function difficulty(s) {
+  if (s.type === 'letters') return s.hint === 'blank' ? 4 : s.hint === 'partial' ? 3 : 2;
+  return { order: 1, cloze: 1, bank: 2 }[s.type] ?? null;
+}
+
+/**
+ * Where to go after a step. While every answer in a lesson has been flawless, steps easier
+ * than the hardest one done so far are skipped (never the last).
+ */
+function nextIndex(session, queue, from, results) {
+  if (session.kind !== 'learn') return from;
+  const graded = results.filter((r) => difficulty(r) !== null);
+  if (!graded.length || graded.some((r) => r.mistakes > 0)) return from;
+  const best = Math.max(...graded.map(difficulty));
+  let i = from;
+  while (i < queue.length - 1 && !queue[i].redo && difficulty(queue[i]) !== null && difficulty(queue[i]) < best) i += 1;
+  return i;
+}
+
 export default function Lesson({ session, onExit, onFinish }) {
   const [queue, setQueue] = useState(session.steps);
   const [index, setIndex] = useState(0);
@@ -29,9 +50,10 @@ export default function Lesson({ session, onExit, onFinish }) {
   const [feedback, setFeedback] = useState(null);
   const [combo, setCombo] = useState(0);
   const step = queue[index];
-  const tokens = session.tokens[step.verseId];
+  const tokens = step.tokens || session.tokens[step.verseId];
   const Exercise = EXERCISES[step.type];
   const redos = queue.filter((s) => s.redo).length;
+  const relearns = queue.filter((s) => s.relearn).length;
 
   const progress = (index + (feedback ? 1 : 0)) / queue.length;
   const subtitle = useMemo(() => {
@@ -44,30 +66,35 @@ export default function Lesson({ session, onExit, onFinish }) {
   const finish = (all) => onFinish(all);
 
   const complete = (result) => {
-    const r = { ...result, type: step.type, hint: step.hint, verseId: step.verseId, xp: stepXp(step) };
+    const r = { ...result, type: step.type, hint: step.hint, verseId: step.verseId, xp: stepXp(step), relearn: step.relearn };
     const all = [...results, r];
     setResults(all);
     if (step.type === 'read') {
-      if (index + 1 >= queue.length) finish(all);
-      else setIndex(index + 1);
+      const after = nextIndex(session, queue, index + 1, all);
+      if (after >= queue.length) finish(all);
+      else setIndex(after);
       return;
     }
     let nextQueue = queue;
     if (result.mistakes >= 2 && REDO_TYPES.has(step.type) && !step.redo && redos < 2 && session.kind === 'learn') {
       nextQueue = [...queue, { ...step, redo: true, key: `${step.key}-again` }];
-      setQueue(nextQueue);
+    } else if (result.mistakes >= 3 && step.type === 'letters' && !step.relearn && relearns < 2 && (session.kind === 'review' || session.kind === 'practice')) {
+      // A poor recall in a review: once more straight away, with half the words showing.
+      nextQueue = [...queue, relearnStep(step, tokens)];
     }
+    if (nextQueue !== queue) setQueue(nextQueue);
+    const after = nextIndex(session, nextQueue, index + 1, all);
     const tone = result.mistakes === 0 ? 'perfect' : result.mistakes <= 2 ? 'good' : 'learning';
     setCombo((c) => (tone === 'perfect' ? c + 1 : 0));
     if (tone !== 'learning') play('correct');
-    setFeedback({ tone, title: pick(PRAISE[tone]), result: r, last: index + 1 >= nextQueue.length });
+    setFeedback({ tone, title: pick(PRAISE[tone]), result: r, after, last: after >= nextQueue.length });
   };
 
   const next = () => {
-    const last = feedback.last;
+    const { last, after } = feedback;
     setFeedback(null);
     if (last) finish(results);
-    else setIndex(index + 1);
+    else setIndex(after);
   };
 
   const exit = async () => {
@@ -77,6 +104,7 @@ export default function Lesson({ session, onExit, onFinish }) {
       onExit();
     }
   };
+  useBack(exit, { guard: true });
 
   return (
     <div className="lesson">
@@ -92,7 +120,7 @@ export default function Lesson({ session, onExit, onFinish }) {
           {combo}
         </div>
       </header>
-      <div className="lesson-sub">{step.redo ? 'Once more, to make it stick' : subtitle}</div>
+      <div className="lesson-sub">{step.redo ? 'Once more, to make it stick' : step.relearn ? 'Once more, with a little help' : subtitle}</div>
 
       <main className="lesson-body" key={step.key}>
         <Exercise step={step} tokens={tokens} tr={session.trs[step.verseId]} locked={!!feedback} onComplete={complete} />

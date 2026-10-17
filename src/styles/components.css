@@ -502,6 +502,12 @@
   color: var(--gold);
 }
 
+.menu-key {
+  color: var(--gold);
+  font-weight: 700;
+  padding: 0 2px;
+}
+
 /* ─── Top bar & tabs ─────────────────────────────────────────────────────── */
 
 .topbar {
@@ -823,6 +829,21 @@
   font-style: italic;
   color: var(--ink-soft);
   animation: fade-in 0.3s 0.1s ease both;
+}
+
+.crash {
+  min-height: 100dvh;
+  max-width: 440px;
+  margin: 0 auto;
+  display: grid;
+  place-content: center;
+  gap: 16px;
+  padding: 24px calc(20px + env(safe-area-inset-right)) 24px calc(20px + env(safe-area-inset-left));
+  text-align: center;
+}
+
+.crash .small-print {
+  overflow-wrap: anywhere;
 }
 
 /* ─── Form bits ──────────────────────────────────────────────────────────── */
@@ -1312,6 +1333,12 @@ button.row:active {
   border: 1px dashed var(--line-strong);
   background: color-mix(in srgb, var(--surface) 80%, transparent);
   margin-bottom: 14px;
+}
+
+.hint-card.update-note {
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .hint-card > .glyph {

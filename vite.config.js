@@ -2,6 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 
+// One id per build, shared by the app and its service worker (see src/lib/update.js).
+const BUILD = Date.now().toString(36);
+
 // Writes /sw.js at build time with a fresh version and the list of built files,
 // so the app opens instantly (and offline) once it is on the home screen.
 function serviceWorker() {
@@ -25,7 +28,7 @@ function serviceWorker() {
         ...built.map((file) => `/${file}`),
       ];
       const source = readFileSync(new URL('./src/sw-template.js', import.meta.url), 'utf8')
-        .replace('__VERSION__', Date.now().toString(36))
+        .replace('__VERSION__', BUILD)
         .replace('__PRECACHE__', JSON.stringify(precache));
       this.emitFile({ type: 'asset', fileName: 'sw.js', source });
     },
@@ -58,4 +61,5 @@ function devApi() {
 
 export default defineConfig({
   plugins: [react(), serviceWorker(), devApi()],
+  define: { __BUILD__: JSON.stringify(BUILD) },
 });

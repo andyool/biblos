@@ -27,8 +27,26 @@ import { bookProgress, bookSections, buildReading, loadSection, prefetchSection,
 import { guideNow } from './data/guides/index.js';
 import { fontFor, THEMES } from './data/shop.js';
 import { toast } from './lib/ui.js';
+import { useBack } from './lib/nav.js';
+import { useUpdateReady } from './lib/update.js';
+import Glyph from './components/Glyph.jsx';
 
 const THEME_BG = Object.fromEntries(THEMES.map((t) => [t.id, t.colors[0]]));
+
+/** A new version has arrived: offer to reload (not in the middle of a lesson). */
+function UpdateNote() {
+  const ready = useUpdateReady();
+  if (!ready) return null;
+  return (
+    <button className="hint-card is-action update-note" onClick={() => window.location.reload()}>
+      <Glyph name="refresh" size={24} />
+      <div>
+        <strong>A new version of Biblos is ready</strong>
+        <p>Tap to reload. Your progress is kept.</p>
+      </div>
+    </button>
+  );
+}
 
 function useAppearance() {
   const theme = useStore((s) => s.settings.theme);
@@ -133,6 +151,8 @@ export default function App() {
     mainRef.current?.scrollTo({ top: 0 });
   }, []);
 
+  useBack(() => go('path'), { active: onboarded && tab !== 'path' });
+
   const ctx = useMemo(() => ({ start, read, openSheet, closeSheet, go, openVerse: (id) => openSheet({ type: 'verse', id }) }), [start, read, openSheet, closeSheet, go]);
 
   const sheetView = sheets.map((s) => {
@@ -218,6 +238,7 @@ export default function App() {
     body = (
       <div className="app">
         <main className="app-main" ref={mainRef}>
+          <UpdateNote />
           {tab === 'path' && <Home />}
           {tab === 'read' && <Read />}
           {tab === 'verses' && <Library />}

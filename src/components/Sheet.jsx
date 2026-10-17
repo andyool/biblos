@@ -2,9 +2,11 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Glyph from './Glyph.jsx';
 import { Divider } from './Ornaments.jsx';
+import { useBack } from '../lib/nav.js';
 
 /** A bottom sheet that slides up over the app. */
 export default function Sheet({ title, onClose, children, className = '', flourish = true }) {
+  useBack(onClose, { active: Boolean(onClose) });
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose?.();
     window.addEventListener('keydown', onKey);

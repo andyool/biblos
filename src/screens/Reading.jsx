@@ -5,6 +5,7 @@ import { ask } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
 import { pick } from '../lib/text.js';
 import { stopSpeaking } from '../lib/speech.js';
+import { useBack } from '../lib/nav.js';
 import { readingXp } from '../lib/reading.js';
 import Passage from '../reading/Passage.jsx';
 import PassageStep from '../reading/PassageStep.jsx';
@@ -60,6 +61,7 @@ export default function Reading({ session, onExit, onFinish }) {
       onExit();
     }
   };
+  useBack(exit, { guard: true });
 
   return (
     <div className="lesson reading">

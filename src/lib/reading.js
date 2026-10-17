@@ -44,8 +44,10 @@ export function bookSections(code, guide = guideNow(code), tr = null) {
 /** A book's sections in a translation, once its guide has loaded. */
 export function useBook(code, tr) {
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [, force] = useState(0);
   const guide = code ? guideNow(code) : null;
+  const retry = () => setAttempt((n) => n + 1);
 
   useEffect(() => {
     if (!code || guide) return undefined;
@@ -57,10 +59,10 @@ export function useBook(code, tr) {
     return () => {
       alive = false;
     };
-  }, [code, guide]);
+  }, [code, guide, attempt]);
 
-  if (!guide) return { ready: false, failed, guide: null, sections: [] };
-  return { ready: true, failed: false, guide, sections: bookSections(code, guide, tr) };
+  if (!guide) return { ready: false, failed, retry, guide: null, sections: [] };
+  return { ready: true, failed: false, retry, guide, sections: bookSections(code, guide, tr) };
 }
 
 const bookLabel = (code) => (code === 'PSA' ? 'Psalm' : BOOK_BY_CODE[code]?.name || code);

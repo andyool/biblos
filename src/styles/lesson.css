@@ -427,6 +427,21 @@
   color: var(--ink-faint);
 }
 
+.letters-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-link.is-listening {
+  animation: listening 1.2s ease-in-out infinite;
+}
+
+@keyframes listening {
+  50% {
+    opacity: 0.45;
+  }
+}
+
 .keyboard {
   flex: none;
   display: grid;

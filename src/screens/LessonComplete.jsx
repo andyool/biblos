@@ -6,6 +6,7 @@ import { LEVELS } from '../data/levels.js';
 import { BOOK_BY_CODE, formatRef } from '../data/books.js';
 import { whenText } from '../lib/dates.js';
 import { BOOK_BONUS } from '../lib/actions.js';
+import { useBack } from '../lib/nav.js';
 
 function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
@@ -18,6 +19,7 @@ function headline(summary) {
 
 export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
   const levelled = summary.changes.filter((c) => c.to > c.from);
+  useBack(onDone);
   useEffect(() => {
     play('complete');
     if (levelled.length) setTimeout(() => play('level'), 650);
@@ -68,6 +70,8 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
                 <span className="gold-soft">
                   {LEVELS[c.from].name} → {LEVELS[c.to].name}
                 </span>
+              ) : c.note === 'rest' ? (
+                <span>It has grown enough for one day. It can grow again tomorrow.</span>
               ) : c.note === 'almost' ? (
                 <span>Almost fruitful — one more try will do it.</span>
               ) : c.note === 'lapse' ? (

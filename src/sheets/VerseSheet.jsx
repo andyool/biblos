@@ -8,7 +8,7 @@ import { useStore } from '../lib/store.js';
 import { useApp } from '../AppContext.js';
 import { useVerseText } from '../lib/hooks.js';
 import { tokenize } from '../lib/text.js';
-import { learnPlan, verseTr } from '../lib/lesson.js';
+import { learnPlan, resting, verseTr } from '../lib/lesson.js';
 import { freshness, isDue } from '../lib/srs.js';
 import { whenText } from '../lib/dates.js';
 import { removeCustomVerse, resetVerse, setVerseTranslation } from '../lib/actions.js';
@@ -49,7 +49,8 @@ export default function VerseSheet({ id, onClose }) {
   const fresh = freshness(v);
   const isCustom = state.custom.includes(id);
 
-  const primary = level >= 4 ? (due ? 'Review now' : 'Practise') : level === 0 ? 'Begin learning' : LESSON_NAMES[level];
+  const settling = resting(v);
+  const primary = level >= 4 ? (due ? 'Review now' : 'Practise') : level === 0 ? 'Begin learning' : settling ? 'Practise' : LESSON_NAMES[level];
 
   const begin = () => {
     onClose();
@@ -143,6 +144,7 @@ export default function VerseSheet({ id, onClose }) {
       </div>
       <p className="growth-desc">
         {LEVELS[level].desc}
+        {settling && ' It has grown twice today, so let it settle: it can grow again tomorrow.'}
         {v?.srs && level >= 4 && (
           <>
             {' '}

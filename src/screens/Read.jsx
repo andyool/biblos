@@ -9,6 +9,7 @@ import { useYouVersionReady } from '../lib/bible.js';
 import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { BOOK_BY_CODE } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
+import { updateReady } from '../lib/update.js';
 
 const STARTS = [
   { code: 'MRK', why: 'Short, vivid and fast-moving — the best place to meet Jesus.' },
@@ -113,7 +114,7 @@ export default function Read() {
   const nivReady = useYouVersionReady();
   const code = state.reading.book;
   const tr = readingTr(state);
-  const { ready, failed, guide, sections } = useBook(code, tr);
+  const { ready, failed, retry, guide, sections } = useBook(code, tr);
   const progress = bookProgress(state, code, sections);
   const { next } = progress;
   const book = code ? BOOK_BY_CODE[code] : null;
@@ -168,7 +169,13 @@ export default function Read() {
         <p className="today-kicker">{progress.finished ? 'Book complete' : progress.count ? 'Continue reading' : `Begin ${book.name}`}</p>
         {!ready ? (
           failed ? (
-            <p className="today-detail">The guide for {book.name} could not be loaded. Check your connection and try again.</p>
+            <>
+              <p className="today-detail">The guide for {book.name} could not be loaded. Check your connection and try again.</p>
+              {/* After an update, the old version's files may be gone: the new version has them. */}
+              <button className="btn btn-ghost btn-block" onClick={() => (updateReady() ? window.location.reload() : retry())}>
+                <Glyph name="refresh" size={18} /> Try again
+              </button>
+            </>
           ) : (
             <div className="loading-lines">
               <span />

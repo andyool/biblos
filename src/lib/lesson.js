@@ -1,12 +1,23 @@
 import { CURATED_IDS, PATHS, getPath } from '../data/paths.js';
 import { LESSON_NAMES, LEVELS } from '../data/levels.js';
-import { formatRef } from '../data/books.js';
+import { formatRef, parseId } from '../data/books.js';
 import { allTexts, getText } from './texts.js';
 import { STOP, bare, norm, orderGroups, phrases, pick, shuffle, tokenize } from './text.js';
 import { isDue } from './srs.js';
+import { dayKey } from './dates.js';
 
 export const verseTr = (state, id) => state.verses[id]?.tr || state.settings.translation;
 export const verseLevel = (state, id) => state.verses[id]?.level || 0;
+
+// A verse grows at most two stages a day (Sown and Rooted today, Growing and Fruitful
+// tomorrow): memory settles overnight, so a verse crammed in one sitting is soon lost.
+export const GROWTH_PER_DAY = 2;
+
+/** How many stages a verse has grown today. */
+export const grownToday = (verse, now = Date.now()) => (verse?.grew?.day === dayKey(now) ? verse.grew.n : 0);
+
+/** A verse that is still being learned and has grown all it can today. */
+export const resting = (verse, now = Date.now()) => (verse?.level || 0) < 4 && grownToday(verse, now) >= GROWTH_PER_DAY;
 
 // ── What to do next ────────────────────────────────────────────────────────────
 
@@ -21,7 +32,7 @@ export function planNext(state, now = Date.now()) {
       detail: `${due.length} ${due.length === 1 ? 'verse is' : 'verses are'} ready to be recalled`,
     };
   }
-  const learning = all.filter((v) => v.level >= 1 && v.level <= 3).sort((a, b) => (a.lastPracticed || 0) - (b.lastPracticed || 0));
+  const learning = all.filter((v) => v.level >= 1 && v.level <= 3 && !resting(v, now)).sort((a, b) => (a.lastPracticed || 0) - (b.lastPracticed || 0));
   if (learning.length) {
     const v = learning[0];
     return {
@@ -42,6 +53,10 @@ export function planNext(state, now = Date.now()) {
   const known = all.filter((v) => v.level >= 4).sort((a, b) => a.srs.due - b.srs.due);
   if (known.length) {
     return { kind: 'practice', verseIds: known.slice(0, 3).map((v) => v.id), title: 'Strengthen your verses', detail: 'Nothing is due — keep them shining' };
+  }
+  const settling = all.filter((v) => resting(v, now));
+  if (settling.length) {
+    return { kind: 'practice', verseIds: settling.slice(0, 3).map((v) => v.id), title: 'Go over today’s verses', detail: 'They grow again tomorrow' };
   }
   return null;
 }
@@ -93,25 +108,29 @@ function distractorPool(excludeNorms) {
 }
 
 function clozeStep(id, tokens, used, pool) {
+  const inVerse = new Map();
+  tokens.forEach((t) => inVerse.set(t.n, (inVerse.get(t.n) || 0) + 1));
   let candidates = tokens.filter((t) => t.n.length >= 4 && !STOP.has(t.n) && !used.has(t.i));
   if (!candidates.length) candidates = tokens.filter((t) => t.n.length >= 2 && !used.has(t.i));
   if (!candidates.length) candidates = tokens;
-  const target = pick(candidates);
+  // A word that appears only once, so the answer isn't showing elsewhere in the verse.
+  const once = candidates.filter((t) => inVerse.get(t.n) === 1);
+  const target = pick(once.length ? once : candidates);
   used.add(target.i);
   const word = midSentence(bare(target.w), tokens[target.i - 1]?.w);
   const isName = /^\p{Lu}/u.test(word);
 
   // Distractors must look alike: names compete with names, ordinary words with ordinary words.
-  const fromVerse = shuffle(tokens.map((t) => midSentence(bare(t.w), tokens[t.i - 1]?.w)));
+  // They come from other verses: a word from this one could be spotted elsewhere in it.
   const near = (w) => Math.abs(w.length - word.length) <= 3;
   const alike = (w) => /^\p{Lu}/u.test(w) === isName;
-  const ordered = [...fromVerse.filter(near), ...shuffle(pool).filter(near), ...shuffle(pool)].filter(alike);
-  if (isName) ordered.push(...['God', 'Lord', 'Jesus', 'Christ', 'Spirit', 'Father', 'Israel', 'David']);
+  const ordered = [...shuffle(pool).filter(near), ...shuffle(pool)].filter(alike);
+  if (isName) ordered.push(...shuffle(['God', 'Lord', 'Jesus', 'Christ', 'Spirit', 'Father', 'Israel', 'David', 'Moses', 'Abraham', 'Zion', 'Jerusalem']));
   const seen = new Set([target.n]);
   const options = [];
   for (const w of ordered) {
     const n = norm(w);
-    if (n.length < 3 || STOP.has(n) || seen.has(n)) continue;
+    if (n.length < 3 || STOP.has(n) || seen.has(n) || inVerse.has(n)) continue;
     seen.add(n);
     options.push({ w, ok: false });
     if (options.length === 3) break;
@@ -146,6 +165,69 @@ function lettersStep(id, tokens, hint, part = 'all') {
   if (part === 'second') start = Math.ceil(n / 2);
   const visible = hint === 'partial' ? shuffle(tokens.slice(start, end + 1).map((t) => t.i)).slice(0, Math.ceil((end - start + 1) * 0.5)) : [];
   return { type: 'letters', verseId: id, start, end, hint, visible };
+}
+
+/** After a poor recall in a review: the same verse once more, with half the words showing. */
+export function relearnStep(step, tokens) {
+  return { ...lettersStep(step.verseId, tokens, 'partial'), relearn: true, key: `${step.key}-again` };
+}
+
+// ── Joining verses ─────────────────────────────────────────────────────────────
+
+/** The verses that come just before and after this one, among those you know: { prev, next }. */
+function neighbours(state, id) {
+  const a = parseId(id);
+  let prev = null;
+  let next = null;
+  for (const v of Object.values(state.verses)) {
+    if (v.level < 3 || v.id === id) continue;
+    const b = parseId(v.id);
+    if (b.book !== a.book || b.chapter !== a.chapter) continue;
+    if (b.end === a.start - 1) prev = v.id;
+    if (b.start === a.end + 1) next = v.id;
+  }
+  return { prev, next };
+}
+
+/**
+ * What comes next? The end of one verse, then the first words of the next to recall by
+ * their first letters: the joins are what a passage learned verse by verse loses.
+ */
+function linkStep(state, fromId, toId) {
+  const from = getText(verseTr(state, fromId), fromId);
+  const to = getText(verseTr(state, toId), toId);
+  if (!from || !to) return null;
+  const a = tokenize(from.verses);
+  const b = tokenize(to.verses);
+  if (a.length < 3 || b.length < 3) return null;
+  // Whole phrases where they are short enough: the last of one verse, the first of the next.
+  const tail = a.slice(-Math.max(3, Math.min(9, phrases(a).at(-1).length)));
+  const first = phrases(b)[0].length;
+  const head = b.slice(0, Math.max(3, first <= 9 ? first : 6));
+  const tokens = [...tail, ...head].map((t, i) => ({ ...t, i, w: i === 0 ? `…${t.w}` : t.w }));
+  return {
+    type: 'link',
+    verseId: toId,
+    from: fromId,
+    tokens,
+    start: tail.length,
+    end: tokens.length - 1,
+    hint: 'blank',
+    kicker: 'What comes next? Type each first letter',
+    ref: `${formatRef(fromId)} → ${formatRef(toId).split(':').pop()}`,
+  };
+}
+
+/** Joins with the neighbouring verses, once both sides are at least Growing. */
+function linkSteps(state, ids) {
+  const pairs = new Map();
+  for (const id of ids) {
+    if (verseLevel(state, id) < 3) continue;
+    const { prev, next } = neighbours(state, id);
+    if (prev) pairs.set(`${prev}>${id}`, [prev, id]);
+    if (next) pairs.set(`${id}>${next}`, [id, next]);
+  }
+  return [...pairs.values()].map(([from, to]) => linkStep(state, from, to)).filter(Boolean);
 }
 
 function referenceStep(id, refPool) {
@@ -211,6 +293,8 @@ export function buildSession(plan, state) {
   if (plan.kind === 'learn') {
     const id = plan.verseIds[0];
     steps = learnSteps(id, tokens[id], levels[id], pool, refPool);
+    // Bearing fruit: join it to the verses either side, before the last recall.
+    if (levels[id] === 3) steps.splice(steps.length - 1, 0, ...linkSteps(state, [id]));
   } else {
     for (const id of plan.verseIds) {
       const hint = plan.kind === 'practice' && levels[id] < 3 ? 'partial' : 'blank';
@@ -219,13 +303,15 @@ export function buildSession(plan, state) {
     if (plan.kind !== 'recite') {
       const ref = referenceStep(pick(plan.verseIds), refPool);
       if (ref && Math.random() < 0.6) steps.splice(Math.floor(Math.random() * (steps.length + 1)), 0, ref);
+      // A recitation joins its verses already; a review practises up to two joins.
+      steps.push(...shuffle(linkSteps(state, plan.verseIds)).slice(0, 2));
     }
   }
   steps = steps.map((s, i) => ({ ...s, key: `${i}-${s.type}` }));
   return { ...plan, tokens, trs, levels, steps, startedAt: Date.now() };
 }
 
-const XP = { read: 1, order: 3, cloze: 2, bank: 3, reference: 2 };
+const XP = { read: 1, order: 3, cloze: 2, bank: 3, reference: 2, link: 4 };
 
 export function stepXp(step) {
   if (step.type === 'letters') return step.hint === 'blank' ? 6 : step.hint === 'partial' ? 4 : 3;

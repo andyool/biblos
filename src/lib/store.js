@@ -20,6 +20,11 @@ export function freshState() {
       yvKey: '',
       activePath: 'foundations',
       installDismissed: false,
+      // Backups: when the last was saved, how many lessons and readings had been done then,
+      // and until when the reminder is put off.
+      lastBackup: null,
+      backupCount: 0,
+      backupSnooze: 0,
     },
     stats: {
       xp: 0,

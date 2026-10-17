@@ -7,12 +7,14 @@ import { Divider, EmblemBadge, Frame, LevelRing } from '../components/Ornaments.
 import { getPath } from '../data/paths.js';
 import { formatRefShort } from '../data/books.js';
 import { LEVELS, roman } from '../data/levels.js';
-import { planNext, recitePlan, verseTr } from '../lib/lesson.js';
+import { planNext, recitePlan, resting, verseTr } from '../lib/lesson.js';
 import { isDue } from '../lib/srs.js';
 import { prefetch, useYouVersionReady } from '../lib/bible.js';
 import { getTranslation } from '../data/translations.js';
-import { isIOS, isStandalone, useInstallPrompt } from '../lib/device.js';
-import { updateSettings } from '../lib/actions.js';
+import { androidBrowser, backupDue, exportBackup, isAndroid, isIOS, isStandalone, useInstallPrompt } from '../lib/device.js';
+import { snoozeBackup, updateSettings } from '../lib/actions.js';
+import { toast } from '../lib/ui.js';
+import { DAY } from '../lib/dates.js';
 
 const SWAY = [0, 54, 82, 54, 0, -54, -82, -54];
 const GAP = 118;
@@ -66,22 +68,45 @@ function PathTrail({ path, state, nextId, onNode }) {
   );
 }
 
+// Where "Add to Home screen" is in each Android browser.
+const ANDROID_STEPS = {
+  chrome: (
+    <>
+      Tap <b className="menu-key">⋮</b> at the top right of Chrome, then <em>Add to Home screen</em> or <em>Install app</em>.
+    </>
+  ),
+  samsung: (
+    <>
+      Tap <b className="menu-key">☰</b> at the bottom right, then <em>Add page to</em> → <em>Home screen</em>.
+    </>
+  ),
+  firefox: (
+    <>
+      Tap <b className="menu-key">⋮</b>, then <em>Add to Home screen</em> or <em>Install</em>.
+    </>
+  ),
+};
+
 function InstallHint() {
   const dismissed = useStore((s) => s.settings.installDismissed);
   const promptInstall = useInstallPrompt();
   if (dismissed || isStandalone()) return null;
-  if (!isIOS() && !promptInstall) return null;
+  const ios = isIOS();
+  const android = isAndroid();
+  if (!ios && !android && !promptInstall) return null;
   return (
     <div className="hint-card">
       <Glyph name="phone" size={26} />
       <div>
         <strong>Put Biblos on your Home Screen</strong>
-        {isIOS() ? (
+        {promptInstall ? (
+          <p>It opens full-screen, like an app, and works offline.</p>
+        ) : ios ? (
           <p>
-            Tap <Glyph name="share" size={15} className="inline-glyph" /> Share in Safari, then <em>Add to Home Screen</em>.
+            Tap <Glyph name="share" size={15} className="inline-glyph" /> Share, then <em>Add to Home Screen</em>.
           </p>
         ) : (
-          <p>It opens full-screen, like an app, and works offline.</p>
+          <p>{ANDROID_STEPS[androidBrowser()]}</p>
         )}
         {promptInstall && (
           <button className="btn btn-gold btn-small" onClick={promptInstall}>
@@ -90,6 +115,35 @@ function InstallHint() {
         )}
       </div>
       <button className="icon-btn" onClick={() => updateSettings({ installDismissed: true })} aria-label="Dismiss">
+        <Glyph name="close" size={18} />
+      </button>
+    </div>
+  );
+}
+
+/** Progress lives only on this phone, so suggest a backup now and then. */
+function BackupHint() {
+  const due = useStore((s) => backupDue(s));
+  const last = useStore((s) => s.settings.lastBackup);
+  if (!due) return null;
+  const weeks = last ? Math.max(1, Math.round((Date.now() - last) / (7 * DAY))) : 0;
+  const save = async () => {
+    const result = await exportBackup();
+    if (result === 'downloaded') toast('Backup saved to your downloads', 'check');
+  };
+  return (
+    <div className="hint-card">
+      <Glyph name="shield" size={26} />
+      <div>
+        <strong>Keep your progress safe</strong>
+        <p>
+          {last ? `Your last backup was ${weeks} week${weeks === 1 ? '' : 's'} ago.` : 'Your progress is kept only on this phone.'} Save a copy to Files, or send it to yourself.
+        </p>
+        <button className="btn btn-gold btn-small" onClick={save}>
+          Save a backup
+        </button>
+      </div>
+      <button className="icon-btn" onClick={() => snoozeBackup()} aria-label="Remind me next week">
         <Glyph name="close" size={18} />
       </button>
     </div>
@@ -119,7 +173,9 @@ export default function Home() {
   const { start, openVerse, openSheet } = useApp();
   const plan = useMemo(() => planNext(state), [state]);
   const path = getPath(state, state.settings.activePath);
-  const nextId = path.verses.find((id) => (state.verses[id]?.level || 0) < 4);
+  // The next verse to learn: one that can still grow today, if there is one.
+  const learning = path.verses.filter((id) => (state.verses[id]?.level || 0) < 4);
+  const nextId = learning.find((id) => !resting(state.verses[id])) || learning[0];
   const memorised = path.verses.filter((id) => (state.verses[id]?.level || 0) >= 4).length;
   const complete = path.verses.length > 0 && memorised === path.verses.length;
 
@@ -134,6 +190,7 @@ export default function Home() {
       <TopBar />
       <InstallHint />
       <NivCard />
+      <BackupHint />
 
       <Frame className="today" size={40}>
         <p className="today-kicker">Today’s practice</p>

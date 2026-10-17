@@ -25,8 +25,14 @@ import './styles/lesson.css';
 import './styles/reading.css';
 
 import App from './App.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
+import { registerServiceWorker } from './lib/update.js';
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>,
+);
 
 // Handy for testing in development: window.__biblos.setState(...)
 if (import.meta.env.DEV) {
@@ -35,8 +41,4 @@ if (import.meta.env.DEV) {
   });
 }
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
-}
+registerServiceWorker();

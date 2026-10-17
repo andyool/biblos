@@ -10,7 +10,7 @@ import { TRANSLATIONS, getTranslation } from '../data/translations.js';
 import { FONTS, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
 import { resetEverything, restoreBackup, updateProfile, updateSettings, equip } from '../lib/actions.js';
-import { exportBackup, readBackup, isStandalone } from '../lib/device.js';
+import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
@@ -252,7 +252,12 @@ export default function Profile() {
       <h2 className="section-heading">Keep your progress safe</h2>
       <p className="small-print">Progress is stored on this phone. Save a backup now and then — you can restore it on any device.</p>
       <div className="rows">
-        <Row icon="share" label="Save a backup" onClick={onExport} />
+        <Row
+          icon="share"
+          label="Save a backup"
+          value={settings.lastBackup ? `Last ${new Date(settings.lastBackup).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Never'}
+          onClick={onExport}
+        />
         <Row icon="upload" label="Restore from a backup" onClick={() => fileRef.current?.click()} />
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImport} />
         {!isStandalone() && <Row icon="phone" label="Add to Home Screen" onClick={() => setSheet('install')} />}
@@ -339,19 +344,24 @@ export default function Profile() {
       {sheet === 'install' && (
         <Sheet title="Add to Home Screen" onClose={() => setSheet(null)}>
           <ol className="steps">
-            <li>Open this page in Safari (on iPhone) or Chrome (on Android).</li>
-            <li>
-              iPhone: tap <Glyph name="share" size={15} className="inline-glyph" /> <strong>Share</strong>, then <strong>Add to Home Screen</strong>.
-            </li>
-            <li>
-              Android: tap the <strong>⋮</strong> menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.
-            </li>
+            {/* Only this phone's steps, or both when we can't tell. */}
+            <li>{isIOS() ? 'Open this page in Safari.' : isAndroid() ? 'Open this page in Chrome.' : 'Open this page in Safari (on iPhone) or Chrome (on Android).'}</li>
+            {!isAndroid() && (
+              <li>
+                {isIOS() ? 'Tap' : 'iPhone: tap'} <Glyph name="share" size={15} className="inline-glyph" /> <strong>Share</strong>, then <strong>Add to Home Screen</strong>.
+              </li>
+            )}
+            {!isIOS() && (
+              <li>
+                {isAndroid() ? 'Tap' : 'Android: tap'} the <strong>⋮</strong> menu at the top right, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+              </li>
+            )}
             <li>Open Biblos from the new icon. It runs full-screen and works offline.</li>
             <li>
               On Wi-Fi, go to <strong>Me → Use it offline</strong> and download your Bible, so it works with no signal.
             </li>
           </ol>
-          <p className="small-print">On iPhone the Home Screen app keeps its own progress, separate from Safari — so start using it from the icon.</p>
+          {!isAndroid() && <p className="small-print">On iPhone the Home Screen app keeps its own progress, separate from Safari — so start using it from the icon.</p>}
         </Sheet>
       )}
     </div>

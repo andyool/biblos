@@ -7,6 +7,8 @@ import { GOALS } from '../data/levels.js';
 import { getTranslation } from '../data/translations.js';
 import { updateProfile, updateSettings } from '../lib/actions.js';
 import { play } from '../lib/sound.js';
+import { useBack } from '../lib/nav.js';
+import { useYouVersionReady } from '../lib/bible.js';
 
 const FREE_EMBLEMS = [
   { id: 'cross', name: 'Cross' },
@@ -18,7 +20,10 @@ export default function Onboarding() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [emblem, setEmblem] = useState('cross');
-  const [translation, setTranslation] = useState('NIV');
+  const nivReady = useYouVersionReady();
+  const [picked, setPicked] = useState(null);
+  // The NIV when this Biblos can fetch it; otherwise one that needs no key.
+  const translation = picked || (nivReady ? 'NIV' : 'ESV');
   const [goal, setGoal] = useState(20);
   const [path, setPath] = useState('foundations');
 
@@ -27,6 +32,7 @@ export default function Onboarding() {
     setStep((s) => s + 1);
   };
   const back = () => setStep((s) => Math.max(0, s - 1));
+  useBack(back, { active: step > 0, guard: true });
 
   const finish = () => {
     updateProfile({ name: name.trim(), emblem, since: Date.now() });
@@ -90,12 +96,12 @@ export default function Onboarding() {
         <div className="ob-page">
           <h2 className="ob-title">Which Bible do you read?</h2>
           <p className="ob-sub">You can change this at any time, or for a single verse.</p>
-          {getTranslation(translation).source === 'yv' && (
+          {getTranslation(translation).source === 'yv' && !nivReady && (
             <div className="note">
               <Glyph name="key" size={16} /> The NIV is copyrighted, so it needs a free key from YouVersion. Biblos will show you how — it takes two minutes, once.
             </div>
           )}
-          <TranslationPicker value={translation} onPick={setTranslation} />
+          <TranslationPicker value={translation} onPick={setPicked} />
           <button className="btn btn-gold btn-block sticky-cta" onClick={next}>
             Continue
           </button>

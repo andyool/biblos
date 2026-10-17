@@ -1,7 +1,7 @@
 import { getState, setState, freshState, migrate } from './store.js';
-import { addDays, dayKey, daysBetween } from './dates.js';
+import { DAY, addDays, dayKey, daysBetween } from './dates.js';
 import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
-import { stepXp } from './lesson.js';
+import { GROWTH_PER_DAY, grownToday, stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
 import { OIL, SHOP } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
@@ -163,10 +163,12 @@ export function finishSession(session, results) {
     let { stats } = reconcileStats(s0.stats, today);
     const verses = { ...s0.verses };
 
-    // Accuracy per verse (reading steps don't count).
+    // Accuracy per verse grades it. Reading steps don't count, nor do joins with the verses
+    // either side, nor a second try after a poor recall: a review is graded on the first.
+    const graded = results.filter((r) => r.type !== 'read');
     const per = {};
-    for (const r of results) {
-      if (r.type === 'read') continue;
+    for (const r of graded) {
+      if (r.type === 'link' || r.relearn) continue;
       per[r.verseId] ||= { correct: 0, mistakes: 0 };
       per[r.verseId].correct += r.correct;
       per[r.verseId].mistakes += r.mistakes;
@@ -175,8 +177,8 @@ export function finishSession(session, results) {
       const p = per[id];
       return p && p.correct + p.mistakes > 0 ? p.correct / (p.correct + p.mistakes) : 1;
     };
-    const totalCorrect = Object.values(per).reduce((a, p) => a + p.correct, 0);
-    const totalMistakes = Object.values(per).reduce((a, p) => a + p.mistakes, 0);
+    const totalCorrect = graded.reduce((a, r) => a + r.correct, 0);
+    const totalMistakes = graded.reduce((a, r) => a + r.mistakes, 0);
     const accuracy = totalCorrect + totalMistakes ? totalCorrect / (totalCorrect + totalMistakes) : 1;
     const perfect = totalMistakes === 0;
 
@@ -193,10 +195,14 @@ export function finishSession(session, results) {
       let note = null;
 
       if (session.kind === 'learn' && from < 4) {
-        if (from === 3 && acc < 0.8) {
+        const grown = grownToday(old, now);
+        if (grown >= GROWTH_PER_DAY) {
+          note = 'rest';
+        } else if (from === 3 && acc < 0.8) {
           note = 'almost';
         } else {
           to = from + 1;
+          v.grew = { day: today, n: grown + 1 };
           if (to === 4) {
             v.srs = newSchedule(now);
             talents += 10;
@@ -226,7 +232,7 @@ export function finishSession(session, results) {
     const xp = results.reduce((sum, r) => sum + (r.xp ?? stepXp(r)), 0) + 5 + (perfect ? 5 : 0);
     const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
     talents += day.talents;
-    const letters = results.filter((r) => r.type === 'letters').reduce((a, r) => a + r.correct, 0);
+    const letters = results.filter((r) => r.type === 'letters' || r.type === 'link').reduce((a, r) => a + r.correct, 0);
 
     stats = {
       ...day.stats,
@@ -366,9 +372,21 @@ export function buyOil() {
 
 // ── Backup & reset ─────────────────────────────────────────────────────────────
 
+/** Lessons and readings done so far: the backup reminder counts these. */
+export const sessionsDone = (stats) => stats.lessons + (stats.readings || 0);
+
+export function noteBackup(at = Date.now()) {
+  setState((s) => ({ ...s, settings: { ...s.settings, lastBackup: at, backupCount: sessionsDone(s.stats), backupSnooze: 0 } }));
+}
+
+export function snoozeBackup(days = 7) {
+  updateSettings({ backupSnooze: Date.now() + days * DAY });
+}
+
 export function restoreBackup(data) {
   setState(migrate(data.state));
   if (data.texts) replaceTexts(data.texts);
+  noteBackup(Date.parse(data.exported) || Date.now());
 }
 
 export function resetEverything() {
