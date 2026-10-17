@@ -1,7 +1,7 @@
 import { getState, setState, freshState, migrate } from './store.js';
 import { DAY, addDays, dayKey, daysBetween } from './dates.js';
 import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
-import { GROWTH_PER_DAY, grownToday, stepXp } from './lesson.js';
+import { GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
 import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
@@ -199,7 +199,7 @@ export function finishSession(session, results) {
         const grown = grownToday(old, now);
         if (grown >= GROWTH_PER_DAY) {
           note = 'rest';
-        } else if (from === 3 && acc < 0.8) {
+        } else if (acc < PASS_MARK[from]) {
           note = 'almost';
         } else {
           to = from + 1;

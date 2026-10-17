@@ -12,6 +12,7 @@ function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
   if (summary.changes.some((c) => c.to === 5 && c.from === 4)) return 'Hidden in your heart';
   if (summary.changes.some((c) => c.to === 4 && c.from === 3)) return 'It bears fruit!';
+  if (summary.changes.some((c) => c.note === 'almost')) return 'Keep pressing on';
   if (summary.perfect) return 'Flawless';
   if (summary.kind === 'review') return 'Well tended';
   return 'Well done';
@@ -73,7 +74,9 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
               ) : c.note === 'rest' ? (
                 <span>It has grown enough for one day. It can grow again tomorrow.</span>
               ) : c.note === 'almost' ? (
-                <span>Almost fruitful — one more try will do it.</span>
+                <span>
+                  Not quite {LEVELS[c.from + 1].name.toLowerCase()} yet — try this lesson again.
+                </span>
               ) : c.note === 'lapse' ? (
                 <span>Slipping a little — we’ll bring it back tomorrow.</span>
               ) : (

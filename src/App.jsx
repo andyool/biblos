@@ -22,7 +22,7 @@ import BooksSheet from './sheets/BooksSheet.jsx';
 import SectionSheet from './sheets/SectionSheet.jsx';
 import PlansSheet from './sheets/PlansSheet.jsx';
 import JournalSheet from './sheets/JournalSheet.jsx';
-import { buildSession, planNext, verseTr } from './lib/lesson.js';
+import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
 import { checkStreak, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
 import { planProgress } from './lib/plans.js';
@@ -255,7 +255,9 @@ export default function App() {
       />
     );
   } else if (summary) {
-    const more = planNext(getState());
+    // A lesson that fell short of its pass mark is offered again straight away.
+    const missed = summary.changes.find((c) => c.note === 'almost');
+    const more = missed ? learnPlan(getState(), missed.id) : planNext(getState());
     body = (
       <LessonComplete
         summary={summary}
@@ -264,7 +266,7 @@ export default function App() {
           mainRef.current?.scrollTo({ top: 0 });
         }}
         onMore={more ? () => start(more) : null}
-        moreLabel={more ? (more.kind === 'review' ? 'Review next' : more.kind === 'practice' ? 'Practise more' : 'Next lesson') : null}
+        moreLabel={missed ? 'Try again' : more ? (more.kind === 'review' ? 'Review next' : more.kind === 'practice' ? 'Practise more' : 'Next lesson') : null}
       />
     );
   } else {

@@ -13,6 +13,10 @@ export const verseLevel = (state, id) => state.verses[id]?.level || 0;
 // tomorrow): memory settles overnight, so a verse crammed in one sitting is soon lost.
 export const GROWTH_PER_DAY = 2;
 
+// The accuracy each of the four lessons needs before the verse grows. Below it, the verse
+// stays where it is and the lesson can be tried again.
+export const PASS_MARK = [0.6, 0.6, 0.6, 0.8];
+
 /** How many stages a verse has grown today. */
 export const grownToday = (verse, now = Date.now()) => (verse?.grew?.day === dayKey(now) ? verse.grew.n : 0);
 
