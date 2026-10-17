@@ -10,10 +10,9 @@ import Passage from '../reading/Passage.jsx';
 import PassageStep from '../reading/PassageStep.jsx';
 import ChoiceStep from '../reading/ChoiceStep.jsx';
 import SequenceStep from '../reading/SequenceStep.jsx';
-import HeadingStep from '../reading/HeadingStep.jsx';
 import ReflectStep from '../reading/ReflectStep.jsx';
 
-const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, heading: HeadingStep, reflect: ReflectStep };
+const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, reflect: ReflectStep };
 const GRADED = new Set(['question', 'summary', 'flow', 'recap']);
 
 const PRAISE = {

@@ -34,12 +34,6 @@ export default function SectionSheet({ id, onClose }) {
 
       {/* The summary is the answer to one of the questions, so it waits until you have read it. */}
       {doneAt && sec.summary && <p className="section-sheet-summary">{sec.summary}</p>}
-      {mine?.heading && !sec.title && (
-        <div className="context-card">
-          <p className="context-kicker">Your heading</p>
-          <p>{mine.heading}</p>
-        </div>
-      )}
       {mine?.note && (
         <div className="context-card">
           <p className="context-kicker">Your note</p>

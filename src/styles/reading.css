@@ -482,12 +482,7 @@
   padding: 12px 14px;
 }
 
-/* Heading and reflection */
-
-.heading-input {
-  text-align: center;
-  font-family: var(--font-verse);
-}
+/* Reflection */
 
 .reflect-card {
   display: flex;

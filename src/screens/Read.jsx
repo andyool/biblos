@@ -4,10 +4,10 @@ import { useApp } from '../AppContext.js';
 import { TopBar } from '../components/Chrome.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
-import { bookProgress, prefetchSection, readingTr, sectionRef, sectionTitle, useBook } from '../lib/reading.js';
+import { bookProgress, prefetchSection, readingTr, sectionRef, useBook } from '../lib/reading.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { carryOverReading, setReadingBook } from '../lib/actions.js';
-import { BOOK_BY_CODE, chaptersIn } from '../data/books.js';
+import { BOOK_BY_CODE } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 
 const STARTS = [
@@ -49,7 +49,7 @@ function Welcome() {
 
 const chapterName = (code, chapter) => (code === 'PSA' ? `Psalm ${chapter}` : `Chapter ${chapter}`);
 
-function ChapterMap({ code, sections, done, next, notes, onSection }) {
+function ChapterMap({ code, sections, done, next, onSection }) {
   const chapters = useMemo(() => {
     const map = new Map();
     for (const s of sections) {
@@ -68,23 +68,20 @@ function ChapterMap({ code, sections, done, next, notes, onSection }) {
         const single = list.length === 1;
         const isOpen = !single && open.has(chapter);
         const hasNext = next && next.chapter === chapter;
-        const heading = single ? notes[list[0].id]?.heading || list[0].title : null;
         return (
           <div key={chapter} className={`chapter ${count === list.length ? 'is-done' : ''} ${hasNext ? 'is-next' : ''}`}>
             <button className="chapter-head" onClick={() => (single ? onSection(list[0]) : toggle(chapter))} aria-expanded={single ? undefined : isOpen}>
               <span className="chapter-num">{count === list.length ? <Glyph name="check" size={16} strokeWidth={2} /> : chapter}</span>
               <span className="chapter-text">
                 <strong>{chapterName(code, chapter)}</strong>
-                {heading ? (
-                  <small>{heading}</small>
+                {single ? (
+                  <small>{list[0].title}</small>
                 ) : (
-                  !single && (
-                    <span className="chapter-dots" aria-label={`${count} of ${list.length} read`}>
-                      {list.map((s) => (
-                        <i key={s.id} className={`${done[s.id] ? 'is-on' : ''} ${next?.id === s.id ? 'is-next' : ''}`} />
-                      ))}
-                    </span>
-                  )
+                  <span className="chapter-dots" aria-label={`${count} of ${list.length} read`}>
+                    {list.map((s) => (
+                      <i key={s.id} className={`${done[s.id] ? 'is-on' : ''} ${next?.id === s.id ? 'is-next' : ''}`} />
+                    ))}
+                  </span>
                 )}
               </span>
               {hasNext && <span className="chapter-badge">Next</span>}
@@ -96,7 +93,7 @@ function ChapterMap({ code, sections, done, next, notes, onSection }) {
                   <button key={s.id} className={`section-row ${done[s.id] ? 'is-done' : ''} ${next?.id === s.id ? 'is-next' : ''}`} onClick={() => onSection(s)}>
                     <span className="section-mark">{done[s.id] ? <Glyph name="check" size={14} strokeWidth={2} /> : null}</span>
                     <span className="section-text">
-                      <strong>{sectionTitle(s, notes)}</strong>
+                      <strong>{s.title}</strong>
                       <small>{sectionRef(s)}</small>
                     </span>
                   </button>
@@ -142,7 +139,6 @@ export default function Read() {
 
   const chosen = getTranslation(state.settings.translation);
   const fallback = chosen.source === 'yv' && !nivReady;
-  const chapters = chaptersIn(code, getTranslation(tr).catholic);
   const pct = progress.total ? Math.round((progress.count / progress.total) * 100) : 0;
 
   return (
@@ -181,14 +177,12 @@ export default function Read() {
           )
         ) : next ? (
           <>
-            <h2 className="today-title gold-text">{sectionTitle(next, state.reading.notes)}</h2>
-            <p className="today-detail">{next.title || state.reading.notes[next.id]?.heading ? sectionRef(next) : `${next.end - next.start + 1} verses`}</p>
+            <h2 className="today-title gold-text">{next.title}</h2>
+            <p className="today-detail">{sectionRef(next)}</p>
             <button className="btn btn-gold btn-block btn-shine" onClick={() => read(next)}>
               {progress.count ? 'Read on' : 'Begin'}
             </button>
-            <p className="today-time">
-              {guide ? 'With questions on the meaning' : 'Read, sum it up, and reflect'} · {tr}
-            </p>
+            <p className="today-time">With questions on the meaning · {tr}</p>
           </>
         ) : (
           <>
@@ -206,8 +200,7 @@ export default function Read() {
         <div className="path-head-text">
           <h2>{book.name}</h2>
           <p>
-            {guide ? guide.tagline : code === 'PSA' ? '150 psalms' : `${chapters} chapter${chapters > 1 ? 's' : ''}`}
-            {ready && ` · ${progress.count}/${progress.total} read`}
+            {ready && `${guide.tagline} · ${progress.count}/${progress.total} read`}
           </p>
         </div>
         <button className="btn btn-ghost btn-small" onClick={() => openSheet({ type: 'books' })}>
@@ -222,7 +215,7 @@ export default function Read() {
       {guide && progress.count === 0 && <p className="read-intro">{guide.intro}</p>}
       <Divider width={240} className="center" />
 
-      {ready && <ChapterMap key={code} code={code} sections={sections} done={progress.done} next={next} notes={state.reading.notes} onSection={(s) => openSheet({ type: 'section', id: s.id })} />}
+      {ready && <ChapterMap key={code} code={code} sections={sections} done={progress.done} next={next} onSection={(s) => openSheet({ type: 'section', id: s.id })} />}
     </div>
   );
 }

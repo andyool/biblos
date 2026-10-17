@@ -115,10 +115,10 @@ export default function App() {
     setPreparing(true);
     try {
       const verses = await loadSection(tr, sec);
-      const guide = guideNow(sec.book) || null;
+      const guide = guideNow(sec.book);
       setSheets([]);
       setSummary(null);
-      setReading(buildReading({ sec, sections: bookSections(sec.book, guide, tr), guide, verses, tr, notes: getState().reading.notes }));
+      setReading(buildReading({ sec, sections: bookSections(sec.book, guide, tr), guide, verses, tr }));
     } catch (error) {
       toast(error?.message || 'The passage could not be loaded.');
       if (['needs-key', 'auth', 'license'].includes(error?.kind)) setSheets([{ type: 'niv' }]);

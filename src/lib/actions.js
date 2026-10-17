@@ -275,7 +275,7 @@ export function carryOverReading(code, sections) {
 export const BOOK_BONUS = 25;
 
 /**
- * Apply a finished reading. results: [{ type, correct, mistakes, xp, heading?, note? }]
+ * Apply a finished reading. results: [{ type, correct, mistakes, xp, note? }]
  * Returns a summary for the celebration screen.
  */
 export function finishReading(session, results) {
@@ -297,9 +297,8 @@ export function finishReading(session, results) {
     if (bookDone) talents += BOOK_BONUS;
 
     const notes = { ...s0.reading.notes };
-    const heading = results.find((r) => r.heading)?.heading;
     const note = results.find((r) => r.note)?.note;
-    if (heading || note) notes[sec.id] = { ...notes[sec.id], ...(heading && { heading }), ...(note && { note }), at: now };
+    if (note) notes[sec.id] = { ...notes[sec.id], note, at: now };
 
     const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
     talents += day.talents;
@@ -324,7 +323,7 @@ export function finishReading(session, results) {
       accuracy: correct + mistakes ? correct / (correct + mistakes) : 1,
       perfect,
       changes: [],
-      reading: { id: sec.id, ref: session.ref, title: session.title || heading || null, bookDone, book: sec.book },
+      reading: { id: sec.id, ref: session.ref, title: session.title, bookDone, book: sec.book },
       streak: day.streak,
       streakExtended: day.streakExtended,
       goalReached: day.goalReached,

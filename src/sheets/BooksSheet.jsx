@@ -5,7 +5,7 @@ import { EmblemBadge } from '../components/Ornaments.jsx';
 import { getState, useStore } from '../lib/store.js';
 import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { bookProgress, bookSections, readingTr } from '../lib/reading.js';
-import { SUGGESTED, guideNow, isGuided, loadGuide } from '../data/guides/index.js';
+import { SUGGESTED, guideNow, loadGuide } from '../data/guides/index.js';
 import { BOOK_BY_CODE, NEW_TESTAMENT, oldTestament } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 
@@ -40,8 +40,8 @@ export default function BooksSheet({ onClose }) {
 
   // Progress is only known once a book's guide has loaded.
   const progressOf = (code) => {
-    if (isGuided(code) && !guideNow(code)) return null;
-    return bookProgress(state, code, bookSections(code, guideNow(code), readingTr(state, code)));
+    const guide = guideNow(code);
+    return guide ? bookProgress(state, code, bookSections(code, guide, readingTr(state, code))) : null;
   };
 
   const choose = (code) => {

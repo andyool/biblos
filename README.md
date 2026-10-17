@@ -100,7 +100,7 @@ Then open the address it prints.
 | `src/data/guides/` | The guide for each book of Read Through, one file per book (check them with `npm run check:guides`) |
 | `src/lib/` | Fetching Bible text, building lessons, spaced repetition, streaks and rewards, saving progress |
 | `src/exercises/` | The six exercise types and the on-screen keyboard |
-| `src/reading/` | The steps of a reading: the passage, questions, ordering, a heading and reflection |
+| `src/reading/` | The steps of a reading: the passage, questions, a summary to choose, ordering and reflection |
 | `src/screens/`, `src/sheets/` | The pages and the slide-up panels |
 | `src/components/` | Gold ornaments, frames, seals, icons |
 | `api/yv.js` | A tiny Vercel function that fetches NIV text from YouVersion |
