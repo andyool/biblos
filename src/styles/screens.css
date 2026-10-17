@@ -7,7 +7,7 @@
 
 .today-kicker {
   font-family: var(--font-display);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -17,7 +17,7 @@
 .today-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 44px;
+  font-size: calc(44px * var(--text-scale, 1));
   line-height: 1.2;
   margin: 2px 0 2px;
   padding: 0 6px;
@@ -25,15 +25,69 @@
 
 .today-detail {
   color: var(--ink-soft);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale, 1));
   margin-bottom: 18px;
 }
 
 .today-time {
   margin-top: 12px;
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   font-style: italic;
   color: var(--ink-faint);
+}
+
+.today-done {
+  color: var(--gold);
+}
+
+/* The day's reading, under the memory practice. */
+.today-read {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+.today-read-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  color: var(--gold);
+}
+
+.today-read-icon.is-done {
+  background: var(--grad-gold);
+  border-color: transparent;
+  color: var(--gold-ink);
+}
+
+.today-read-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.today-read-text strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: calc(14px * var(--text-scale, 1));
+  letter-spacing: 0.03em;
+}
+
+.today-read-text small {
+  display: block;
+  font-size: calc(15px * var(--text-scale, 1));
+  font-style: italic;
+  color: var(--ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .path-head {
@@ -50,7 +104,7 @@
 
 .path-head h2 {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--gold);
@@ -58,7 +112,7 @@
 }
 
 .path-head p {
-  font-size: 15.5px;
+  font-size: calc(15.5px * var(--text-scale, 1));
   color: var(--ink-faint);
   font-style: italic;
 }
@@ -141,7 +195,7 @@
 .node-numeral {
   font-family: var(--font-deco);
   font-weight: 700;
-  font-size: 19px;
+  font-size: calc(19px * var(--text-scale, 1));
   letter-spacing: 0.02em;
 }
 
@@ -189,7 +243,7 @@
   color: var(--gold-ink);
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.16em;
   text-transform: uppercase;
   box-shadow: 0 3px 0 var(--g4);
@@ -236,7 +290,7 @@
 
 .node-label {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.06em;
   color: var(--ink-soft);
@@ -265,12 +319,12 @@
 .recite-card strong {
   display: block;
   font-family: var(--font-display);
-  font-size: 13.5px;
+  font-size: calc(13.5px * var(--text-scale, 1));
   letter-spacing: 0.06em;
 }
 
 .recite-card p {
-  font-size: 15.5px;
+  font-size: calc(15.5px * var(--text-scale, 1));
 }
 
 .recite-card.is-ready {
@@ -317,14 +371,14 @@
 .path-item-text strong {
   display: block;
   font-family: var(--font-display);
-  font-size: 14.5px;
+  font-size: calc(14.5px * var(--text-scale, 1));
   letter-spacing: 0.03em;
   color: var(--ink);
 }
 
 .path-item-text small {
   display: block;
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   color: var(--ink-faint);
   font-style: italic;
 }
@@ -351,7 +405,7 @@
   align-items: center;
   gap: 4px;
   font-family: var(--font-display);
-  font-size: 9.5px;
+  font-size: calc(9.5px * var(--text-scale, 1));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -392,7 +446,7 @@
   text-align: center;
   font-style: italic;
   color: var(--ink-soft);
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
 }
 
 .freshness {
@@ -416,7 +470,7 @@
 .freshness small {
   margin-left: 8px;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--gold);
@@ -447,13 +501,13 @@
   text-align: right;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .votd-ref small {
-  font-size: 10px;
+  font-size: calc(10px * var(--text-scale, 1));
   letter-spacing: 0.2em;
   -webkit-text-fill-color: var(--ink-faint);
 }
@@ -483,7 +537,7 @@
   border-radius: 999px;
   border: 1px solid var(--line);
   font-family: var(--font-display);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.1em;
   color: var(--ink-faint);
@@ -548,12 +602,12 @@
 
 .verse-row-text strong {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   letter-spacing: 0.04em;
 }
 
 .verse-row-text strong small {
-  font-size: 10px;
+  font-size: calc(10px * var(--text-scale, 1));
   letter-spacing: 0.16em;
   color: var(--ink-faint);
   margin-left: 4px;
@@ -561,7 +615,7 @@
 
 .verse-row-snippet {
   font-family: var(--font-verse);
-  font-size: 16.5px;
+  font-size: calc(16.5px * var(--text-scale, 1));
   color: var(--ink-soft);
   white-space: nowrap;
   overflow: hidden;
@@ -569,7 +623,7 @@
 }
 
 .verse-row-meta {
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   color: var(--ink-faint);
 }
 
@@ -629,13 +683,13 @@
 
 .purse-num {
   font-family: var(--font-deco);
-  font-size: 44px;
+  font-size: calc(44px * var(--text-scale, 1));
   font-weight: 700;
 }
 
 .purse span {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -646,7 +700,7 @@
   text-align: center;
   font-style: italic;
   color: var(--ink-faint);
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale, 1));
   margin: 10px 20px 20px;
 }
 
@@ -664,7 +718,7 @@
   height: 42px;
   border-radius: 12px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -696,14 +750,14 @@
 
 .seal-cell strong {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.25;
 }
 
 .seal-cell small {
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   color: var(--ink-faint);
 }
 
@@ -731,12 +785,12 @@
 
 .shop-oil strong {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   letter-spacing: 0.05em;
 }
 
 .shop-oil p {
-  font-size: 15.5px;
+  font-size: calc(15.5px * var(--text-scale, 1));
   color: var(--ink-soft);
 }
 
@@ -764,7 +818,7 @@
 
 .shop-item strong {
   font-family: var(--font-display);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.25;
@@ -824,13 +878,13 @@
   align-items: center;
   gap: 4px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   font-weight: 700;
   color: var(--gold);
 }
 
 .price.is-locked {
-  font-size: 10px;
+  font-size: calc(10px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--ink-faint);
@@ -838,7 +892,7 @@
 
 .equipped {
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: calc(10px * var(--text-scale, 1));
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--gold);
@@ -865,7 +919,7 @@
 
 .script-name {
   font-family: var(--font-script);
-  font-size: 44px;
+  font-size: calc(44px * var(--text-scale, 1));
   line-height: 1.25;
   padding: 0 6px;
 }
@@ -878,7 +932,7 @@
 
 .profile-title {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -946,13 +1000,13 @@
 
 .garden-cell strong {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale, 1));
   color: var(--ink);
 }
 
 .garden-cell span {
   font-family: var(--font-display);
-  font-size: 8.5px;
+  font-size: calc(8.5px * var(--text-scale, 1));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -982,14 +1036,14 @@
 
 .goal-item strong {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   letter-spacing: 0.06em;
   color: var(--gold);
 }
 
 .goal-item span {
   color: var(--ink-soft);
-  font-size: 16.5px;
+  font-size: calc(16.5px * var(--text-scale, 1));
 }
 
 .goal-item.is-on {
@@ -1048,14 +1102,14 @@
 .logo-word {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 92px;
+  font-size: calc(92px * var(--text-scale, 1));
   line-height: 1.1;
   margin-top: 6px;
   padding: 0 14px;
 }
 
 .ob-tag {
-  font-size: 22px;
+  font-size: calc(22px * var(--text-scale, 1));
   font-style: italic;
   color: var(--ink-soft);
   max-width: 320px;
@@ -1064,7 +1118,7 @@
 .ob-quote {
   margin: 12px 0 22px;
   font-family: var(--font-verse);
-  font-size: 19px;
+  font-size: calc(19px * var(--text-scale, 1));
   color: var(--ink-soft);
   max-width: 330px;
 }
@@ -1074,7 +1128,7 @@
   margin-top: 8px;
   font-style: normal;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.2em;
   color: var(--gold);
 }
@@ -1082,7 +1136,7 @@
 .ob-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 42px;
+  font-size: calc(42px * var(--text-scale, 1));
   line-height: 1.2;
   text-align: center;
   color: var(--gold);
@@ -1092,7 +1146,7 @@
 .ob-sub {
   text-align: center;
   color: var(--ink-soft);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale, 1));
   font-style: italic;
 }
 
@@ -1110,7 +1164,7 @@
   border-radius: 20px;
   border: 1px solid transparent;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.1em;
   color: var(--ink-faint);
 }
@@ -1153,13 +1207,13 @@
 
 .complete-xp-num {
   font-family: var(--font-deco);
-  font-size: 46px;
+  font-size: calc(46px * var(--text-scale, 1));
   font-weight: 700;
 }
 
 .complete-xp-label {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.4em;
   color: var(--ink-faint);
   margin-top: 4px;
@@ -1207,19 +1261,19 @@
 
 .complete-verse-text {
   display: grid;
-  font-size: 16.5px;
+  font-size: calc(16.5px * var(--text-scale, 1));
   color: var(--ink-soft);
 }
 
 .complete-verse-text strong {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   letter-spacing: 0.04em;
   color: var(--ink);
 }
 
 .complete-verse-text small {
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   color: var(--ink-faint);
   font-style: italic;
 }
@@ -1234,7 +1288,7 @@
   border: 1px dashed var(--g2);
   color: var(--gold);
   font-family: var(--font-display);
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--text-scale, 1));
   letter-spacing: 0.06em;
 }
 
@@ -1261,13 +1315,13 @@
 
 .complete-seal strong {
   font-family: var(--font-display);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale, 1));
   letter-spacing: 0.04em;
 }
 
 .complete-seal small {
   color: var(--gold);
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
 }
 
 .complete-actions {

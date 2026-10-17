@@ -75,13 +75,17 @@ export async function exportBackup() {
   return result;
 }
 
-async function writeBackup() {
+function writeBackup() {
   const data = { app: 'biblos', exported: new Date().toISOString(), state: getState(), texts: allTexts() };
-  const name = `biblos-backup-${dayKey()}.json`;
-  const file = new File([JSON.stringify(data)], name, { type: 'application/json' });
+  const file = new File([JSON.stringify(data)], `biblos-backup-${dayKey()}.json`, { type: 'application/json' });
+  return shareFile(file, 'Biblos backup');
+}
+
+/** Hand a file to the phone's share sheet, or download it. Resolves to 'shared', 'downloaded' or 'cancelled'. */
+export async function shareFile(file, title) {
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'Biblos backup' });
+      await navigator.share({ files: [file], title });
       return 'shared';
     } catch (err) {
       if (err?.name === 'AbortError') return 'cancelled';
@@ -90,7 +94,7 @@ async function writeBackup() {
   const url = URL.createObjectURL(file);
   const a = document.createElement('a');
   a.href = url;
-  a.download = name;
+  a.download = file.name;
   document.body.appendChild(a);
   a.click();
   a.remove();

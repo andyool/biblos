@@ -16,10 +16,150 @@
 
 .read-intro {
   margin-top: 12px;
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   font-style: italic;
   color: var(--ink-soft);
   line-height: 1.45;
+}
+
+.read-links {
+  margin-top: 16px;
+}
+
+/* ─── Reading plan ───────────────────────────────────────────────────────── */
+
+.plan-card {
+  margin-top: 16px;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.plan-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.plan-card-head > .glyph {
+  color: var(--gold);
+  flex: none;
+}
+
+.plan-card-head strong {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: calc(14.5px * var(--text-scale, 1));
+  letter-spacing: 0.03em;
+}
+
+.plan-bar {
+  position: relative;
+  height: 8px;
+  margin: 12px 0 10px;
+  border-radius: 8px;
+  background: var(--surface-3);
+}
+
+.plan-bar-done {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--grad-gold);
+}
+
+/* Where you would be today, at the plan's pace. */
+.plan-bar-mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--ink-soft);
+}
+
+.plan-status {
+  font-size: calc(16px * var(--text-scale, 1));
+  color: var(--ink-soft);
+}
+
+.plan-status em.is-behind {
+  color: var(--bad);
+}
+
+.plan-today {
+  font-size: calc(15px * var(--text-scale, 1));
+  font-style: italic;
+  color: var(--ink-faint);
+  margin-bottom: 2px;
+}
+
+.plan-card .btn-small {
+  margin-top: 10px;
+}
+
+/* ─── Journal ────────────────────────────────────────────────────────────── */
+
+.journal-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--ink-faint);
+}
+
+.journal-search .input {
+  flex: 1;
+}
+
+.journal-list {
+  display: grid;
+  gap: 10px;
+}
+
+.journal-entry {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.journal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.journal-head strong {
+  font-family: var(--font-display);
+  font-size: calc(13.5px * var(--text-scale, 1));
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+.journal-head small {
+  font-size: calc(14px * var(--text-scale, 1));
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.journal-title {
+  font-size: calc(16px * var(--text-scale, 1));
+  font-style: italic;
+}
+
+.journal-note {
+  font-size: calc(17px * var(--text-scale, 1));
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .chapters {
@@ -63,7 +203,7 @@
   flex: none;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   color: var(--ink-soft);
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
@@ -84,13 +224,13 @@
 
 .chapter-text strong {
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale, 1));
   letter-spacing: 0.04em;
   color: var(--ink);
 }
 
 .chapter-text small {
-  font-size: 15.5px;
+  font-size: calc(15.5px * var(--text-scale, 1));
   font-style: italic;
   color: var(--ink-soft);
   overflow: hidden;
@@ -124,7 +264,7 @@
 
 .chapter-badge {
   font-family: var(--font-display);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -178,7 +318,7 @@
 
 .section-text strong {
   font-weight: 600;
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   line-height: 1.3;
   color: var(--ink);
 }
@@ -189,7 +329,7 @@
 
 .section-text small {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.1em;
   color: var(--ink-faint);
 }
@@ -220,7 +360,7 @@
 
 .book-cell-name {
   font-family: var(--font-display);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale, 1));
   font-weight: 600;
   line-height: 1.25;
   color: var(--ink);
@@ -240,7 +380,7 @@
 
 .section-sheet-title {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.04em;
   text-align: center;
@@ -249,7 +389,7 @@
 
 .section-sheet-summary {
   margin: 14px 0 4px;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale, 1));
   color: var(--ink-soft);
   line-height: 1.45;
 }
@@ -273,14 +413,14 @@
   border-radius: 14px;
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 85%, transparent);
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   line-height: 1.45;
   color: var(--ink-soft);
 }
 
 .context-kicker {
   font-family: var(--font-display);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -295,7 +435,7 @@
   padding: 12px 16px;
   border-radius: 14px;
   border: 1px dashed var(--line-strong);
-  font-size: 17.5px;
+  font-size: calc(17.5px * var(--text-scale, 1));
   font-style: italic;
   line-height: 1.4;
   color: var(--ink);
@@ -313,7 +453,7 @@
 
 .passage-ref {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -322,7 +462,7 @@
 .passage-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 34px;
+  font-size: calc(34px * var(--text-scale, 1));
   line-height: 1.2;
   color: var(--gold);
   margin-top: 2px;
@@ -337,7 +477,7 @@
 
 .passage-verse {
   font-family: var(--font-verse);
-  font-size: calc(20px * var(--verse-scale));
+  font-size: calc(20px * var(--verse-scale) * var(--text-scale, 1));
   font-weight: 500;
   line-height: 1.55;
   color: var(--ink);
@@ -351,18 +491,18 @@
 .passage-tr {
   text-align: right;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.24em;
   color: var(--ink-faint);
 }
 
 .passage-sheet .passage-verse {
-  font-size: calc(19px * var(--verse-scale));
+  font-size: calc(19px * var(--verse-scale) * var(--text-scale, 1));
 }
 
 .ex-question {
   font-family: var(--font-verse);
-  font-size: calc(24px * var(--verse-scale));
+  font-size: calc(24px * var(--verse-scale) * var(--text-scale, 1));
   font-weight: 600;
   line-height: 1.3;
   text-align: center;
@@ -380,14 +520,14 @@
   padding: 13px 16px;
   text-align: left;
   font-family: var(--font-body, inherit);
-  font-size: 17.5px;
+  font-size: calc(17.5px * var(--text-scale, 1));
   font-weight: 500;
   letter-spacing: 0;
   line-height: 1.35;
 }
 
 .feedback-why {
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   line-height: 1.45;
   color: var(--ink);
   max-height: 30dvh;
@@ -442,7 +582,7 @@
   place-items: center;
   flex: none;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   font-weight: 700;
   color: var(--gold);
   border: 1px solid var(--line-strong);
@@ -456,13 +596,13 @@
 
 .seq-text {
   font-family: var(--font-verse);
-  font-size: calc(18px * var(--verse-scale));
+  font-size: calc(18px * var(--verse-scale) * var(--text-scale, 1));
   line-height: 1.35;
 }
 
 .seq-text small {
   font-family: var(--font-display);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--text-scale, 1));
   letter-spacing: 0.12em;
   color: var(--ink-faint);
   white-space: nowrap;
@@ -477,7 +617,7 @@
 .seq-tile {
   text-align: left;
   font-family: var(--font-verse);
-  font-size: calc(18px * var(--verse-scale));
+  font-size: calc(18px * var(--verse-scale) * var(--text-scale, 1));
   line-height: 1.35;
   padding: 12px 14px;
 }
@@ -493,7 +633,7 @@
   border: 1px solid var(--line);
   background: var(--surface);
   font-family: var(--font-verse);
-  font-size: calc(21px * var(--verse-scale));
+  font-size: calc(21px * var(--verse-scale) * var(--text-scale, 1));
   font-weight: 500;
   line-height: 1.4;
 }
@@ -513,7 +653,7 @@
   justify-content: center;
   gap: 6px;
   margin-top: -4px;
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale, 1));
   color: var(--gold);
 }
 
@@ -546,7 +686,7 @@
 
 .verse-pick-num {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   font-weight: 700;
   color: var(--gold);
   min-width: 18px;
@@ -556,7 +696,7 @@
 .verse-pick-text {
   flex: 1;
   font-family: var(--font-verse);
-  font-size: calc(18.5px * var(--verse-scale));
+  font-size: calc(18.5px * var(--verse-scale) * var(--text-scale, 1));
   line-height: 1.45;
   color: var(--ink);
 }

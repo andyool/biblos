@@ -7,13 +7,25 @@ import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
 import TranslationPicker from '../components/TranslationPicker.jsx';
 import { GOALS, LEVELS, titleFor } from '../data/levels.js';
 import { TRANSLATIONS, getTranslation } from '../data/translations.js';
-import { FONTS, THEMES } from '../data/shop.js';
+import { FONTS, TEXT_SIZES, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
-import { resetEverything, restoreBackup, updateProfile, updateSettings, equip } from '../lib/actions.js';
+import { resetEverything, restoreBackup, setAutoTheme, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
+
+function ThemeChips({ themes, isOn }) {
+  return (
+    <div className="chip-row wrap">
+      {themes.map((t) => (
+        <button key={t.id} className={`chip ${isOn(t.id) ? 'is-on' : ''}`} onClick={() => equip('theme', t.id)} aria-pressed={isOn(t.id)}>
+          <span className="chip-dot" style={{ background: t.colors[0], boxShadow: `inset 0 0 0 3px ${t.colors[2]}` }} /> {t.name}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function Heatmap({ days }) {
   const weeks = 16;
@@ -145,6 +157,7 @@ export default function Profile() {
   const memorised = counts[4] + counts[5];
   const title = titleFor(memorised);
   const since = new Date(profile.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const ownedThemes = THEMES.filter((t) => state.owned.theme.includes(t.id));
 
   const onImport = async (e) => {
     const file = e.target.files?.[0];
@@ -234,7 +247,8 @@ export default function Profile() {
         <Row icon="book" label="Bible translation" value={settings.translation} onClick={() => setSheet('translation')} />
         <Row icon="key" label="NIV access" value={nivReady ? 'Connected' : 'Not connected'} onClick={() => openSheet({ type: 'niv' })} />
         <Row icon="target" label="Daily goal" value={`${GOALS.find((g) => g.xp === settings.dailyGoal)?.name || ''} · ${settings.dailyGoal} XP`} onClick={() => setSheet('goal')} />
-        <Row icon="sparkle" label="Theme" value={THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
+        <Row icon="sparkle" label="Theme" value={settings.autoTheme ? 'Matches your phone' : THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
+        <Row icon="eye" label="Text size" value={(TEXT_SIZES.find((t) => t.scale === settings.textSize) || TEXT_SIZES[0]).name} onClick={() => setSheet('text')} />
         <label className="row">
           <Glyph name="speaker" size={20} />
           <span className="row-label">Sound effects</span>
@@ -316,13 +330,26 @@ export default function Profile() {
       {sheet === 'look' && (
         <Sheet title="Appearance" onClose={() => setSheet(null)}>
           <p className="small-print">Your themes and lettering. More wait in the Treasury.</p>
-          <div className="chip-row wrap">
-            {THEMES.filter((t) => state.owned.theme.includes(t.id)).map((t) => (
-              <button key={t.id} className={`chip ${settings.theme === t.id ? 'is-on' : ''}`} onClick={() => equip('theme', t.id)}>
-                <span className="chip-dot" style={{ background: t.colors[0], boxShadow: `inset 0 0 0 3px ${t.colors[2]}` }} /> {t.name}
-              </button>
-            ))}
+          <div className="rows">
+            <label className="row">
+              <Glyph name="sun" size={20} />
+              <span className="row-label">
+                Match my phone
+                <small className="row-note">Light when your phone is light, dark when it is dark</small>
+              </span>
+              <input type="checkbox" className="switch" checked={Boolean(settings.autoTheme)} onChange={(e) => setAutoTheme(e.target.checked)} />
+            </label>
           </div>
+          {settings.autoTheme ? (
+            <>
+              <p className="small-print">Light</p>
+              <ThemeChips themes={ownedThemes.filter((t) => t.light)} isOn={(id) => id === settings.lightTheme} />
+              <p className="small-print">Dark</p>
+              <ThemeChips themes={ownedThemes.filter((t) => !t.light)} isOn={(id) => id === settings.darkTheme} />
+            </>
+          ) : (
+            <ThemeChips themes={ownedThemes} isOn={(id) => id === settings.theme} />
+          )}
           <div className="chip-row wrap">
             {FONTS.filter((f) => state.owned.font.includes(f.id)).map((f) => (
               <button key={f.id} className={`chip ${settings.verseFont === f.id ? 'is-on' : ''}`} onClick={() => equip('font', f.id)} style={{ fontFamily: f.family }}>
@@ -339,6 +366,19 @@ export default function Profile() {
           >
             Visit the Treasury
           </button>
+        </Sheet>
+      )}
+      {sheet === 'text' && (
+        <Sheet title="Text size" onClose={() => setSheet(null)}>
+          <p className="small-print">Every word in Biblos grows with it, verses included.</p>
+          <div className="goal-list">
+            {TEXT_SIZES.map((t) => (
+              <button key={t.scale} className={`goal-item ${(settings.textSize || 1) === t.scale ? 'is-on' : ''}`} onClick={() => updateSettings({ textSize: t.scale })} aria-pressed={(settings.textSize || 1) === t.scale}>
+                <strong>{t.name}</strong>
+                <span style={{ fontSize: `${17 * t.scale}px` }}>Thy word is a lamp unto my feet</span>
+              </button>
+            ))}
+          </div>
         </Sheet>
       )}
       {sheet === 'install' && (

@@ -11,6 +11,13 @@ const LOADERS = Object.fromEntries(BOOKS.filter((b) => files[fileFor(b)]).map((b
 // Good places to start for someone new to reading the Bible through, in order.
 export const SUGGESTED = ['MRK', 'GEN', 'JHN', 'ACT', 'RUT', 'JON', 'PHP', 'JAS', 'ROM'];
 
+// The first three, and why.
+export const FIRST_BOOKS = [
+  { code: 'MRK', why: 'Short, vivid and fast-moving — the best place to meet Jesus.' },
+  { code: 'GEN', why: 'Begin at the very beginning: creation, the fall, and God’s promise to Abraham.' },
+  { code: 'JHN', why: 'Slower and deeper: signs and sayings that show who Jesus is.' },
+];
+
 const guides = new Map();
 const pending = new Map();
 

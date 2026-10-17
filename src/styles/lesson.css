@@ -56,7 +56,7 @@
   gap: 2px;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   color: var(--gold);
   opacity: 0;
   transition: opacity 0.3s;
@@ -69,7 +69,7 @@
 .lesson-sub {
   text-align: center;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -106,7 +106,7 @@
 
 .ex-kicker {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -117,7 +117,7 @@
 
 .ex-ref {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -129,7 +129,7 @@
   text-align: center;
   font-style: italic;
   color: var(--ink-faint);
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
 }
 
 .ex-footer {
@@ -160,7 +160,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   font-family: var(--font-verse);
-  font-size: calc(22px * var(--verse-scale));
+  font-size: calc(22px * var(--verse-scale) * var(--text-scale, 1));
   line-height: 1.55;
   box-shadow: var(--shadow);
 }
@@ -203,7 +203,7 @@
 
 .tile {
   font-family: var(--font-verse);
-  font-size: calc(20px * var(--verse-scale));
+  font-size: calc(20px * var(--verse-scale) * var(--text-scale, 1));
   font-weight: 600;
   line-height: 1.25;
   padding: 9px 14px;
@@ -237,7 +237,7 @@
 .tile-phrase {
   width: 100%;
   text-align: left;
-  font-size: calc(19px * var(--verse-scale));
+  font-size: calc(19px * var(--verse-scale) * var(--text-scale, 1));
 }
 
 .tiles-phrases {
@@ -332,7 +332,7 @@
   border: 1px solid var(--line-strong);
   box-shadow: 0 3px 0 var(--line-strong);
   font-family: var(--font-verse);
-  font-size: calc(21px * var(--verse-scale));
+  font-size: calc(21px * var(--verse-scale) * var(--text-scale, 1));
   font-weight: 600;
   transition:
     transform 0.08s,
@@ -341,7 +341,7 @@
 
 .choices-list .choice {
   font-family: var(--font-display);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   letter-spacing: 0.06em;
 }
 
@@ -422,7 +422,7 @@
 }
 
 .letters-count {
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   font-style: italic;
   color: var(--ink-faint);
 }
@@ -452,7 +452,7 @@
   border: 1px solid var(--line);
   box-shadow: 0 3px 0 var(--line-strong);
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: calc(19px * var(--text-scale, 1));
   font-weight: 600;
   text-transform: uppercase;
   color: var(--ink);
@@ -535,14 +535,14 @@
 .feedback-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 36px;
+  font-size: calc(36px * var(--text-scale, 1));
   line-height: 1.1;
   color: var(--gold);
 }
 
 .feedback-sub {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.12em;
   color: var(--ink-soft);
@@ -566,6 +566,6 @@
     gap: 10px;
   }
   .verse-text {
-    font-size: calc(20px * var(--verse-scale));
+    font-size: calc(20px * var(--verse-scale) * var(--text-scale, 1));
   }
 }

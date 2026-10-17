@@ -18,12 +18,12 @@ export function roman(n) {
   return ROMAN[n] || String(n);
 }
 
-// Daily goals, in XP. A lesson is worth roughly 20 XP.
+// Daily goals, in XP. A lesson or a reading is worth roughly 20 XP.
 export const GOALS = [
-  { xp: 20, name: 'Gentle', desc: 'About one lesson a day' },
-  { xp: 40, name: 'Steady', desc: 'About two lessons a day' },
-  { xp: 60, name: 'Devoted', desc: 'About three lessons a day' },
-  { xp: 100, name: 'Zealous', desc: 'Five lessons or more' },
+  { xp: 20, name: 'Gentle', desc: 'About one lesson or reading a day' },
+  { xp: 40, name: 'Steady', desc: 'About two a day' },
+  { xp: 60, name: 'Devoted', desc: 'About three a day' },
+  { xp: 100, name: 'Zealous', desc: 'Five or more' },
 ];
 
 // Titles grow with the number of verses hidden in the heart.

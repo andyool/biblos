@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Glyph from './Glyph.jsx';
 import { Divider } from './Ornaments.jsx';
 import { useBack } from '../lib/nav.js';
+import { useFocusTrap } from '../lib/focus.js';
 
 /** A bottom sheet that slides up over the app. */
 export default function Sheet({ title, onClose, children, className = '', flourish = true }) {
+  const ref = useRef(null);
   useBack(onClose, { active: Boolean(onClose) });
+  useFocusTrap(ref);
   useEffect(() => {
     const onKey = (e) => e.key === 'Escape' && onClose?.();
     window.addEventListener('keydown', onKey);
@@ -15,7 +18,7 @@ export default function Sheet({ title, onClose, children, className = '', flouri
 
   return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className={`sheet ${className}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} tabIndex={-1} className={`sheet ${className}`} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-handle" />
         {onClose && (
           <button className="icon-btn sheet-close" onClick={onClose} aria-label="Close">

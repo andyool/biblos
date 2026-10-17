@@ -9,7 +9,7 @@
   --surface-3: #1f2b48;
   --ink: #f3ead7;
   --ink-soft: rgba(243, 234, 215, 0.74);
-  --ink-faint: rgba(243, 234, 215, 0.4);
+  --ink-faint: rgba(243, 234, 215, 0.52);
   --g1: #f8e7a8;
   --g2: #d4af37;
   --g3: #a37c25;
@@ -37,7 +37,7 @@
   --surface-3: #ecdfbd;
   --ink: #2c2115;
   --ink-soft: rgba(44, 33, 21, 0.74);
-  --ink-faint: rgba(44, 33, 21, 0.42);
+  --ink-faint: rgba(44, 33, 21, 0.64);
   --g1: #ecd07a;
   --g2: #b38a2a;
   --g3: #8a6618;
@@ -65,7 +65,7 @@
   --surface-3: #311d50;
   --ink: #f5ecdd;
   --ink-soft: rgba(245, 236, 221, 0.74);
-  --ink-faint: rgba(245, 236, 221, 0.4);
+  --ink-faint: rgba(245, 236, 221, 0.52);
   --g1: #fbe9b0;
   --g2: #e0b84e;
   --g3: #a9842c;
@@ -85,7 +85,7 @@
   --surface-3: #183428;
   --ink: #f1ecd9;
   --ink-soft: rgba(241, 236, 217, 0.74);
-  --ink-faint: rgba(241, 236, 217, 0.4);
+  --ink-faint: rgba(241, 236, 217, 0.52);
   --g1: #f6e5ad;
   --g2: #d9b45a;
   --g3: #a0802f;
@@ -105,7 +105,7 @@
   --surface-3: #3a1520;
   --ink: #f6eadb;
   --ink-soft: rgba(246, 234, 219, 0.74);
-  --ink-faint: rgba(246, 234, 219, 0.4);
+  --ink-faint: rgba(246, 234, 219, 0.52);
   --g1: #fbe6b0;
   --g2: #e3bb5c;
   --g3: #aa8433;
@@ -125,7 +125,7 @@
   --surface-3: #f1e9d6;
   --ink: #241e18;
   --ink-soft: rgba(36, 30, 24, 0.72);
-  --ink-faint: rgba(36, 30, 24, 0.4);
+  --ink-faint: rgba(36, 30, 24, 0.64);
   --g1: #eed584;
   --g2: #bb9331;
   --g3: #8e6c1c;
@@ -153,7 +153,7 @@
   --surface-3: #f0dbd4;
   --ink: #3a2328;
   --ink-soft: rgba(58, 35, 40, 0.74);
-  --ink-faint: rgba(58, 35, 40, 0.42);
+  --ink-faint: rgba(58, 35, 40, 0.64);
   --g1: #f3cdbf;
   --g2: #b97580;
   --g3: #8e4e59;
@@ -215,7 +215,7 @@ body {
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale, 1));
   font-weight: 500;
   line-height: 1.45;
   overscroll-behavior: none;
@@ -287,6 +287,12 @@ code {
 :focus-visible {
   outline: 2px solid var(--g2);
   outline-offset: 2px;
+}
+
+/* Sheets and dialogs take focus themselves when they open; only what is inside shows it. */
+.sheet:focus,
+.dialog:focus {
+  outline: none;
 }
 
 .sr-only {
@@ -362,7 +368,7 @@ code {
 .screen-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 54px;
+  font-size: calc(54px * var(--text-scale, 1));
   line-height: 1.15;
   text-align: center;
   margin-top: 6px;
@@ -372,7 +378,7 @@ code {
 .script-title {
   font-family: var(--font-script);
   font-weight: 400;
-  font-size: 46px;
+  font-size: calc(46px * var(--text-scale, 1));
   line-height: 1.2;
   text-align: center;
   padding: 0 10px;
@@ -380,7 +386,7 @@ code {
 
 .section-heading {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
@@ -404,13 +410,13 @@ code {
 }
 
 .lead {
-  font-size: 19px;
+  font-size: calc(19px * var(--text-scale, 1));
   color: var(--ink-soft);
   margin-bottom: 16px;
 }
 
 .small-print {
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   color: var(--ink-faint);
   margin: 10px 0;
   line-height: 1.4;

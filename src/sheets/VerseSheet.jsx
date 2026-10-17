@@ -4,6 +4,7 @@ import Glyph from '../components/Glyph.jsx';
 import { VerseText } from '../components/VerseText.jsx';
 import TranslationPicker from '../components/TranslationPicker.jsx';
 import PasteText from './PasteText.jsx';
+import ShareImageSheet from './ShareImageSheet.jsx';
 import { useStore } from '../lib/store.js';
 import { useApp } from '../AppContext.js';
 import { useVerseText } from '../lib/hooks.js';
@@ -45,6 +46,7 @@ export default function VerseSheet({ id, onClose }) {
   const tr = verseTr(state, id);
   const { entry, status, error, retry } = useVerseText(tr, id);
   const [mode, setMode] = useState(null); // 'translation' | 'edit'
+  const [sharing, setSharing] = useState(false);
   const due = isDue(v);
   const fresh = freshness(v);
   const isCustom = state.custom.includes(id);
@@ -171,6 +173,11 @@ export default function VerseSheet({ id, onClose }) {
               <Glyph name="speaker" size={16} /> Listen
             </button>
           )}
+          {status === 'ready' && (
+            <button className="btn btn-ghost btn-small" onClick={() => setSharing(true)}>
+              <Glyph name="share" size={16} /> Picture
+            </button>
+          )}
           {status === 'ready' && mode !== 'edit' && (
             <button className="btn btn-ghost btn-small" onClick={() => setMode('edit')}>
               <Glyph name="pen" size={16} /> Edit text
@@ -194,6 +201,7 @@ export default function VerseSheet({ id, onClose }) {
         </div>
       </div>
       <p className="small-print">{getTranslation(tr).copyright}</p>
+      {sharing && entry && <ShareImageSheet id={id} tr={tr} text={joinVerses(entry)} onClose={() => setSharing(false)} />}
     </Sheet>
   );
 }

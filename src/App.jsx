@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { getState, useStore } from './lib/store.js';
 import { AppContext } from './AppContext.js';
 import { GoldDefs, LogoMark } from './components/Ornaments.jsx';
@@ -20,18 +20,28 @@ import NivSheet from './sheets/NivSheet.jsx';
 import TextProblemSheet from './sheets/TextProblemSheet.jsx';
 import BooksSheet from './sheets/BooksSheet.jsx';
 import SectionSheet from './sheets/SectionSheet.jsx';
+import PlansSheet from './sheets/PlansSheet.jsx';
+import JournalSheet from './sheets/JournalSheet.jsx';
 import { buildSession, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
-import { checkStreak, finishReading, finishSession, setActivePath } from './lib/actions.js';
+import { checkStreak, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
+import { planProgress } from './lib/plans.js';
 import { bookProgress, bookSections, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
-import { guideNow } from './data/guides/index.js';
-import { fontFor, THEMES } from './data/shop.js';
+import { guideNow, loadGuide } from './data/guides/index.js';
+import { fontFor, themeFor, THEMES } from './data/shop.js';
 import { toast } from './lib/ui.js';
 import { useBack } from './lib/nav.js';
 import { useUpdateReady } from './lib/update.js';
 import Glyph from './components/Glyph.jsx';
 
 const THEME_BG = Object.fromEntries(THEMES.map((t) => [t.id, t.colors[0]]));
+
+/** The next passage of the book being read, once its guide has loaded. */
+function nextReading(state) {
+  const code = state.reading.book;
+  const guide = code && guideNow(code);
+  return guide ? bookProgress(state, code, bookSections(code, guide, readingTr(state, code))).next : null;
+}
 
 /** A new version has arrived: offer to reload (not in the middle of a lesson). */
 function UpdateNote() {
@@ -48,23 +58,36 @@ function UpdateNote() {
   );
 }
 
+const DARK = '(prefers-color-scheme: dark)';
+const subscribeScheme = (onChange) => {
+  const query = matchMedia(DARK);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+
 function useAppearance() {
-  const theme = useStore((s) => s.settings.theme);
-  const font = useStore((s) => s.settings.verseFont);
+  const settings = useStore((s) => s.settings);
+  const phoneIsDark = useSyncExternalStore(subscribeScheme, () => matchMedia(DARK).matches);
+  const theme = themeFor(settings, phoneIsDark);
+  const font = settings.verseFont;
+  const textSize = settings.textSize || 1;
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = theme;
     const f = fontFor(font);
     root.style.setProperty('--font-verse', f.family);
     root.style.setProperty('--verse-scale', String(f.scale));
+    root.style.setProperty('--text-scale', String(textSize));
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEME_BG[theme] || '#0a0f1d');
-  }, [theme, font]);
+  }, [theme, font, textSize]);
 }
 
 export default function App() {
   useAppearance();
   const onboarded = useStore((s) => s.settings.onboarded);
-  const [tab, setTab] = useState('path');
+  // Someone who came to read through the Bible starts on the Read tab.
+  const home = useStore((s) => (s.settings.focus === 'read' ? 'read' : 'path'));
+  const [tab, setTab] = useState(() => (getState().settings.focus === 'read' ? 'read' : 'path'));
   const [sheets, setSheets] = useState([]);
   const [session, setSession] = useState(null);
   const [reading, setReading] = useState(null);
@@ -151,7 +174,7 @@ export default function App() {
     mainRef.current?.scrollTo({ top: 0 });
   }, []);
 
-  useBack(() => go('path'), { active: onboarded && tab !== 'path' });
+  useBack(() => go(home), { active: onboarded && tab !== home });
 
   const ctx = useMemo(() => ({ start, read, openSheet, closeSheet, go, openVerse: (id) => openSheet({ type: 'verse', id }) }), [start, read, openSheet, closeSheet, go]);
 
@@ -172,6 +195,10 @@ export default function App() {
         return <BooksSheet key="books" onClose={close} />;
       case 'section':
         return <SectionSheet key="section" id={s.id} onClose={close} />;
+      case 'plans':
+        return <PlansSheet key="plans" onClose={close} />;
+      case 'journal':
+        return <JournalSheet key="journal" onClose={close} />;
       default:
         return null;
     }
@@ -200,16 +227,22 @@ export default function App() {
         onExit={() => setReading(null)}
         onFinish={(results) => {
           const result = finishReading(reading, results);
-          const { book } = result.reading;
-          prefetchSection(reading.tr, bookProgress(getState(), book, bookSections(book, guideNow(book), reading.tr)).next);
+          // In a reading plan, a finished book leads on to the plan's next one.
+          const plan = planProgress(getState());
+          if (result.reading.bookDone && plan?.book) {
+            setReadingBook(plan.book);
+            loadGuide(plan.book)
+              .then(() => setSummary((s) => s && { ...s }))
+              .catch(() => {});
+          }
+          prefetchSection(readingTr(getState()), nextReading(getState()));
           setSummary(result);
           setReading(null);
         }}
       />
     );
   } else if (summary?.kind === 'reading') {
-    const { book } = summary.reading;
-    const next = bookProgress(getState(), book, bookSections(book, guideNow(book), readingTr(getState(), book))).next;
+    const next = nextReading(getState());
     body = (
       <LessonComplete
         summary={summary}

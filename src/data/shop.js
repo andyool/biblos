@@ -1,12 +1,27 @@
 // Everything that can be bought with talents (or unlocked by seals).
 export const THEMES = [
   { id: 'midnight', name: 'Midnight & Gold', price: 0, colors: ['#0a0f1d', '#17223a', '#d4af37'] },
-  { id: 'parchment', name: 'Parchment', price: 0, colors: ['#f3ead3', '#fbf5e6', '#a8801f'] },
+  { id: 'parchment', name: 'Parchment', price: 0, light: true, colors: ['#f3ead3', '#fbf5e6', '#a8801f'] },
   { id: 'royal', name: 'Royal Purple', price: 150, colors: ['#170c22', '#2a1840', '#e0b84e'] },
   { id: 'emerald', name: 'Garden of Eden', price: 150, colors: ['#08170f', '#123022', '#d9b45a'] },
   { id: 'crimson', name: 'Crimson & Gold', price: 200, colors: ['#1a080c', '#34121b', '#e3bb5c'] },
-  { id: 'ivory', name: 'Ivory Palace', price: 200, colors: ['#fbf8f1', '#ffffff', '#b8912f'] },
-  { id: 'rose', name: 'Rose of Sharon', price: 250, colors: ['#f6e9e4', '#fdf5f2', '#b5707a'] },
+  { id: 'ivory', name: 'Ivory Palace', price: 200, light: true, colors: ['#fbf8f1', '#ffffff', '#b8912f'] },
+  { id: 'rose', name: 'Rose of Sharon', price: 250, light: true, colors: ['#f6e9e4', '#fdf5f2', '#b5707a'] },
+];
+
+export const isLightTheme = (id) => Boolean(THEMES.find((t) => t.id === id)?.light);
+
+/** The theme to show: your own choice, or with "Match my phone", your light or dark one. */
+export function themeFor(settings, phoneIsDark) {
+  if (!settings.autoTheme) return settings.theme;
+  return phoneIsDark ? settings.darkTheme || 'midnight' : settings.lightTheme || 'parchment';
+}
+
+// Text sizes: every size in the app is multiplied by this.
+export const TEXT_SIZES = [
+  { scale: 1, name: 'Standard' },
+  { scale: 1.15, name: 'Large' },
+  { scale: 1.3, name: 'Larger' },
 ];
 
 export const FONTS = [

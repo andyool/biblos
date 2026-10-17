@@ -14,7 +14,10 @@ import { getTranslation } from '../data/translations.js';
 import { androidBrowser, backupDue, exportBackup, isAndroid, isIOS, isStandalone, useInstallPrompt } from '../lib/device.js';
 import { snoozeBackup, updateSettings } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
-import { DAY } from '../lib/dates.js';
+import { DAY, startOfDay } from '../lib/dates.js';
+import { bookProgress, readingTr, sectionRef, useBook } from '../lib/reading.js';
+import { planProgress, planStatus } from '../lib/plans.js';
+import { BOOK_BY_CODE } from '../data/books.js';
 
 const SWAY = [0, 54, 82, 54, 0, -54, -82, -54];
 const GAP = 118;
@@ -168,6 +171,57 @@ function NivCard() {
   );
 }
 
+/** Did anything happen today? Memory practice and reading each count. */
+const practisedToday = (state) => Object.values(state.verses).some((v) => (v.lastPracticed || 0) >= startOfDay());
+const readToday = (state) => Object.values(state.reading.books).some((b) => Object.values(b.done || {}).some((t) => t >= startOfDay()));
+
+/** The other half of today: the next passage of the book you are reading through. */
+function ReadingToday({ state }) {
+  const { read, go } = useApp();
+  const code = state.reading.book;
+  const { ready, sections } = useBook(code, readingTr(state));
+  const next = ready ? bookProgress(state, code, sections).next : null;
+  const plan = planProgress(state);
+  const done = readToday(state);
+
+  let title;
+  let detail;
+  let action;
+  if (!code) {
+    title = 'Read the Bible through';
+    detail = 'A passage at a time, with questions on the meaning';
+    action = { label: 'Choose', run: () => go('read') };
+  } else if (!ready) {
+    title = `Read ${BOOK_BY_CODE[code].name}`;
+    detail = ' ';
+  } else if (!next) {
+    title = `${BOOK_BY_CODE[code].name}, read through`;
+    detail = 'Choose your next book';
+    action = { label: 'Choose', run: () => go('read') };
+  } else {
+    title = `${done ? 'Next:' : 'Read'} ${sectionRef(next)}`;
+    detail = [done && 'Read today', next.title, plan && !plan.finished && planStatus(plan)].filter(Boolean).join(' · ');
+    action = { label: done ? 'Read on' : 'Read', run: () => read(next) };
+  }
+
+  return (
+    <div className="today-read">
+      <span className={`today-read-icon ${done ? 'is-done' : ''}`}>
+        <Glyph name={done ? 'check' : 'scroll'} size={20} strokeWidth={done ? 2 : 1.5} />
+      </span>
+      <span className="today-read-text">
+        <strong>{title}</strong>
+        <small>{detail}</small>
+      </span>
+      {action && (
+        <button className="btn btn-ghost btn-small" onClick={action.run}>
+          {action.label}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const state = useStore();
   const { start, openVerse, openSheet } = useApp();
@@ -193,7 +247,15 @@ export default function Home() {
       <BackupHint />
 
       <Frame className="today" size={40}>
-        <p className="today-kicker">Today’s practice</p>
+        <p className="today-kicker">
+          Today’s practice
+          {practisedToday(state) && (
+            <span className="today-done">
+              {' '}
+              · <Glyph name="check" size={12} strokeWidth={2.4} /> done
+            </span>
+          )}
+        </p>
         {plan ? (
           <>
             <h2 className="today-title gold-text">{plan.title}</h2>
@@ -209,6 +271,7 @@ export default function Home() {
             <p className="today-detail">Add a verse of your own, or choose a new path.</p>
           </>
         )}
+        <ReadingToday state={state} />
       </Frame>
 
       <div className="path-head">

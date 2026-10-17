@@ -10,12 +10,79 @@ import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { BOOK_BY_CODE } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 import { updateReady } from '../lib/update.js';
+import { planProgress, planStatus } from '../lib/plans.js';
+import { FIRST_BOOKS } from '../data/guides/index.js';
 
-const STARTS = [
-  { code: 'MRK', why: 'Short, vivid and fast-moving — the best place to meet Jesus.' },
-  { code: 'GEN', why: 'Begin at the very beginning: creation, the fall, and God’s promise to Abraham.' },
-  { code: 'JHN', why: 'Slower and deeper: signs and sayings that show who Jesus is.' },
-];
+/** The reading plan you follow: how far through, and what is left for today. */
+function PlanCard({ code, sections }) {
+  const state = useStore();
+  const { openSheet } = useApp();
+  const p = planProgress(state);
+  if (!p) return null;
+  const pct = (n) => `${Math.min(100, (n / p.total) * 100)}%`;
+  const verses = sections.reduce((sum, s) => sum + s.end - s.start + 1, 0);
+  const perReading = sections.length ? verses / sections.length : 15;
+  const readings = Math.max(1, Math.round(p.today / perReading));
+  return (
+    <div className="plan-card">
+      <div className="plan-card-head">
+        <Glyph name="calendar" size={22} />
+        <strong>{p.plan.name}</strong>
+        <button className="btn-link" onClick={() => openSheet({ type: 'plans' })}>
+          Change
+        </button>
+      </div>
+      <div className="plan-bar" role="img" aria-label={`${Math.round((p.read / p.total) * 100)}% read`}>
+        <span className="plan-bar-done" style={{ width: pct(p.read) }} />
+        {!p.finished && <i className="plan-bar-mark" style={{ left: pct(p.daily * p.day) }} />}
+      </div>
+      {p.finished ? (
+        <p className="plan-status">Plan complete: every book read.</p>
+      ) : (
+        <>
+          <p className="plan-status">
+            Day {p.day} of {p.plan.days} · <em className={p.behind ? 'is-behind' : ''}>{planStatus(p)}</em>
+          </p>
+          <p className="plan-today">{p.today ? `Today: about ${readings} more reading${readings === 1 ? '' : 's'} (${p.today} verses)` : 'Today’s reading is done.'}</p>
+        </>
+      )}
+      {p.book && p.book !== code && (
+        <button className="btn btn-ghost btn-small" onClick={() => setReadingBook(p.book)}>
+          Go on with {BOOK_BY_CODE[p.book].name}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Ways in to a reading plan and to your journal. */
+function ReadLinks() {
+  const { openSheet } = useApp();
+  const planned = useStore((s) => Boolean(s.reading.plan));
+  const notes = useStore((s) => Object.values(s.reading.notes).filter((n) => n?.note).length);
+  if (planned && !notes) return null;
+  return (
+    <div className="rows read-links">
+      {!planned && (
+        <button className="row" onClick={() => openSheet({ type: 'plans' })}>
+          <Glyph name="calendar" size={20} />
+          <span className="row-label">Follow a reading plan</span>
+          <Glyph name="chevron" size={16} className="row-chev" />
+        </button>
+      )}
+      {notes > 0 && (
+        <button className="row" onClick={() => openSheet({ type: 'journal' })}>
+          <Glyph name="quill" size={20} />
+          <span className="row-label">Your journal</span>
+          <span className="row-value">
+            {notes} note{notes === 1 ? '' : 's'}
+          </span>
+          <Glyph name="chevron" size={16} className="row-chev" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 function Welcome() {
   const { openSheet } = useApp();
@@ -30,7 +97,7 @@ function Welcome() {
       </p>
       <h2 className="section-heading">Where to begin</h2>
       <div className="path-list">
-        {STARTS.map((s) => (
+        {FIRST_BOOKS.map((s) => (
           <button key={s.code} className="path-item" onClick={() => setReadingBook(s.code)}>
             <EmblemBadge id="scroll" size={44} />
             <span className="path-item-text">
@@ -44,6 +111,7 @@ function Welcome() {
       <button className="btn btn-ghost btn-block read-choose" onClick={() => openSheet({ type: 'books' })}>
         <Glyph name="book" size={18} /> Choose any book
       </button>
+      <ReadLinks />
     </>
   );
 }
@@ -201,6 +269,9 @@ export default function Read() {
           </>
         )}
       </Frame>
+
+      <PlanCard code={code} sections={sections} />
+      <ReadLinks />
 
       <div className="path-head">
         <EmblemBadge id="scroll" size={46} />

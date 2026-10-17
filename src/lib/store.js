@@ -15,10 +15,16 @@ export function freshState() {
       sound: true,
       speechRate: 0.92,
       theme: prefersLight ? 'parchment' : 'midnight',
+      // "Match my phone": the light theme by day, the dark one by night.
+      autoTheme: false,
+      lightTheme: 'parchment',
+      darkTheme: 'midnight',
+      textSize: 1,
       verseFont: 'cormorant',
       frame: 'filigree',
       yvKey: '',
       activePath: 'foundations',
+      focus: 'both', // what you came for: 'memorise', 'read' or 'both'
       installDismissed: false,
       // Backups: when the last was saved, how many lessons and readings had been done then,
       // and until when the reminder is put off.
@@ -46,8 +52,9 @@ export function freshState() {
     },
     verses: {},
     custom: [],
-    // Reading whole books in order: the current book, which sections are done, and your notes.
-    reading: { book: null, books: {}, notes: {} },
+    // Reading whole books in order: the current book, which sections are done, your notes,
+    // and the reading plan you follow ({ id, started }).
+    reading: { book: null, books: {}, notes: {}, plan: null },
     owned: {
       theme: ['midnight', 'parchment'],
       font: ['cormorant', 'garamond'],

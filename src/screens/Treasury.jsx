@@ -88,6 +88,8 @@ function Shop() {
   const state = useStore();
   const { settings, profile, stats } = state;
   const onTheme = useItemAction('theme');
+  // With "Match my phone", a light and a dark theme are both in use.
+  const themeInUse = (id) => (settings.autoTheme ? id === settings.lightTheme || id === settings.darkTheme : settings.theme === id);
   const onFont = useItemAction('font');
   const onFrame = useItemAction('frame');
   const onEmblem = useItemAction('emblem');
@@ -118,12 +120,12 @@ function Shop() {
       <h2 className="section-heading">Themes</h2>
       <div className="shop-grid">
         {THEMES.map((t) => (
-          <button key={t.id} className={`shop-item ${settings.theme === t.id ? 'is-equipped' : ''}`} onClick={() => onTheme(t)}>
+          <button key={t.id} className={`shop-item ${themeInUse(t.id) ? 'is-equipped' : ''}`} onClick={() => onTheme(t)}>
             <span className="swatch" style={{ background: `linear-gradient(140deg, ${t.colors[0]} 0 55%, ${t.colors[1]} 55% 100%)` }}>
               <span className="swatch-gold" style={{ background: t.colors[2] }} />
             </span>
             <strong>{t.name}</strong>
-            {settings.theme === t.id ? <span className="equipped">In use</span> : <Price item={t} kind="theme" />}
+            {themeInUse(t.id) ? <span className="equipped">In use</span> : <Price item={t} kind="theme" />}
           </button>
         ))}
       </div>

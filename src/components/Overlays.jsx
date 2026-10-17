@@ -1,13 +1,17 @@
 import { createPortal } from 'react-dom';
 import { useOverlays } from '../lib/ui.js';
 import Glyph from './Glyph.jsx';
+import { useRef } from 'react';
 import { useBack } from '../lib/nav.js';
+import { useFocusTrap } from '../lib/focus.js';
 
 function Dialog({ dialog }) {
+  const ref = useRef(null);
   useBack(() => dialog.resolve(false));
+  useFocusTrap(ref);
   return (
     <div className="dialog-backdrop" onClick={() => dialog.resolve(false)}>
-      <div className="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} tabIndex={-1} className="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dialog-title" onClick={(e) => e.stopPropagation()}>
         <h3 className="dialog-title" id="dialog-title">
           {dialog.title}
         </h3>

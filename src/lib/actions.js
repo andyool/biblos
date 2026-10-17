@@ -3,9 +3,10 @@ import { DAY, addDays, dayKey, daysBetween } from './dates.js';
 import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
 import { GROWTH_PER_DAY, grownToday, stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
-import { OIL, SHOP } from '../data/shop.js';
+import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
 import { carryOver } from './reading.js';
+import { planProgress } from './plans.js';
 
 // ── Settings & profile ─────────────────────────────────────────────────────────
 
@@ -269,6 +270,17 @@ export function setReadingBook(code) {
   setState((s) => ({ ...s, reading: { ...s.reading, book: code } }));
 }
 
+/** Follow a reading plan from today, reading on from its first unfinished book. */
+export function startPlan(id) {
+  setState((s) => ({ ...s, reading: { ...s.reading, plan: { id, started: Date.now() } } }));
+  const next = planProgress(getState())?.book;
+  if (next) setReadingBook(next);
+}
+
+export function leavePlan() {
+  setState((s) => ({ ...s, reading: { ...s.reading, plan: null } }));
+}
+
 /** Keep what was read of a book under its old sections (see carryOver). */
 export function carryOverReading(code, sections) {
   const book = getState().reading.books[code];
@@ -360,7 +372,21 @@ const EQUIP_KEY = { theme: 'theme', font: 'verseFont', frame: 'frame' };
 
 export function equip(kind, id) {
   if (kind === 'emblem') updateProfile({ emblem: id });
+  // A theme is also your light or your dark one, for "Match my phone".
+  else if (kind === 'theme') updateSettings({ theme: id, [isLightTheme(id) ? 'lightTheme' : 'darkTheme']: id });
   else updateSettings({ [EQUIP_KEY[kind]]: id });
+}
+
+/** Turn "Match my phone" on or off. Turning it on keeps the theme you have as your light or dark one. */
+export function setAutoTheme(on) {
+  const { settings } = getState();
+  if (on) {
+    updateSettings({ autoTheme: true, [isLightTheme(settings.theme) ? 'lightTheme' : 'darkTheme']: settings.theme });
+  } else {
+    // Keep the theme that is showing now.
+    const dark = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches;
+    updateSettings({ autoTheme: false, theme: themeFor(settings, dark) });
+  }
 }
 
 export function buyOil() {

@@ -5,27 +5,39 @@ import TranslationPicker from '../components/TranslationPicker.jsx';
 import { PathList } from '../sheets/PathsSheet.jsx';
 import { GOALS } from '../data/levels.js';
 import { getTranslation } from '../data/translations.js';
-import { updateProfile, updateSettings } from '../lib/actions.js';
+import { BOOK_BY_CODE } from '../data/books.js';
+import { FIRST_BOOKS, loadGuide } from '../data/guides/index.js';
+import { setReadingBook, updateProfile, updateSettings } from '../lib/actions.js';
+import { planNext } from '../lib/lesson.js';
+import { bookSections, readingTr } from '../lib/reading.js';
+import { getState } from '../lib/store.js';
 import { play } from '../lib/sound.js';
 import { useBack } from '../lib/nav.js';
 import { useYouVersionReady } from '../lib/bible.js';
+import { useApp } from '../AppContext.js';
 
-const FREE_EMBLEMS = [
-  { id: 'cross', name: 'Cross' },
-  { id: 'dove', name: 'Dove' },
-  { id: 'lamp', name: 'Lamp' },
+const AIMS = [
+  { id: 'memorise', name: 'Learn verses by heart', desc: 'A few minutes a day, until each verse is hidden in your heart' },
+  { id: 'read', name: 'Read the Bible through', desc: 'A passage at a time, with questions on the meaning' },
+  { id: 'both', name: 'Both', desc: 'Memorise and read, in one daily rhythm' },
 ];
 
 export default function Onboarding() {
+  const { start, read, go } = useApp();
   const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
-  const [emblem, setEmblem] = useState('cross');
+  const [aim, setAim] = useState('both');
   const nivReady = useYouVersionReady();
   const [picked, setPicked] = useState(null);
   // The NIV when this Biblos can fetch it; otherwise one that needs no key.
   const translation = picked || (nivReady ? 'NIV' : 'ESV');
   const [goal, setGoal] = useState(20);
   const [path, setPath] = useState('foundations');
+  const [book, setBook] = useState('MRK');
+
+  // A path of verses only for memorising, a first book only for reading.
+  const steps = ['welcome', 'aim', 'bible', ...(aim !== 'read' ? ['path'] : []), ...(aim !== 'memorise' ? ['book'] : []), 'goal'];
+  const page = steps[step];
+  const last = step === steps.length - 1;
 
   const next = () => {
     play('tap');
@@ -34,11 +46,30 @@ export default function Onboarding() {
   const back = () => setStep((s) => Math.max(0, s - 1));
   useBack(back, { active: step > 0, guard: true });
 
-  const finish = () => {
-    updateProfile({ name: name.trim(), emblem, since: Date.now() });
-    updateSettings({ translation, dailyGoal: goal, activePath: path, onboarded: true });
+  // Straight into a first lesson, or a first reading.
+  const finish = async () => {
+    updateProfile({ since: Date.now() });
+    updateSettings({ translation, dailyGoal: goal, activePath: path, focus: aim, onboarded: true });
+    if (aim !== 'memorise') setReadingBook(book);
     play('complete');
+    if (aim === 'read') {
+      go('read');
+      try {
+        const guide = await loadGuide(book);
+        read(bookSections(book, guide, readingTr(getState(), book))[0]);
+      } catch {
+        /* the Read tab shows the book, and says if its guide couldn't load */
+      }
+    } else {
+      start(planNext(getState()));
+    }
   };
+
+  const cta = (label, className = '') => (
+    <button className={`btn btn-gold btn-block ${className}`} onClick={last ? finish : next}>
+      {last ? (aim === 'read' ? 'Begin reading' : 'Begin my first lesson') : label}
+    </button>
+  );
 
   return (
     <div className="onboarding">
@@ -48,15 +79,15 @@ export default function Onboarding() {
             <Glyph name="back" size={22} />
           </button>
           <div className="dots">
-            {[1, 2, 3, 4].map((i) => (
-              <i key={i} className={i <= step ? 'is-on' : ''} />
+            {steps.slice(1).map((s, i) => (
+              <i key={s} className={i < step ? 'is-on' : ''} />
             ))}
           </div>
           <span style={{ width: 40 }} />
         </header>
       )}
 
-      {step === 0 && (
+      {page === 'welcome' && (
         <div className="ob-page ob-welcome">
           <LogoMark size={128} className="float" />
           <h1 className="logo-word gold-text">Biblos</h1>
@@ -72,27 +103,23 @@ export default function Onboarding() {
         </div>
       )}
 
-      {step === 1 && (
+      {page === 'aim' && (
         <div className="ob-page">
-          <h2 className="ob-title">What shall we call you?</h2>
-          <input className="input input-large center" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={28} autoComplete="given-name" />
-          <p className="ob-sub">Choose your emblem</p>
-          <div className="emblem-pick">
-            {FREE_EMBLEMS.map((e) => (
-              <button key={e.id} className={`emblem-choice ${emblem === e.id ? 'is-on' : ''}`} onClick={() => setEmblem(e.id)}>
-                <EmblemBadge id={e.id} size={72} />
-                <span>{e.name}</span>
+          <h2 className="ob-title">What would you like to do?</h2>
+          <p className="ob-sub">You can do the other too, whenever you like.</p>
+          <div className="goal-list">
+            {AIMS.map((a) => (
+              <button key={a.id} className={`goal-item ${aim === a.id ? 'is-on' : ''}`} onClick={() => setAim(a.id)} aria-pressed={aim === a.id}>
+                <strong>{a.name}</strong>
+                <span>{a.desc}</span>
               </button>
             ))}
           </div>
-          <p className="small-print center">More emblems can be earned in the Treasury.</p>
-          <button className="btn btn-gold btn-block" onClick={next}>
-            Continue
-          </button>
+          {cta('Continue')}
         </div>
       )}
 
-      {step === 2 && (
+      {page === 'bible' && (
         <div className="ob-page">
           <h2 className="ob-title">Which Bible do you read?</h2>
           <p className="ob-sub">You can change this at any time, or for a single verse.</p>
@@ -102,19 +129,46 @@ export default function Onboarding() {
             </div>
           )}
           <TranslationPicker value={translation} onPick={setPicked} />
-          <button className="btn btn-gold btn-block sticky-cta" onClick={next}>
-            Continue
-          </button>
+          {cta('Continue', 'sticky-cta')}
         </div>
       )}
 
-      {step === 3 && (
+      {page === 'path' && (
+        <div className="ob-page">
+          <h2 className="ob-title">Which verses first?</h2>
+          <p className="ob-sub">Each path is a little collection of verses. You can wander to others whenever you like.</p>
+          <PathList active={path} onPick={setPath} />
+          {cta('Continue', 'sticky-cta')}
+        </div>
+      )}
+
+      {page === 'book' && (
+        <div className="ob-page">
+          <h2 className="ob-title">Which book first?</h2>
+          <p className="ob-sub">Any book can be read from the Read tab. These are good places to begin.</p>
+          <div className="path-list">
+            {FIRST_BOOKS.map((b) => (
+              <button key={b.code} className={`path-item ${book === b.code ? 'is-active' : ''}`} onClick={() => setBook(b.code)} aria-pressed={book === b.code}>
+                <EmblemBadge id="scroll" size={44} />
+                <span className="path-item-text">
+                  <strong>{BOOK_BY_CODE[b.code].name}</strong>
+                  <small>{b.why}</small>
+                </span>
+                {book === b.code && <Glyph name="check" size={18} />}
+              </button>
+            ))}
+          </div>
+          {cta('Continue')}
+        </div>
+      )}
+
+      {page === 'goal' && (
         <div className="ob-page">
           <h2 className="ob-title">A daily rhythm</h2>
           <p className="ob-sub">Little and often is the secret. How much each day?</p>
           <div className="goal-list">
             {GOALS.map((g) => (
-              <button key={g.xp} className={`goal-item ${goal === g.xp ? 'is-on' : ''}`} onClick={() => setGoal(g.xp)}>
+              <button key={g.xp} className={`goal-item ${goal === g.xp ? 'is-on' : ''}`} onClick={() => setGoal(g.xp)} aria-pressed={goal === g.xp}>
                 <strong>{g.name}</strong>
                 <span>
                   {g.xp} XP · {g.desc}
@@ -122,20 +176,7 @@ export default function Onboarding() {
               </button>
             ))}
           </div>
-          <button className="btn btn-gold btn-block" onClick={next}>
-            Continue
-          </button>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="ob-page">
-          <h2 className="ob-title">Where shall we begin?</h2>
-          <p className="ob-sub">Each path is a little collection of verses. You can wander to others whenever you like.</p>
-          <PathList active={path} onPick={setPath} />
-          <button className="btn btn-gold btn-block btn-shine sticky-cta" onClick={finish}>
-            Begin my journey
-          </button>
+          {cta('Continue', 'btn-shine')}
         </div>
       )}
     </div>

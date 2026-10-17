@@ -34,7 +34,20 @@ function VerseOfTheDay() {
   const id = verseOfTheDay();
   const { entry, status } = useVerseText(tr, id);
   return (
-    <Frame className="votd" size={36} onClick={() => openVerse(id)} role="button" tabIndex={0}>
+    <Frame
+      className="votd"
+      size={36}
+      onClick={() => openVerse(id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openVerse(id);
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={`Verse of the day: ${formatRef(id)}`}
+    >
       <p className="today-kicker">Verse of the day</p>
       {status === 'ready' ? (
         <VerseText tokens={tokenize(entry.verses)} dropCap compact />
