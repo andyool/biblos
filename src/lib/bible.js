@@ -79,18 +79,35 @@ function checkCanon(translation, book, chapter) {
   throw new BibleError('not-found', `${b.deutero ? b.name : `${b.name} ${chapter}`} is only in Catholic Bibles. Choose the ${CATHOLIC_BIBLE.id} to read it.`);
 }
 
+// Chapters saved on the phone, by the service worker or by "Download for offline" (lib/offline.js).
+// The service worker uses the same cache name.
+export const TEXTS_CACHE = 'biblos-texts';
+
+export const bollsUrl = (code, bookNumber, chapter) => `${BOLLS_BASE}/get-text/${code}/${bookNumber}/${chapter}/`;
+
+async function savedChapter(url) {
+  try {
+    const hit = await caches.match(url);
+    return hit ? await hit.json() : null;
+  } catch {
+    return null; // no Cache Storage here (e.g. plain http)
+  }
+}
+
 const chapters = new Map();
 
 function bollsChapter(code, bookNumber, chapter) {
-  const key = `${code}/${bookNumber}/${chapter}`;
-  if (!chapters.has(key)) {
-    const p = fetchJSON(`${BOLLS_BASE}/get-text/${code}/${bookNumber}/${chapter}/`).catch((err) => {
-      chapters.delete(key);
-      throw err;
-    });
-    chapters.set(key, p);
+  const url = bollsUrl(code, bookNumber, chapter);
+  if (!chapters.has(url)) {
+    const p = savedChapter(url)
+      .then((saved) => saved || fetchJSON(url))
+      .catch((err) => {
+        chapters.delete(url);
+        throw err;
+      });
+    chapters.set(url, p);
   }
-  return chapters.get(key);
+  return chapters.get(url);
 }
 
 async function fromBolls(translation, id) {

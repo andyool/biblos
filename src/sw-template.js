@@ -2,7 +2,7 @@
 const VERSION = '__VERSION__';
 const SHELL = `biblos-shell-${VERSION}`;
 const RUNTIME = 'biblos-runtime';
-const TEXTS = 'biblos-texts';
+const TEXTS = 'biblos-texts'; // also filled by "Download for offline" (src/lib/offline.js)
 const PRECACHE = __PRECACHE__;
 
 self.addEventListener('install', (event) => {

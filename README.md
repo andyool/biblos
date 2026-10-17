@@ -9,7 +9,7 @@ Biblos is a phone app for learning Bible verses by heart, a few minutes at a tim
 - **Rewards**: XP, a daily goal, a streak lamp (with "flasks of oil" that keep a streak alive if you miss a day), talents to spend, and 27 seals to earn.
 - **Customisation**: 7 themes, 5 verse letterings, 3 card frames and 19 emblems.
 - **Translations**: NIV, NIV (Anglicised), ESV, NKJV, NLT, NRSV Catholic Edition, CSB, NASB, LSB, NET, AMP, MSG, KJV, BSB and WEB. You can switch the whole app, or a single verse. With the Catholic Edition, Read Through also has Tobit, Judith, Wisdom, Sirach, Baruch, 1–2 Maccabees and the longer Esther and Daniel.
-- It works offline once installed. Progress stays on your phone, and you can save or restore a backup from the **Me** tab.
+- It works offline once installed. Tap **Me → Download for offline** (on Wi-Fi, about 6 MB) to save the whole Bible and every memory verse on the phone. Progress stays on your phone, and you can save or restore a backup from the **Me** tab.
 
 ---
 

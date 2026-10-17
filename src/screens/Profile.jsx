@@ -12,6 +12,7 @@ import { addDays, dayKey } from '../lib/dates.js';
 import { resetEverything, restoreBackup, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
+import { downloadAll, offlineSupported, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
 
 function Heatmap({ days }) {
@@ -54,6 +55,57 @@ function Row({ icon, label, value, onClick, children }) {
       {children}
       {onClick && <Glyph name="chevron" size={16} className="row-chev" />}
     </Tag>
+  );
+}
+
+function Offline({ translation, nivReady }) {
+  const { progress, saved } = useOffline();
+  const niv = getTranslation(translation).source === 'yv' && nivReady;
+  const unfinished = !progress.running && progress.total > 0 && (progress.done < progress.total || progress.failed > 0);
+
+  const onDownload = async () => {
+    if (navigator.onLine === false) {
+      toast('Connect to the internet first, then try again.');
+      return;
+    }
+    const result = await downloadAll();
+    if (result.done < result.total) toast('The connection dropped. Tap again to finish when you’re back online.');
+    else if (result.failed) toast(`${result.failed} ${result.failed === 1 ? 'chapter' : 'chapters'} didn’t download. Tap again to finish.`);
+    else toast('Saved for offline', 'check');
+  };
+
+  let row;
+  if (progress.running) {
+    const pct = Math.round((progress.done / progress.total) * 100) || 0;
+    row = (
+      <div className="row">
+        <Glyph name="upload" size={20} />
+        <div className="row-label">
+          Saving…
+          <span className="mini-bar">
+            <span className="mini-bar-done" style={{ width: `${pct}%` }} />
+          </span>
+        </div>
+        <span className="row-value">{pct}%</span>
+      </div>
+    );
+  } else if (saved?.tr === translation && !unfinished) {
+    const when = new Date(saved.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+    row = <Row icon="check" label="Saved for offline" value={when} onClick={onDownload} />;
+  } else {
+    row = <Row icon="upload" label={unfinished ? 'Finish downloading' : 'Download for offline'} value={translation} onClick={onDownload} />;
+  }
+
+  return (
+    <>
+      <h2 className="section-heading">Use it offline</h2>
+      <p className="small-print">
+        {niv
+          ? 'The NIV comes from YouVersion a verse at a time, so the whole NIV can’t be saved. This saves all your memory verses, but reading through books needs a connection — or choose another translation to save a whole Bible.'
+          : 'Save the whole Bible and every memory verse on this phone (about 6 MB), so Biblos works with no signal. Best done on Wi-Fi; it takes a few minutes.'}
+      </p>
+      <div className="rows">{row}</div>
+    </>
   );
 }
 
@@ -172,6 +224,8 @@ export default function Profile() {
         </div>
       </div>
 
+      {offlineSupported() && <Offline translation={settings.translation} nivReady={nivReady} />}
+
       <h2 className="section-heading">Keep your progress safe</h2>
       <p className="small-print">Progress is stored on this phone. Save a backup now and then — you can restore it on any device.</p>
       <div className="rows">
@@ -270,6 +324,9 @@ export default function Profile() {
               Android: tap the <strong>⋮</strong> menu, then <strong>Install app</strong> or <strong>Add to Home screen</strong>.
             </li>
             <li>Open Biblos from the new icon. It runs full-screen and works offline.</li>
+            <li>
+              On Wi-Fi, go to <strong>Me</strong> and tap <strong>Download for offline</strong> to save the whole Bible on your phone.
+            </li>
           </ol>
           <p className="small-print">On iPhone the Home Screen app keeps its own progress, separate from Safari — so start using it from the icon.</p>
         </Sheet>
