@@ -12,7 +12,7 @@ import { addDays, dayKey } from '../lib/dates.js';
 import { resetEverything, restoreBackup, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
-import { downloadAll, offlineSupported, useOffline } from '../lib/offline.js';
+import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
 
 function Heatmap({ days }) {
@@ -58,10 +58,10 @@ function Row({ icon, label, value, onClick, children }) {
   );
 }
 
-function Offline({ translation, nivReady }) {
+function Offline({ tr }) {
   const { progress, saved } = useOffline();
-  const niv = getTranslation(translation).source === 'yv' && nivReady;
-  const unfinished = !progress.running && progress.total > 0 && (progress.done < progress.total || progress.failed > 0);
+  const niv = getTranslation(tr).source === 'yv';
+  const unfinished = !progress.running && progress.tr === tr && progress.total > 0 && (progress.done < progress.total || progress.failed > 0);
 
   const onDownload = async () => {
     if (navigator.onLine === false) {
@@ -71,17 +71,25 @@ function Offline({ translation, nivReady }) {
     const result = await downloadAll();
     if (result.done < result.total) toast('The connection dropped. Tap again to finish when you’re back online.');
     else if (result.failed) toast(`${result.failed} ${result.failed === 1 ? 'chapter' : 'chapters'} didn’t download. Tap again to finish.`);
-    else toast('Saved for offline', 'check');
+    else toast(`The ${result.tr} is saved for offline`, 'check');
   };
 
-  let row;
+  const onRemove = async (id) => {
+    const ok = await ask({ title: `Remove the ${id}?`, message: 'It will need a connection again until you download it.', confirm: 'Remove', danger: true });
+    if (!ok) return;
+    await removeSaved(id);
+    toast(`The ${id} was removed from this phone`);
+  };
+
+  // The Bible you read in comes first: downloading, ready to download, or saved.
+  let current = null;
   if (progress.running) {
     const pct = Math.round((progress.done / progress.total) * 100) || 0;
-    row = (
+    current = (
       <div className="row">
         <Glyph name="upload" size={20} />
         <div className="row-label">
-          Saving…
+          Saving the {progress.tr}…
           <span className="mini-bar">
             <span className="mini-bar-done" style={{ width: `${pct}%` }} />
           </span>
@@ -89,28 +97,37 @@ function Offline({ translation, nivReady }) {
         <span className="row-value">{pct}%</span>
       </div>
     );
-  } else if (saved?.tr === translation && !unfinished) {
-    const when = new Date(saved.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
-    row = <Row icon="check" label="Saved for offline" value={when} onClick={onDownload} />;
-  } else {
-    row = <Row icon="upload" label={unfinished ? 'Finish downloading' : 'Download for offline'} value={translation} onClick={onDownload} />;
+  } else if (!niv && (!saved[tr] || unfinished)) {
+    current = <Row icon="upload" label={`${unfinished ? 'Finish downloading' : 'Download'} the ${tr}`} onClick={onDownload} />;
   }
 
-  // YouVersion allows the whole app 200 requests an hour, so the NIV can't be downloaded (see lib/offline.js).
-  if (niv) {
-    return (
-      <>
-        <h2 className="section-heading">Use it offline</h2>
-        <p className="small-print">The NIV can’t be downloaded, because YouVersion only lets Biblos fetch it a little at a time. NIV memory verses you have already opened stay on this phone. To read the whole Bible offline, choose another translation, then download it here.</p>
-      </>
-    );
-  }
+  const ids = Object.keys(saved)
+    .filter((id) => !(current && id === (progress.running ? progress.tr : tr)))
+    .sort((a, b) => (a === tr ? -1 : b === tr ? 1 : saved[b].at - saved[a].at));
 
   return (
     <>
       <h2 className="section-heading">Use it offline</h2>
-      <p className="small-print">Save the whole Bible and every memory verse on this phone (about 6 MB), so Biblos works with no signal. Best done on Wi-Fi; it takes a few minutes.</p>
-      <div className="rows">{row}</div>
+      <p className="small-print">
+        {niv
+          ? 'The NIV can’t be downloaded, because YouVersion only lets Biblos fetch it a little at a time. NIV memory verses you have already opened stay on this phone. To read the whole Bible offline, choose another translation, then download it here.'
+          : 'Save the whole Bible and every memory verse on this phone, so Biblos works with no signal. Each translation takes about 6 MB, and you can keep several. Best done on Wi-Fi; it takes a few minutes.'}
+      </p>
+      {(current || ids.length > 0) && (
+        <div className="rows">
+          {current}
+          {ids.map((id) => (
+            <div className="row" key={id}>
+              <Glyph name="check" size={20} />
+              <span className="row-label">{id}</span>
+              <span className="row-value">Saved {new Date(saved[id].at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
+              <button className="row-action" onClick={() => onRemove(id)} aria-label={`Remove the ${id} from this phone`}>
+                <Glyph name="trash" size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }
@@ -230,7 +247,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {offlineSupported() && <Offline translation={settings.translation} nivReady={nivReady} />}
+      {offlineSupported() && <Offline tr={bibleTr(state)} />}
 
       <h2 className="section-heading">Keep your progress safe</h2>
       <p className="small-print">Progress is stored on this phone. Save a backup now and then — you can restore it on any device.</p>
@@ -331,7 +348,7 @@ export default function Profile() {
             </li>
             <li>Open Biblos from the new icon. It runs full-screen and works offline.</li>
             <li>
-              On Wi-Fi, go to <strong>Me</strong> and tap <strong>Download for offline</strong> to save the whole Bible on your phone.
+              On Wi-Fi, go to <strong>Me → Use it offline</strong> and download your Bible, so it works with no signal.
             </li>
           </ol>
           <p className="small-print">On iPhone the Home Screen app keeps its own progress, separate from Safari — so start using it from the icon.</p>

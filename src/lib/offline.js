@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { BOOK_BY_CODE, NEW_TESTAMENT, chaptersIn, oldTestament, parseId } from '../data/books.js';
 import { CURATED_IDS } from '../data/paths.js';
-import { getTranslation } from '../data/translations.js';
+import { TRANSLATION_BY_ID, getTranslation } from '../data/translations.js';
 import { TEXTS_CACHE, bollsUrl } from './bible.js';
 import { verseTr } from './lesson.js';
 import { readingTr } from './reading.js';
@@ -10,19 +10,32 @@ import { getState } from './store.js';
 // "Download for offline": saves every chapter of the Bible you read in, and every memory
 // verse, so the whole app works with no signal. The app itself is kept by the service worker.
 
-// When it last finished on this phone: { tr, at }. Kept apart from progress, because a
-// backup restored on another phone doesn't bring the text with it.
+// The Bibles saved on this phone, and when: { ESV: { at }, NLT: { at } }. Kept apart from
+// progress, because a backup restored on another phone doesn't bring the text with it.
 const KEY = 'biblos.offline.v1';
 const WORKERS = 4;
 
-let saved = null;
+const downloadable = (tr) => TRANSLATION_BY_ID[tr]?.source === 'bolls';
+
+let saved = {};
 try {
-  saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+  const data = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+  // The first version kept only the last download: { tr, at }.
+  const entries = typeof data.tr === 'string' ? [[data.tr, { at: data.at }]] : Object.entries(data);
+  saved = Object.fromEntries(entries.filter(([tr]) => downloadable(tr)));
 } catch {
-  saved = null;
+  saved = {};
 }
 
-let progress = { running: false, done: 0, total: 0, failed: 0 };
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(saved));
+  } catch {
+    /* storage full */
+  }
+}
+
+let progress = { tr: null, running: false, done: 0, total: 0, failed: 0 };
 let version = 0;
 const listeners = new Set();
 
@@ -32,6 +45,9 @@ function changed() {
 }
 
 export const offlineSupported = () => typeof caches !== 'undefined';
+
+/** The translation the whole Bible is saved in: the one you read through books in. */
+export const bibleTr = (state) => readingTr(state, 'GEN');
 
 /**
  * Every Bible chapter to save, from bolls.life. The NIV is left out: YouVersion allows the
@@ -96,9 +112,10 @@ async function withRetries(job) {
 export async function downloadAll() {
   if (progress.running) return progress;
   const state = getState();
+  const tr = bibleTr(state);
   const cache = await caches.open(TEXTS_CACHE);
   const jobs = plan(state).map((url) => () => saveChapter(cache, url));
-  progress = { running: true, done: 0, total: jobs.length, failed: 0 };
+  progress = { tr, running: true, done: 0, total: jobs.length, failed: 0 };
   changed();
 
   let next = 0;
@@ -119,16 +136,23 @@ export async function downloadAll() {
   await Promise.all(Array.from({ length: WORKERS }, worker));
 
   progress = { ...progress, running: false };
-  if (progress.done === progress.total && !progress.failed) {
-    saved = { tr: state.settings.translation, at: Date.now() };
-    try {
-      localStorage.setItem(KEY, JSON.stringify(saved));
-    } catch {
-      /* storage full */
-    }
+  if (progress.done === progress.total && !progress.failed && downloadable(tr)) {
+    saved = { ...saved, [tr]: { at: Date.now() } };
+    persist();
   }
   changed();
   return progress;
+}
+
+/** Take a saved Bible off this phone, to free the space. */
+export async function removeSaved(tr) {
+  const cache = await caches.open(TEXTS_CACHE);
+  const prefix = `/get-text/${getTranslation(tr).code}/`;
+  const keys = await cache.keys();
+  await Promise.all(keys.filter((req) => new URL(req.url).pathname.startsWith(prefix)).map((req) => cache.delete(req)));
+  saved = Object.fromEntries(Object.entries(saved).filter(([id]) => id !== tr));
+  persist();
+  changed();
 }
 
 function subscribe(l) {
@@ -136,7 +160,7 @@ function subscribe(l) {
   return () => listeners.delete(l);
 }
 
-/** The download's progress, and when it last finished: { progress, saved }. */
+/** The download's progress, and the Bibles saved on this phone: { progress, saved }. */
 export function useOffline() {
   useSyncExternalStore(subscribe, () => version, () => version);
   return { progress, saved };
