@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { BOOK_BY_CODE, NEW_TESTAMENT, chaptersIn, oldTestament, parseId } from '../data/books.js';
 import { CURATED_IDS } from '../data/paths.js';
 import { getTranslation } from '../data/translations.js';
-import { TEXTS_CACHE, bollsUrl, hasYouVersion, loadPassage } from './bible.js';
+import { TEXTS_CACHE, bollsUrl } from './bible.js';
 import { verseTr } from './lesson.js';
 import { readingTr } from './reading.js';
 import { getState } from './store.js';
@@ -33,10 +33,13 @@ function changed() {
 
 export const offlineSupported = () => typeof caches !== 'undefined';
 
-/** Everything to save: Bible chapters from bolls.life, and NIV verses (YouVersion only gives them a verse at a time). */
+/**
+ * Every Bible chapter to save, from bolls.life. The NIV is left out: YouVersion allows the
+ * whole app 200 requests an hour, shared by everyone, so it can't be downloaded. NIV verses
+ * stay on the phone once they have been opened (lib/texts.js).
+ */
 function plan(state) {
   const chapters = new Set();
-  const verses = [];
   const addChapter = (tr, code, chapter) => {
     const t = getTranslation(tr);
     if (BOOK_BY_CODE[code].deutero && !t.catholic) return;
@@ -60,9 +63,8 @@ function plan(state) {
     const tr = verseTr(state, id);
     const { book, chapter } = parseId(id);
     if (getTranslation(tr).source === 'bolls') addChapter(tr, book, chapter);
-    else if (hasYouVersion()) verses.push([tr, id]);
   }
-  return { chapters: [...chapters], verses };
+  return [...chapters];
 }
 
 async function saveChapter(cache, url) {
@@ -94,9 +96,8 @@ async function withRetries(job) {
 export async function downloadAll() {
   if (progress.running) return progress;
   const state = getState();
-  const { chapters, verses } = plan(state);
   const cache = await caches.open(TEXTS_CACHE);
-  const jobs = [...chapters.map((url) => () => saveChapter(cache, url)), ...verses.map(([tr, id]) => () => loadPassage(tr, id))];
+  const jobs = plan(state).map((url) => () => saveChapter(cache, url));
   progress = { running: true, done: 0, total: jobs.length, failed: 0 };
   changed();
 

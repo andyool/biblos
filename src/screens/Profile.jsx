@@ -96,14 +96,20 @@ function Offline({ translation, nivReady }) {
     row = <Row icon="upload" label={unfinished ? 'Finish downloading' : 'Download for offline'} value={translation} onClick={onDownload} />;
   }
 
+  // YouVersion allows the whole app 200 requests an hour, so the NIV can't be downloaded (see lib/offline.js).
+  if (niv) {
+    return (
+      <>
+        <h2 className="section-heading">Use it offline</h2>
+        <p className="small-print">The NIV can’t be downloaded, because YouVersion only lets Biblos fetch it a little at a time. NIV memory verses you have already opened stay on this phone. To read the whole Bible offline, choose another translation, then download it here.</p>
+      </>
+    );
+  }
+
   return (
     <>
       <h2 className="section-heading">Use it offline</h2>
-      <p className="small-print">
-        {niv
-          ? 'The NIV comes from YouVersion a verse at a time, so the whole NIV can’t be saved. This saves all your memory verses, but reading through books needs a connection — or choose another translation to save a whole Bible.'
-          : 'Save the whole Bible and every memory verse on this phone (about 6 MB), so Biblos works with no signal. Best done on Wi-Fi; it takes a few minutes.'}
-      </p>
+      <p className="small-print">Save the whole Bible and every memory verse on this phone (about 6 MB), so Biblos works with no signal. Best done on Wi-Fi; it takes a few minutes.</p>
       <div className="rows">{row}</div>
     </>
   );
