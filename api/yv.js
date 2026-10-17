@@ -2,7 +2,8 @@
 // Running on the server avoids browser (CORS) restrictions and lets the key live in
 // Vercel's Environment Variables (YVP_APP_KEY) instead of in the app itself.
 
-const PATH = /^bibles\/\d+(\/passages\/[1-3A-Z]{3}\.\d{1,3}\.\d{1,3}(-\d{1,3})?)?$/;
+// A Bible, a whole chapter (JHN.3), a verse (JHN.3.16) or a range of verses (JHN.3.16-18).
+const PATH = /^bibles\/\d+(\/passages\/[1-3A-Z]{3}\.\d{1,3}(\.\d{1,3}(-\d{1,3})?)?)?$/;
 
 // YVP_APP_KEY is the documented name, but accept close variants (YVP_KEY, VITE_YVP_APP_KEY,
 // YOUVERSION_KEY…) so a small naming slip in Vercel doesn't silently switch the NIV off.

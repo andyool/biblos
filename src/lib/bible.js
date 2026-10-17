@@ -129,7 +129,7 @@ async function fromBolls(translation, id) {
 
 const contentOf = (data) => data?.content ?? data?.data?.content ?? '';
 
-async function youVersionVerse(yvId, usfm, key) {
+async function youVersionPassage(yvId, usfm, key, format = 'text') {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     throw new BibleError('offline', 'You seem to be offline.');
   }
@@ -139,7 +139,7 @@ async function youVersionVerse(yvId, usfm, key) {
   // 1) Through our own Vercel function (api/yv.js): no browser restrictions, real error codes.
   let res = null;
   try {
-    res = await fetch(`/api/yv?path=${encodeURIComponent(path)}&format=text`, { headers });
+    res = await fetch(`/api/yv?path=${encodeURIComponent(path)}&format=${format}`, { headers });
   } catch {
     res = null;
   }
@@ -149,6 +149,8 @@ async function youVersionVerse(yvId, usfm, key) {
     }
     if (res.status === 403) throw new BibleError('license', 'Your YouVersion app has not accepted the licence for this translation yet.');
     if (res.status === 404) throw new BibleError('not-found', 'That passage could not be found.');
+    // YouVersion allows each key 200 requests an hour, shared by everyone using the app.
+    if (res.status === 429) throw new BibleError('network', 'Lots of people are reading the NIV right now. Please try again in a little while.');
     if (!res.ok) throw new BibleError('network', `YouVersion answered with an error (${res.status}). Please try again.`);
     const content = contentOf(await res.json());
     if (!content) throw new BibleError('not-found', 'That passage came back empty.');
@@ -158,7 +160,7 @@ async function youVersionVerse(yvId, usfm, key) {
   // 2) Straight to YouVersion (when hosted somewhere without the /api function).
   if (!key) throw new BibleError('needs-key', 'The NIV needs a free YouVersion key.');
   try {
-    const content = contentOf(await fetchJSON(`${YV_BASE}/${path}?format=text`, { headers }));
+    const content = contentOf(await fetchJSON(`${YV_BASE}/${path}?format=${format}`, { headers }));
     if (!content) throw new BibleError('not-found', 'That passage came back empty.');
     return content;
   } catch (err) {
@@ -167,13 +169,65 @@ async function youVersionVerse(yvId, usfm, key) {
   }
 }
 
+/**
+ * Split a chapter of YouVersion's HTML into verses: Map(verse → raw text).
+ * Verses start at <span class="yv-v" v="N">. Headings (.yv-h), footnotes and cross references
+ * (.yv-n) and the printed verse numbers (.yv-vlbl) are left out, and so is anything before
+ * verse 1, such as a psalm's title.
+ */
+export function versesFromHtml(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('.yv-h, .yv-n, .yv-vlbl').forEach((el) => el.remove());
+  const verses = new Map();
+  let current = 0;
+  const add = (text) => {
+    if (current) verses.set(current, (verses.get(current) || '') + text);
+  };
+  const walk = (node) => {
+    for (const child of node.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) {
+        add(child.textContent);
+      } else if (child.nodeType === Node.ELEMENT_NODE) {
+        if (child.classList.contains('yv-v') && child.hasAttribute('v')) current = parseInt(child.getAttribute('v'), 10) || current;
+        walk(child);
+        // A new paragraph or line of poetry: keep a space between the words either side.
+        if (child.tagName !== 'SPAN') add(' ');
+      }
+    }
+  };
+  walk(doc.body);
+  return verses;
+}
+
+// One request per chapter, shared by every verse and reading in it, because YouVersion
+// allows the whole app only 200 requests an hour.
+const yvChapters = new Map();
+
+function youVersionChapter(translation, book, chapter) {
+  const key = `${translation.yv}/${book}.${chapter}`;
+  if (!yvChapters.has(key)) {
+    const p = youVersionPassage(translation.yv, `${book}.${chapter}`, youVersionKey(), 'html')
+      .then(versesFromHtml)
+      .catch((err) => {
+        yvChapters.delete(key);
+        throw err;
+      });
+    yvChapters.set(key, p);
+  }
+  return yvChapters.get(key);
+}
+
 async function fromYouVersion(translation, id) {
-  const key = youVersionKey();
   const { book, chapter, start, end } = parseId(id);
   checkCanon(translation, book, chapter);
-  const nums = Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  const texts = await Promise.all(nums.map((v) => youVersionVerse(translation.yv, `${book}.${chapter}.${v}`, key)));
-  return nums.map((v, i) => ({ v, t: cleanVerseText(texts[i], { book, verse: v }) }));
+  const texts = await youVersionChapter(translation, book, chapter);
+  const verses = [];
+  for (let v = start; v <= end; v += 1) {
+    const t = cleanVerseText(texts.get(v), { book, verse: v });
+    if (!t) throw new BibleError('not-found', `${BOOK_BY_CODE[book].name} ${chapter}:${v} is not in the ${translation.id}.`);
+    verses.push({ v, t });
+  }
+  return verses;
 }
 
 const pending = new Map();
@@ -205,16 +259,11 @@ export async function loadRange(tr, book, chapter, start, end) {
   const translation = getTranslation(tr);
   checkCanon(translation, book, chapter);
   if (translation.source === 'yv') {
-    const key = youVersionKey();
+    const texts = await youVersionChapter(translation, book, chapter);
     const verses = [];
-    // A few at a time, so a long passage doesn't flood the connection.
-    for (let v = start; v <= end; v += 6) {
-      const batch = Array.from({ length: Math.min(6, end - v + 1) }, (_, i) => v + i);
-      const results = await Promise.allSettled(batch.map((n) => youVersionVerse(translation.yv, `${book}.${chapter}.${n}`, key)));
-      results.forEach((r, i) => {
-        if (r.status === 'fulfilled') verses.push({ v: batch[i], t: cleanVerseText(r.value, { book, verse: batch[i] }) });
-        else if (r.reason?.kind !== 'not-found') throw r.reason;
-      });
+    for (let v = start; v <= end; v += 1) {
+      const t = cleanVerseText(texts.get(v), { book, verse: v });
+      if (t) verses.push({ v, t });
     }
     if (!verses.length) throw new BibleError('not-found', 'That passage could not be found.');
     return verses;
@@ -228,7 +277,7 @@ export async function loadRange(tr, book, chapter, start, end) {
 
 /** Check a YouVersion key by fetching one NIV verse. */
 export async function testYouVersionKey(key, yvId = 111) {
-  const content = await youVersionVerse(yvId, 'JHN.3.16', key.trim());
+  const content = await youVersionPassage(yvId, 'JHN.3.16', key.trim());
   return cleanVerseText(content, { book: 'JHN', verse: 16 });
 }
 
