@@ -1,27 +1,35 @@
 import { useId } from 'react';
 import Glyph from './Glyph.jsx';
 
+const stops = (list) => list.map(([offset, g, opacity]) => <stop key={offset} offset={offset} style={{ stopColor: `var(--${g})`, stopOpacity: opacity }} />);
+
 // Shared gradients. Rendered once near the root of the app.
 export function GoldDefs() {
   return (
     <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
       <defs>
+        {/* Polished gold, with the bright and dark bands of reflected light. */}
         <linearGradient id="gold-fill" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--g3)' }} />
-          <stop offset="0.3" style={{ stopColor: 'var(--g1)' }} />
-          <stop offset="0.55" style={{ stopColor: 'var(--g2)' }} />
-          <stop offset="0.78" style={{ stopColor: 'var(--g1)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--g3)' }} />
+          {stops([[0, 'g3'], [0.22, 'g1'], [0.3, 'g0'], [0.44, 'g2'], [0.58, 'g3'], [0.7, 'g2'], [0.84, 'g1'], [1, 'g3']])}
         </linearGradient>
         <linearGradient id="gold-stroke" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" style={{ stopColor: 'var(--g2)' }} />
-          <stop offset="0.5" style={{ stopColor: 'var(--g1)' }} />
-          <stop offset="1" style={{ stopColor: 'var(--g3)' }} />
+          {stops([[0, 'g2'], [0.28, 'g0'], [0.5, 'g1'], [0.72, 'g3'], [1, 'g2']])}
         </linearGradient>
-        <radialGradient id="gold-glow" cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" style={{ stopColor: 'var(--g1)', stopOpacity: 0.55 }} />
-          <stop offset="1" style={{ stopColor: 'var(--g2)', stopOpacity: 0 }} />
+        {/* A domed face, lit from the top left. */}
+        <radialGradient id="gold-dome" cx="0.36" cy="0.3" r="0.78">
+          {stops([[0, 'g0'], [0.2, 'g1'], [0.5, 'g2'], [0.82, 'g3'], [1, 'g4']])}
         </radialGradient>
+        <radialGradient id="gold-glare" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.85" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="gold-glow" cx="0.5" cy="0.5" r="0.5">
+          {stops([[0, 'g1', 0.55], [1, 'g2', 0]])}
+        </radialGradient>
+        {/* For the 24×24 line glyphs: set in their own units, so straight lines catch it too. */}
+        <linearGradient id="glyph-shine" x1="0" y1="2" x2="0" y2="22" gradientUnits="userSpaceOnUse">
+          {stops([[0, 't0'], [0.26, 't1'], [0.47, 't2'], [0.56, 't3'], [0.68, 't4'], [1, 't5']])}
+        </linearGradient>
       </defs>
     </svg>
   );
@@ -49,10 +57,11 @@ export function Divider({ className = '', width = 220 }) {
       </defs>
       {half}
       <g transform="translate(240 0) scale(-1 1)">{half}</g>
-      <path d="M120 5.2 L 125.4 12 L 120 18.8 L 114.6 12 Z" fill="url(#gold-fill)" stroke="none" />
-      <circle cx="120" cy="12" r="1.3" fill="var(--bg)" stroke="none" />
-      <circle cx="109.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
-      <circle cx="130.5" cy="12" r="1.1" fill="currentColor" stroke="none" />
+      <path d="M120 4.6 L 126 12 L 120 19.4 L 114 12 Z" fill="url(#gold-fill)" stroke="var(--matt-deep)" strokeWidth="0.5" />
+      <path d="M120 6.4 L 122.4 9.6 L 120 12 L 117.6 9.6 Z" fill="var(--g0)" stroke="none" opacity="0.7" />
+      <circle cx="120" cy="12" r="1.2" fill="var(--bg)" stroke="none" />
+      <circle cx="109.5" cy="12" r="1.4" fill="url(#gold-fill)" stroke="none" />
+      <circle cx="130.5" cy="12" r="1.4" fill="url(#gold-fill)" stroke="none" />
     </svg>
   );
 }
@@ -67,9 +76,9 @@ const CORNERS = {
       <path d="M15.5 25 C 13.5 31, 14.5 37.5, 18.5 42" strokeWidth="0.8" />
       <path d="M33 11.8 c 3.2 -3.8 7.6 -4.2 10.4 -2.4 c -2.8 3.2 -6.8 4.2 -10.4 2.4 z" fill="currentColor" stroke="none" opacity="0.8" />
       <path d="M11.8 33 c -3.8 3.2 -4.2 7.6 -2.4 10.4 c 3.2 -2.8 4.2 -6.8 2.4 -10.4 z" fill="currentColor" stroke="none" opacity="0.8" />
-      <circle cx="58" cy="3" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="3" cy="58" r="1.6" fill="currentColor" stroke="none" />
-      <path d="M3 3 l 5 0 l -5 5 z" fill="currentColor" stroke="none" />
+      <circle cx="58" cy="3" r="1.9" fill="url(#gold-fill)" stroke="none" />
+      <circle cx="3" cy="58" r="1.9" fill="url(#gold-fill)" stroke="none" />
+      <path d="M3 3 l 6 0 l -6 6 z" fill="url(#gold-fill)" stroke="none" />
     </>
   ),
   vine: (
@@ -77,9 +86,9 @@ const CORNERS = {
       <path d="M4 60 C 4 30, 30 4, 60 4" />
       <path d="M12 44 c -4 -2 -6 -6 -5 -10 c 4 1 6 5 5 10 z M 20 30 c -4.5 -1 -7 -4.5 -6.6 -8.6 c 4.2 .6 7 4 6.6 8.6 z M 30 20 c -1 -4.5 1.2 -8.4 5 -9.6 c .8 4.2 -1.2 8 -5 9.6 z M 44 12 c -2 -4 -.6 -8 2.8 -9.6 c 1.6 3.8 .4 7.8 -2.8 9.6 z" fill="currentColor" stroke="none" opacity="0.85" />
       <path d="M22 26 c 4 2 8 1 10 -2" strokeWidth="0.8" />
-      <circle cx="14" cy="20" r="2" fill="currentColor" stroke="none" opacity="0.7" />
-      <circle cx="18" cy="16.5" r="1.6" fill="currentColor" stroke="none" opacity="0.7" />
-      <circle cx="13.5" cy="15" r="1.4" fill="currentColor" stroke="none" opacity="0.7" />
+      <circle cx="14" cy="20" r="2" fill="url(#gold-fill)" stroke="none" />
+      <circle cx="18" cy="16.5" r="1.6" fill="url(#gold-fill)" stroke="none" />
+      <circle cx="13.5" cy="15" r="1.4" fill="url(#gold-fill)" stroke="none" />
     </>
   ),
   illuminated: (
@@ -147,7 +156,7 @@ function laurelBranch(side) {
   leaves.push(<ellipse key="tip" cx="6" cy="0" rx="6.5" ry="2.4" transform={`translate(${tx.toFixed(1)} ${ty.toFixed(1)}) rotate(${side < 0 ? to : to + 180})`} fill="url(#gold-fill)" />);
   return (
     <g>
-      <path d={`M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 ${side < 0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`} fill="none" stroke="url(#gold-stroke)" strokeWidth="1.3" />
+      <path d={`M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 0 ${side < 0 ? 1 : 0} ${x1.toFixed(1)} ${y1.toFixed(1)}`} fill="none" stroke="var(--matt)" strokeWidth="1.3" />
       {leaves}
     </g>
   );
@@ -185,13 +194,25 @@ const SEAL_EDGE = scallops(42, 28, 5);
 
 /** A wax-seal style medallion for achievements and emblems. */
 export function Seal({ icon, earned = true, size = 76, className = '' }) {
+  const face = `${useId().replace(/:/g, '')}-face`;
   return (
     <div className={`seal ${earned ? 'is-earned' : 'is-locked'} ${className}`} style={{ width: size, height: size }}>
       <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
+        <defs>
+          <clipPath id={face}>
+            <circle cx="50" cy="50" r="31" />
+          </clipPath>
+        </defs>
         <path d={SEAL_EDGE} className="seal-edge" />
         <circle cx="50" cy="50" r="36" className="seal-ring" />
         <circle cx="50" cy="50" r="31" className="seal-inner" />
         <circle cx="50" cy="50" r="33.5" className="seal-dots" />
+        {/* The glare moves as the seal scrolls (metal.css), but never off its face. */}
+        <g clipPath={`url(#${face})`}>
+          <g className="seal-shine">
+            <ellipse cx="40" cy="34" rx="15" ry="8" transform="rotate(-32 40 34)" />
+          </g>
+        </g>
       </svg>
       <span className="seal-icon">
         <Glyph name={icon} size={Math.round(size * 0.4)} strokeWidth={earned ? 1.6 : 1.3} />
@@ -210,8 +231,8 @@ export function EmblemBadge({ id, size = 44, className = '' }) {
   return (
     <span className={`emblem-badge ${className}`} style={{ width: size, height: size }}>
       <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true">
-        <circle cx="24" cy="24" r="22.5" fill="none" stroke="url(#gold-stroke)" strokeWidth="1.5" />
-        <circle cx="24" cy="24" r="19.5" className="emblem-badge-bg" stroke="url(#gold-stroke)" strokeWidth="0.6" />
+        <circle cx="24" cy="24" r="22.5" className="emblem-badge-rim" />
+        <circle cx="24" cy="24" r="19.5" className="emblem-badge-bg" />
       </svg>
       <Glyph name={id} size={Math.round(size * 0.52)} strokeWidth={1.5} />
     </span>

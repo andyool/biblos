@@ -1,12 +1,12 @@
 // Everything that can be bought with talents (or unlocked by seals).
 export const THEMES = [
-  { id: 'midnight', name: 'Midnight & Gold', price: 0, colors: ['#0a0f1d', '#17223a', '#d4af37'] },
-  { id: 'parchment', name: 'Parchment', price: 0, light: true, colors: ['#f3ead3', '#fbf5e6', '#a8801f'] },
-  { id: 'royal', name: 'Royal Purple', price: 150, colors: ['#170c22', '#2a1840', '#e0b84e'] },
-  { id: 'emerald', name: 'Garden of Eden', price: 150, colors: ['#08170f', '#123022', '#d9b45a'] },
-  { id: 'crimson', name: 'Crimson & Gold', price: 200, colors: ['#1a080c', '#34121b', '#e3bb5c'] },
-  { id: 'ivory', name: 'Ivory Palace', price: 200, light: true, colors: ['#fbf8f1', '#ffffff', '#b8912f'] },
-  { id: 'rose', name: 'Rose of Sharon', price: 250, light: true, colors: ['#f6e9e4', '#fdf5f2', '#b5707a'] },
+  { id: 'midnight', name: 'Midnight & Gold', price: 0, colors: ['#0a0f1d', '#17223a', '#ecc04e'] },
+  { id: 'parchment', name: 'Parchment', price: 0, light: true, colors: ['#f3ead3', '#fbf5e6', '#cf9d30'] },
+  { id: 'royal', name: 'Royal Purple', price: 150, colors: ['#170c22', '#2a1840', '#efc455'] },
+  { id: 'emerald', name: 'Garden of Eden', price: 150, colors: ['#08170f', '#123022', '#e6bd52'] },
+  { id: 'crimson', name: 'Crimson & Gold', price: 200, colors: ['#1a080c', '#34121b', '#efc35c'] },
+  { id: 'ivory', name: 'Ivory Palace', price: 200, light: true, colors: ['#fbf8f1', '#ffffff', '#d0a038'] },
+  { id: 'rose', name: 'Rose of Sharon', price: 250, light: true, colors: ['#f6e9e4', '#fdf5f2', '#d99a9c'] },
 ];
 
 export const isLightTheme = (id) => Boolean(THEMES.find((t) => t.id === id)?.light);

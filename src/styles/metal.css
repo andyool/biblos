@@ -1,0 +1,179 @@
+/* ─── Polished metal ─────────────────────────────────────────────────────── */
+
+/*
+  Polished gold mirrors the room around it, so as the gold moves its reflections stay where
+  they are and seem to slide across it. Each polished piece knows where it is in its scroller:
+  --sheen runs from 0 as it comes in at the bottom to 1 as it leaves at the top, and its
+  reflections are placed from that. Where a browser cannot follow scrolling (or motion is
+  reduced), --sheen stays at 0.5 and the gold simply holds still.
+*/
+
+@property --sheen {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --glint-at {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+
+@keyframes sheen {
+  from {
+    --sheen: 0;
+  }
+  to {
+    --sheen: 1;
+  }
+}
+
+/* Flat gold: diagonal reflections glide across it. */
+.btn-gold,
+.chip.is-on,
+.filter.is-on,
+.segmented button.is-on,
+.node-bubble,
+.choice.is-right,
+.chapter-badge {
+  background-image: var(--reflections), var(--grad-shine);
+  background-size:
+    320% 100%,
+    100% 100%;
+  background-position:
+    calc(var(--sheen) * 100%) 0,
+    0 0;
+  background-repeat: no-repeat;
+}
+
+/* Domed gold: its bright spot rolls down over it as it rises up the screen. */
+.switch:checked::after,
+.today-read-icon.is-done,
+.node.level-4 .node-disc,
+.node.level-5 .node-disc,
+.growth-step.is-on .glyph,
+.verse-row-icon.level-4,
+.verse-row-icon.level-5,
+.feedback-icon,
+.chapter.is-done .chapter-num,
+.section-row.is-done .section-mark,
+.seq-slot.is-filled .seq-num,
+.verse-pick.is-kept .verse-pick-mark {
+  background-image: var(--glare), var(--grad-dome-shade);
+  background-size:
+    200% 200%,
+    100% 100%;
+  background-position:
+    70% calc(90% - var(--sheen) * 50%),
+    0 0;
+  background-repeat: no-repeat;
+}
+
+/* Seals: the glare on the face moves the same way. */
+.seal-shine {
+  transform: translate(calc((var(--sheen) - 0.5) * 24px), calc((var(--sheen) - 0.5) * 40px));
+}
+
+/* Lettering: the bands of light drift up and down through the letters. */
+.gold-text,
+.sheet-title,
+.dialog-title,
+.path-head h2,
+.ob-title,
+.passage-title,
+.feedback-title {
+  background-position: 0 calc((var(--sheen) - 0.5) * 0.6em);
+}
+
+/* Large lettering: now and then a glint of light also runs across it. */
+.logo-word.gold-text,
+.screen-title .gold-text,
+.today-title.gold-text,
+.script-title.gold-text,
+.script-name.gold-text,
+.purse-num.gold-text,
+.complete-xp-num.gold-text {
+  background-image: var(--glint), var(--grad-text);
+  background-size:
+    300% 100%,
+    100% 100%;
+  background-size:
+    300% 100%,
+    100% 1lh;
+  background-repeat: no-repeat, repeat-y;
+  background-position:
+    var(--glint-at) 0,
+    0 calc((var(--sheen) - 0.5) * 0.6em);
+  animation: glint 7s ease-in-out 1.5s infinite;
+}
+
+span.gold-text:is(.screen-title *, .script-name, .purse-num, .complete-xp-num) {
+  background-size:
+    300% 100%,
+    100% 100%;
+}
+
+@keyframes glint {
+  0% {
+    --glint-at: 100%;
+  }
+  22%,
+  100% {
+    --glint-at: 0%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .btn-gold,
+    .chip.is-on,
+    .filter.is-on,
+    .segmented button.is-on,
+    .choice.is-right,
+    .chapter-badge,
+    .switch:checked::after,
+    .today-read-icon.is-done,
+    .node.level-4 .node-disc,
+    .node.level-5 .node-disc,
+    .growth-step.is-on .glyph,
+    .verse-row-icon.level-4,
+    .verse-row-icon.level-5,
+    .feedback-icon,
+    .chapter.is-done .chapter-num,
+    .section-row.is-done .section-mark,
+    .seq-slot.is-filled .seq-num,
+    .verse-pick.is-kept .verse-pick-mark,
+    .seal.is-earned,
+    .gold-text,
+    .sheet-title,
+    .dialog-title,
+    .path-head h2,
+    .ob-title,
+    .passage-title,
+    .feedback-title {
+      animation: sheen linear both;
+      animation-timeline: view();
+    }
+
+    .node-bubble {
+      animation:
+        bob 2.4s ease-in-out infinite,
+        sheen linear both;
+      animation-timeline: auto, view();
+    }
+
+    .logo-word.gold-text,
+    .screen-title .gold-text,
+    .today-title.gold-text,
+    .script-title.gold-text,
+    .script-name.gold-text,
+    .purse-num.gold-text,
+    .complete-xp-num.gold-text {
+      animation:
+        glint 7s ease-in-out 1.5s infinite,
+        sheen linear both;
+      animation-timeline: auto, view();
+    }
+  }
+}

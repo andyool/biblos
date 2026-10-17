@@ -122,7 +122,7 @@ function Shop() {
         {THEMES.map((t) => (
           <button key={t.id} className={`shop-item ${themeInUse(t.id) ? 'is-equipped' : ''}`} onClick={() => onTheme(t)}>
             <span className="swatch" style={{ background: `linear-gradient(140deg, ${t.colors[0]} 0 55%, ${t.colors[1]} 55% 100%)` }}>
-              <span className="swatch-gold" style={{ background: t.colors[2] }} />
+              <span className="swatch-gold" style={{ backgroundColor: t.colors[2] }} />
             </span>
             <strong>{t.name}</strong>
             {themeInUse(t.id) ? <span className="equipped">In use</span> : <Price item={t} kind="theme" />}

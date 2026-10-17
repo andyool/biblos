@@ -14,6 +14,24 @@
   color: var(--ink-faint);
 }
 
+.today-kicker::before,
+.today-kicker::after {
+  content: '';
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin: 0 10px 0.18em;
+  transform: rotate(45deg);
+  background: var(--matt);
+  opacity: 0.8;
+}
+
+/* No room for the diamonds once "done" is added. */
+.today-kicker:has(.today-done)::before,
+.today-kicker:has(.today-done)::after {
+  display: none;
+}
+
 .today-title {
   font-family: var(--font-script);
   font-weight: 400;
@@ -45,9 +63,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, var(--trim) 20%, var(--trim) 80%, transparent) 1;
   text-align: left;
 }
 
@@ -58,14 +77,23 @@
   height: 38px;
   flex: none;
   border-radius: 50%;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--trim);
+  background: var(--surface-2);
   color: var(--gold);
 }
 
+.today-read-icon .glyph {
+  stroke: url(#glyph-shine);
+}
+
 .today-read-icon.is-done {
-  background: var(--grad-gold);
-  border-color: transparent;
+  border-color: var(--matt-deep);
   color: var(--gold-ink);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--g2) 35%, transparent);
+}
+
+.today-read-icon.is-done .glyph {
+  stroke: currentColor;
 }
 
 .today-read-text {
@@ -107,7 +135,6 @@
   font-size: calc(18px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: var(--gold);
   line-height: 1.2;
 }
 
@@ -133,17 +160,16 @@
 
 .trail-path {
   fill: none;
-  stroke: var(--g2);
-  stroke-width: 2.4;
+  stroke: var(--matt);
+  stroke-width: 3;
   stroke-linecap: round;
-  stroke-dasharray: 0.1 9;
-  opacity: 0.8;
+  stroke-dasharray: 0.1 10;
 }
 
 .trail-path-glow {
   fill: none;
-  stroke: var(--glow);
-  stroke-width: 10;
+  stroke: color-mix(in srgb, var(--matt) 10%, transparent);
+  stroke-width: 9;
   stroke-linecap: round;
 }
 
@@ -183,13 +209,19 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 30%, var(--surface-3), var(--surface));
-  border: 1px solid var(--line-strong);
+  background: radial-gradient(circle at 50% 28%, var(--surface-3), var(--surface) 75%);
+  border: 1px solid var(--trim);
   box-shadow:
-    0 5px 0 color-mix(in srgb, var(--g4) 55%, var(--bg)),
-    0 10px 20px rgba(0, 0, 0, 0.25),
+    0 5px 0 var(--matt-deep),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px color-mix(in srgb, var(--bg) 35%, transparent),
+    inset 0 0 0 4px color-mix(in srgb, var(--matt) 30%, transparent),
     inset 0 1px 0 color-mix(in srgb, var(--g1) 18%, transparent);
   color: var(--gold);
+}
+
+.node-disc .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .node-numeral {
@@ -197,18 +229,42 @@
   font-weight: 700;
   font-size: calc(19px * var(--text-scale, 1));
   letter-spacing: 0.02em;
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .node.level-0 .node-disc {
-  color: var(--ink-faint);
-  border-color: var(--line);
+  border-color: var(--line-strong);
 }
 
+.node.level-0 .node-numeral {
+  background: none;
+  -webkit-text-fill-color: var(--ink-faint);
+}
+
+/* Memorised: a polished gold medal. */
 .node.level-4 .node-disc,
 .node.level-5 .node-disc {
-  background: var(--grad-gold);
   color: var(--gold-ink);
-  border-color: var(--g1);
+  border-color: var(--matt-deep);
+  box-shadow:
+    0 5px 0 var(--matt-deep),
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 0 0 3px color-mix(in srgb, var(--g0) 25%, transparent),
+    inset 0 -4px 8px color-mix(in srgb, var(--g4) 40%, transparent);
+}
+
+.node.level-4 .node-numeral,
+.node.level-5 .node-numeral {
+  background: none;
+  -webkit-text-fill-color: var(--gold-ink);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 70%, transparent);
+}
+
+.node.level-5 .node-disc .glyph {
+  stroke: currentColor;
 }
 
 .node.level-5 .node-medal::after {
@@ -216,7 +272,9 @@
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  box-shadow: 0 0 26px color-mix(in srgb, var(--g2) 45%, transparent);
+  box-shadow:
+    0 0 26px color-mix(in srgb, var(--g2) 45%, transparent),
+    inset 0 0 16px color-mix(in srgb, var(--g2) 22%, transparent);
   pointer-events: none;
 }
 
@@ -228,25 +286,31 @@
 @keyframes node-pulse {
   50% {
     box-shadow:
-      0 5px 0 color-mix(in srgb, var(--g4) 55%, var(--bg)),
+      0 5px 0 var(--matt-deep),
       0 0 0 8px color-mix(in srgb, var(--g2) 16%, transparent),
-      0 0 30px color-mix(in srgb, var(--g2) 35%, transparent);
+      0 0 30px color-mix(in srgb, var(--g2) 40%, transparent),
+      inset 0 0 0 3px color-mix(in srgb, var(--bg) 35%, transparent),
+      inset 0 0 0 4px color-mix(in srgb, var(--g2) 45%, transparent);
   }
 }
 
 .node-bubble {
   position: absolute;
-  top: -30px;
+  top: -16px;
   padding: 4px 12px;
   border-radius: 10px;
-  background: var(--grad-button);
   color: var(--gold-ink);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: calc(11px * var(--text-scale, 1));
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  box-shadow: 0 3px 0 var(--g4);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 70%, transparent);
+  box-shadow:
+    0 0 0 1px var(--matt-deep),
+    0 3px 0 var(--matt-deep),
+    0 6px 16px color-mix(in srgb, var(--g2) 35%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   animation: bob 2.4s ease-in-out infinite;
   z-index: 2;
 }
@@ -255,11 +319,11 @@
   content: '';
   position: absolute;
   left: 50%;
-  bottom: -5px;
+  bottom: -6px;
   width: 10px;
   height: 10px;
   margin-left: -5px;
-  background: var(--g3);
+  background: var(--matt-deep);
   transform: rotate(45deg);
   z-index: -1;
 }
@@ -282,6 +346,7 @@
   background: var(--surface);
   border: 1px solid var(--g2);
   color: var(--gold);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--g2) 45%, transparent);
 }
 
 .node.is-due .level-ring .ring-on {
@@ -307,7 +372,7 @@
   padding: 16px;
   border-radius: var(--radius);
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   color: var(--ink-faint);
   margin-top: 6px;
 }
@@ -329,8 +394,11 @@
 
 .recite-card.is-ready {
   color: var(--gold);
-  border-color: var(--g2);
   box-shadow: 0 0 24px color-mix(in srgb, var(--g2) 18%, transparent);
+}
+
+.recite-card.is-ready > .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .recite-card.is-ready p {
@@ -358,9 +426,12 @@
 }
 
 .path-item.is-active {
-  border-color: var(--g2);
-  background: color-mix(in srgb, var(--g2) 9%, var(--surface));
   color: var(--gold);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--g2) 14%, transparent);
+}
+
+.path-item.is-active > .glyph:last-child {
+  stroke: url(#glyph-shine);
 }
 
 .path-item-text {
@@ -390,6 +461,7 @@
   border-radius: 16px;
   background: var(--bg-2);
   border: 1px solid var(--line);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .growth {
@@ -418,7 +490,7 @@
   height: 38px;
   padding: 8px;
   border-radius: 50%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-strong);
 }
 
 .growth-step.is-on {
@@ -427,9 +499,9 @@
 }
 
 .growth-step.is-on .glyph {
-  background: var(--grad-gold);
   color: var(--gold-ink);
-  border-color: var(--g1);
+  border-color: var(--matt-deep);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--g2) 30%, transparent);
 }
 
 .growth-step.is-next {
@@ -464,7 +536,8 @@
 }
 
 .freshness span.is-on {
-  background: var(--grad-gold);
+  background: var(--grad-bar);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--g2) 45%, transparent);
 }
 
 .freshness small {
@@ -544,9 +617,12 @@
 }
 
 .filter.is-on {
-  border-color: var(--g2);
+  border-color: var(--matt-deep);
   color: var(--gold-ink);
-  background: var(--grad-button);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 2px 8px color-mix(in srgb, var(--g2) 30%, transparent);
 }
 
 .verse-list {
@@ -568,7 +644,9 @@
 
 .verse-row.is-due {
   border-color: var(--line-strong);
-  box-shadow: inset 3px 0 0 var(--g2);
+  box-shadow:
+    inset 3px 0 0 var(--g2),
+    -2px 0 10px -4px color-mix(in srgb, var(--g2) 60%, transparent);
 }
 
 .verse-row-icon {
@@ -577,16 +655,25 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--trim);
+  background: var(--surface-2);
   color: var(--gold);
   flex: none;
 }
 
+.verse-row-icon .glyph {
+  stroke: url(#glyph-shine);
+}
+
 .verse-row-icon.level-4,
 .verse-row-icon.level-5 {
-  background: var(--grad-gold);
   color: var(--gold-ink);
-  border-color: var(--g1);
+  border-color: var(--matt-deep);
+}
+
+.verse-row-icon.level-4 .glyph,
+.verse-row-icon.level-5 .glyph {
+  stroke: currentColor;
 }
 
 .verse-row-icon.level-0 {
@@ -659,7 +746,7 @@
 }
 
 .bars i.is-on {
-  background: var(--grad-gold);
+  background: var(--grad-bar);
 }
 
 /* ─── Treasury ───────────────────────────────────────────────────────────── */
@@ -673,7 +760,8 @@
 }
 
 .coin-big {
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g2) 40%, transparent));
+  stroke: url(#glyph-shine);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--g2) 45%, transparent));
 }
 
 .purse > div {
@@ -709,8 +797,9 @@
   grid-template-columns: 1fr 1fr;
   padding: 4px;
   border-radius: 16px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.18);
   margin-bottom: 18px;
 }
 
@@ -729,9 +818,13 @@
 }
 
 .segmented button.is-on {
-  background: var(--grad-button);
   color: var(--gold-ink);
-  box-shadow: 0 2px 0 var(--g4);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 70%, transparent);
+  box-shadow:
+    0 0 0 1px var(--matt-deep),
+    0 2px 0 var(--matt-deep),
+    0 4px 12px color-mix(in srgb, var(--g2) 30%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .seal-grid {
@@ -774,9 +867,13 @@
   gap: 14px;
   padding: 16px;
   border-radius: var(--radius);
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line-strong);
   color: var(--gold);
+}
+
+.shop-oil > .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .shop-oil > div {
@@ -811,7 +908,7 @@
   gap: 8px;
   padding: 14px 8px 12px;
   border-radius: 16px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
   text-align: center;
 }
@@ -825,8 +922,7 @@
 }
 
 .shop-item.is-equipped {
-  border-color: var(--g2);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--g2) 16%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--g2) 18%, transparent);
 }
 
 .swatch {
@@ -845,7 +941,10 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15);
+  background-image: radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.25) 32%, transparent 55%, rgba(0, 0, 0, 0.3) 100%);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.25),
+    0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
 .font-sample {
@@ -952,7 +1051,7 @@
   gap: 4px;
   padding: 14px;
   border-radius: var(--radius);
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
 }
 
@@ -969,10 +1068,10 @@
   background: color-mix(in srgb, var(--g2) 55%, var(--surface-3));
 }
 .heat-3 {
-  background: var(--g2);
+  background: linear-gradient(135deg, var(--g1), var(--g2) 55%, var(--g3));
 }
 .heat-4 {
-  background: var(--g1);
+  background: var(--grad-dome);
   box-shadow: 0 0 6px color-mix(in srgb, var(--g1) 60%, transparent);
 }
 .heat--1 {
@@ -992,10 +1091,14 @@
   gap: 2px;
   padding: 12px 2px;
   border-radius: 14px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
   color: var(--gold);
   text-align: center;
+}
+
+.garden-cell .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .garden-cell strong {
@@ -1047,9 +1150,7 @@
 }
 
 .goal-item.is-on {
-  border-color: var(--g2);
-  background: color-mix(in srgb, var(--g2) 12%, var(--surface));
-  box-shadow: 0 0 0 1px var(--g2);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--g2) 18%, transparent);
 }
 
 /* ─── Onboarding ─────────────────────────────────────────────────────────── */
@@ -1083,6 +1184,8 @@
 
 .dots i.is-on {
   background: var(--grad-gold);
+  border-color: var(--matt-deep);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--g2) 55%, transparent);
 }
 
 .ob-page {
@@ -1139,7 +1242,6 @@
   font-size: calc(42px * var(--text-scale, 1));
   line-height: 1.2;
   text-align: center;
-  color: var(--gold);
   margin-top: 8px;
 }
 
@@ -1170,8 +1272,7 @@
 }
 
 .emblem-choice.is-on {
-  border-color: var(--g2);
-  background: var(--surface);
+  --selected-tint: var(--surface);
   color: var(--gold);
   box-shadow: 0 0 20px color-mix(in srgb, var(--g2) 18%, transparent);
 }
@@ -1240,7 +1341,7 @@
   gap: 12px;
   padding: 10px 14px;
   border-radius: 16px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
 }
 
@@ -1252,6 +1353,10 @@
   place-items: center;
   color: var(--gold);
   flex: none;
+}
+
+.complete-verse-medal > .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .complete-verse-medal .level-ring {
@@ -1285,7 +1390,11 @@
   gap: 8px;
   padding: 12px;
   border-radius: 14px;
-  border: 1px dashed var(--g2);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(color-mix(in srgb, var(--g2) 10%, var(--surface)), color-mix(in srgb, var(--g2) 10%, var(--surface))) padding-box,
+    var(--grad-rim) border-box;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--g2) 18%, transparent);
   color: var(--gold);
   font-family: var(--font-display);
   font-size: calc(12.5px * var(--text-scale, 1));
@@ -1345,7 +1454,8 @@
   width: var(--size);
   height: var(--size);
   border-radius: 50%;
-  background: var(--grad-gold);
+  background: var(--grad-dome);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--g1) 70%, transparent);
   opacity: 0;
   animation: spark 1.5s cubic-bezier(0.1, 0.7, 0.3, 1) var(--delay) forwards;
 }

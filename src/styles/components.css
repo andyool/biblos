@@ -22,35 +22,45 @@
     background-color 0.2s ease;
 }
 
+/* Polished gold, set in a matt gold rim. */
 .btn-gold {
-  background: var(--grad-button);
   color: var(--gold-ink);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 75%, transparent);
   box-shadow:
-    0 4px 0 var(--g4),
-    0 10px 22px rgba(0, 0, 0, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+    0 0 0 1px var(--matt-deep),
+    0 4px 0 var(--matt-deep),
+    0 12px 24px -4px rgba(0, 0, 0, 0.32),
+    0 6px 26px -6px color-mix(in srgb, var(--g2) 45%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px color-mix(in srgb, var(--g0) 35%, transparent),
+    inset 0 -3px 6px -2px color-mix(in srgb, var(--g4) 45%, transparent);
 }
 
 .btn-gold:active:not(:disabled) {
   transform: translateY(3px);
   box-shadow:
-    0 1px 0 var(--g4),
-    0 4px 10px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    0 0 0 1px var(--matt-deep),
+    0 1px 0 var(--matt-deep),
+    0 4px 10px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 0 0 1px color-mix(in srgb, var(--g0) 30%, transparent),
+    inset 0 -2px 5px -2px color-mix(in srgb, var(--g4) 45%, transparent);
 }
 
 .btn-ghost {
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-3) 55%, transparent), color-mix(in srgb, var(--surface) 80%, transparent));
   color: var(--gold);
-  border: 1px solid var(--line-strong);
-  box-shadow: 0 3px 0 var(--line);
+  border: 1px solid var(--trim);
+  box-shadow:
+    0 3px 0 color-mix(in srgb, var(--matt-deep) 70%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 14%, transparent);
 }
 
 .btn-ghost:active:not(:disabled) {
   transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--line);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--matt-deep) 70%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 14%, transparent);
 }
 
 .btn-ghost.is-active {
@@ -58,9 +68,12 @@
 }
 
 .btn-danger {
-  background: var(--bad);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bad) 80%, #fff), var(--bad) 55%, color-mix(in srgb, var(--bad) 85%, #000));
   color: #fff;
-  box-shadow: 0 4px 0 color-mix(in srgb, var(--bad) 60%, #000);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+  box-shadow:
+    0 4px 0 color-mix(in srgb, var(--bad) 55%, #000),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .btn-danger-text {
@@ -104,7 +117,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.3) 45%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0.3) 55%, transparent 62%);
   transform: translateX(-120%);
   animation: shine 4.5s ease-in-out 1.2s infinite;
   pointer-events: none;
@@ -149,6 +162,7 @@
 
 .icon-btn:active {
   background: var(--surface-3);
+  color: var(--gold);
 }
 
 /* ─── Frames & cards ─────────────────────────────────────────────────────── */
@@ -156,16 +170,19 @@
 .frame {
   position: relative;
   background:
-    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--g1) 7%, transparent), transparent 60%),
+    radial-gradient(120% 70% at 50% 0%, color-mix(in srgb, var(--g1) 9%, transparent), transparent 62%),
     linear-gradient(180deg, var(--surface), var(--surface-2));
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--matt) 62%, transparent);
   border-radius: var(--radius);
   box-shadow:
     var(--shadow),
-    inset 0 1px 0 color-mix(in srgb, var(--g1) 12%, transparent);
+    0 0 0 4px color-mix(in srgb, var(--bg) 40%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--matt) 16%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 16%, transparent);
   padding: 26px 24px;
 }
 
+/* The matt inner fillet. */
 .frame::before {
   content: '';
   position: absolute;
@@ -187,9 +204,8 @@
 
 .corner {
   position: absolute;
-  color: var(--g2);
+  color: var(--matt);
   pointer-events: none;
-  opacity: 0.95;
 }
 
 .corner-tl {
@@ -251,7 +267,7 @@
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 1px 0 color-mix(in srgb, var(--g4) 40%, transparent));
+  filter: drop-shadow(0 1px 0 var(--emboss)) drop-shadow(0 0 10px color-mix(in srgb, var(--g2) 22%, transparent));
 }
 
 [data-frame='illuminated'] .dropcap,
@@ -261,8 +277,8 @@
   color: var(--g1);
   padding: 0.12em 0.14em 0.04em;
   margin-right: 0.16em;
-  border: 2px solid var(--g2);
-  box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3px var(--g3);
+  border: 2px solid var(--matt);
+  box-shadow: inset 0 0 0 2px var(--accent), inset 0 0 0 3px var(--g2);
   font-size: 2.7em;
   line-height: 0.95;
 }
@@ -311,13 +327,23 @@
   inset: 0;
 }
 
+.emblem-badge-rim {
+  fill: none;
+  stroke: url(#gold-stroke);
+  stroke-width: 1.7;
+}
+
 .emblem-badge-bg {
   fill: var(--surface-2);
+  stroke: var(--matt);
+  stroke-width: 0.6;
+  stroke-opacity: 0.8;
 }
 
 .emblem-badge .glyph {
   position: relative;
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--g2) 35%, transparent));
+  stroke: url(#glyph-shine);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--g2) 40%, transparent));
 }
 
 .emblem-badge.is-dim {
@@ -341,30 +367,40 @@
   fill: url(#gold-fill);
 }
 
+/* The seal's rim is matt; its face is polished. */
 .seal-ring {
-  fill: none;
-  stroke: color-mix(in srgb, var(--g4) 70%, transparent);
-  stroke-width: 1.2;
+  fill: var(--matt);
+  stroke: var(--matt-deep);
+  stroke-width: 0.8;
 }
 
 .seal-inner {
-  fill: url(#gold-fill);
-  stroke: rgba(255, 255, 255, 0.35);
-  stroke-width: 0.6;
+  fill: url(#gold-dome);
+  stroke: color-mix(in srgb, var(--g0) 70%, transparent);
+  stroke-width: 0.8;
 }
 
 .seal-dots {
   fill: none;
-  stroke: color-mix(in srgb, var(--g4) 60%, transparent);
-  stroke-width: 1;
+  stroke: var(--matt-deep);
+  stroke-width: 1.1;
   stroke-dasharray: 0.2 3;
   stroke-linecap: round;
+}
+
+.seal-shine {
+  fill: url(#gold-glare);
+  pointer-events: none;
+}
+
+.seal.is-earned {
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28)) drop-shadow(0 0 12px color-mix(in srgb, var(--g2) 28%, transparent));
 }
 
 .seal-icon {
   position: relative;
   color: var(--g4);
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.4));
+  filter: drop-shadow(0 1px 0 color-mix(in srgb, var(--g0) 80%, transparent));
 }
 
 .seal.is-locked .seal-edge,
@@ -373,9 +409,17 @@
   stroke: var(--line);
 }
 
-.seal.is-locked .seal-ring,
+.seal.is-locked .seal-ring {
+  fill: var(--surface-2);
+  stroke: var(--line-strong);
+}
+
 .seal.is-locked .seal-dots {
   stroke: var(--line-strong);
+}
+
+.seal.is-locked .seal-shine {
+  display: none;
 }
 
 .seal.is-locked .seal-icon {
@@ -394,14 +438,14 @@
   display: grid;
   place-items: center;
   background: var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--trim);
   color: var(--ink-faint);
 }
 
 .level-ring .ring-off {
   fill: none;
-  stroke: var(--line);
-  stroke-width: 4;
+  stroke: color-mix(in srgb, var(--matt) 30%, transparent);
+  stroke-width: 3;
   stroke-linecap: round;
 }
 
@@ -410,7 +454,7 @@
   stroke: url(#gold-stroke);
   stroke-width: 4.5;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--g2) 60%, transparent));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--g2) 65%, transparent));
 }
 
 .goal-ring {
@@ -426,7 +470,7 @@
 
 .goal-track {
   fill: var(--surface-2);
-  stroke: var(--line);
+  stroke: color-mix(in srgb, var(--matt) 34%, transparent);
   stroke-width: 3.5;
 }
 
@@ -436,6 +480,7 @@
   stroke-width: 3.5;
   stroke-linecap: round;
   transition: stroke-dasharray 0.6s ease;
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--g2) 60%, transparent));
 }
 
 .goal-ring-label {
@@ -448,6 +493,10 @@
 
 .goal-ring.is-full .goal-track {
   fill: color-mix(in srgb, var(--g2) 18%, var(--surface-2));
+}
+
+.goal-ring.is-full .goal-ring-label .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .laurel {
@@ -468,7 +517,7 @@
 }
 
 .logo-mark {
-  filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--g2) 35%, transparent));
+  filter: drop-shadow(0 1px 0 var(--emboss)) drop-shadow(0 6px 20px color-mix(in srgb, var(--g2) 40%, transparent));
 }
 
 .float {
@@ -530,8 +579,9 @@
   height: 38px;
   padding: 0 14px 0 10px;
   border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--line-strong);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--g1) 12%, transparent);
   font-family: var(--font-display);
   font-weight: 700;
   font-size: calc(15px * var(--text-scale, 1));
@@ -544,13 +594,19 @@
 
 .stat-pill.is-lit {
   color: var(--gold);
-  border-color: var(--line-strong);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--g2) 20%, transparent);
+  border-color: transparent;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--g2) 10%, var(--surface-2)), var(--surface)) padding-box,
+    var(--grad-rim) border-box;
+  box-shadow:
+    0 0 18px color-mix(in srgb, var(--g2) 24%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 18%, transparent);
 }
 
 .stat-pill.is-lit .glyph,
 .stat-pill .coin {
   color: var(--gold);
+  stroke: url(#glyph-shine);
 }
 
 .stat-pill.is-lit .glyph-flame {
@@ -585,10 +641,11 @@
   display: flex;
   justify-content: space-around;
   padding: 6px 8px calc(var(--safe-bottom) + 6px);
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--bg) 92%, transparent));
   backdrop-filter: blur(16px) saturate(1.3);
   -webkit-backdrop-filter: blur(16px) saturate(1.3);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-strong);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
 }
 
 .tab {
@@ -616,10 +673,13 @@
 .tab-gem {
   position: absolute;
   top: -1px;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   transform: rotate(45deg) scale(0);
   background: var(--grad-gold);
+  box-shadow:
+    0 0 0 1px var(--matt-deep),
+    0 0 8px color-mix(in srgb, var(--g2) 70%, transparent);
   transition: transform 0.25s ease;
 }
 
@@ -632,7 +692,15 @@
 }
 
 .tab.is-active .glyph {
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--g2) 45%, transparent));
+  stroke: url(#glyph-shine);
+  filter: drop-shadow(0 0 7px color-mix(in srgb, var(--g2) 50%, transparent));
+}
+
+.tab.is-active .tab-label {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* ─── Sheets, dialogs, toasts ────────────────────────────────────────────── */
@@ -668,13 +736,15 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   background:
-    radial-gradient(100% 40% at 50% 0%, color-mix(in srgb, var(--g1) 8%, transparent), transparent),
+    radial-gradient(100% 40% at 50% 0%, color-mix(in srgb, var(--g1) 9%, transparent), transparent),
     var(--surface);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--trim);
   border-bottom: 0;
   border-radius: 26px 26px 0 0;
   padding: 10px 20px calc(var(--safe-bottom) + 24px);
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 -10px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 18%, transparent);
   animation: sheet-up 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) both;
 }
 
@@ -688,7 +758,7 @@
   width: 42px;
   height: 4px;
   border-radius: 4px;
-  background: var(--line-strong);
+  background: var(--trim);
   margin: 0 auto 6px;
 }
 
@@ -709,7 +779,6 @@
   font-size: calc(21px * var(--text-scale, 1));
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--gold);
 }
 
 .sheet-divider {
@@ -744,12 +813,18 @@
 .dialog {
   width: 100%;
   max-width: 360px;
-  background: var(--surface);
-  border: 1px solid var(--line-strong);
+  background:
+    radial-gradient(100% 50% at 50% 0%, color-mix(in srgb, var(--g1) 9%, transparent), transparent),
+    var(--surface);
+  border: 1px solid var(--trim);
   border-radius: 22px;
   padding: 26px 22px 20px;
   text-align: center;
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow),
+    0 0 0 4px color-mix(in srgb, var(--surface) 50%, transparent),
+    0 0 0 5px color-mix(in srgb, var(--matt) 22%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 18%, transparent);
   animation: pop 0.25s cubic-bezier(0.2, 1.3, 0.4, 1) both;
 }
 
@@ -763,7 +838,6 @@
 .dialog-title {
   font-family: var(--font-display);
   font-size: calc(19px * var(--text-scale, 1));
-  color: var(--gold);
   letter-spacing: 0.04em;
 }
 
@@ -797,16 +871,19 @@
   gap: 10px;
   padding: 12px 18px;
   border-radius: 16px;
-  background: var(--surface-3);
-  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
+  border: 1px solid var(--trim);
   color: var(--ink);
-  box-shadow: var(--shadow);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 color-mix(in srgb, var(--g1) 16%, transparent);
   font-size: calc(17px * var(--text-scale, 1));
   animation: toast-in 0.3s cubic-bezier(0.2, 1.2, 0.4, 1) both;
 }
 
 .toast .glyph {
   color: var(--gold);
+  stroke: url(#glyph-shine);
 }
 
 @keyframes toast-in {
@@ -896,6 +973,7 @@
   border-radius: 14px;
   padding: 12px 14px;
   outline: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.12);
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -903,7 +981,9 @@
 
 .input:focus {
   border-color: var(--g2);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--g2) 22%, transparent);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.12),
+    0 0 0 3px color-mix(in srgb, var(--g2) 22%, transparent);
 }
 
 .input::placeholder {
@@ -987,11 +1067,14 @@
 
 .switch:checked {
   background: color-mix(in srgb, var(--g2) 35%, var(--surface-3));
+  border-color: var(--trim);
 }
 
 .switch:checked::after {
   transform: translateX(20px);
-  background: var(--grad-gold);
+  box-shadow:
+    0 0 0 1px var(--matt-deep),
+    0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 input[type='range'] {
@@ -1014,6 +1097,7 @@ input[type='range'] {
 
 .note .glyph {
   color: var(--gold);
+  stroke: url(#glyph-shine);
   margin-top: 2px;
 }
 
@@ -1058,7 +1142,8 @@ input[type='range'] {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--trim);
+  background: var(--surface-2);
   display: grid;
   place-items: center;
   font-family: var(--font-display);
@@ -1100,7 +1185,7 @@ input[type='range'] {
   padding: 0 14px;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
-  background: var(--surface-2);
+  background: linear-gradient(180deg, var(--surface-3), var(--surface-2));
   font-family: var(--font-display);
   font-size: calc(12px * var(--text-scale, 1));
   font-weight: 700;
@@ -1110,8 +1195,12 @@ input[type='range'] {
 }
 
 .chip.is-on {
-  background: color-mix(in srgb, var(--g2) 22%, var(--surface-2));
-  border-color: var(--g2);
+  border-color: var(--matt-deep);
+  color: var(--gold-ink);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 70%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 2px 8px color-mix(in srgb, var(--g2) 30%, transparent);
 }
 
 .chip-muted {
@@ -1155,8 +1244,7 @@ input[type='range'] {
 }
 
 .tr-item.is-on {
-  border-color: var(--g2);
-  background: color-mix(in srgb, var(--g2) 12%, var(--surface));
+  --selected: linear-gradient(color-mix(in srgb, var(--g2) 12%, var(--surface)), color-mix(in srgb, var(--g2) 12%, var(--surface)));
 }
 
 .tr-abbr {
@@ -1191,6 +1279,7 @@ input[type='range'] {
 
 .tr-check {
   color: var(--gold);
+  stroke: url(#glyph-shine);
 }
 
 .loading-lines {
@@ -1202,7 +1291,7 @@ input[type='range'] {
 .loading-lines span {
   height: 16px;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--surface-2), var(--surface-3), var(--surface-2));
+  background: linear-gradient(90deg, var(--surface-2), color-mix(in srgb, var(--g2) 14%, var(--surface-3)), var(--surface-2));
   background-size: 200% 100%;
   animation: shimmer 1.4s linear infinite;
 }
@@ -1227,6 +1316,7 @@ input[type='range'] {
   height: 5px;
   border-radius: 5px;
   background: var(--surface-3);
+  box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
   margin-top: 7px;
 }
@@ -1251,7 +1341,8 @@ input[type='range'] {
 }
 
 .mini-bar-done {
-  background: var(--grad-gold);
+  background: var(--grad-bar);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--g2) 50%, transparent);
 }
 
 .rows {
@@ -1279,6 +1370,7 @@ input[type='range'] {
 
 .row > .glyph:first-child {
   color: var(--gold);
+  stroke: url(#glyph-shine);
 }
 
 .row-label {
@@ -1329,10 +1421,15 @@ button.row:active {
   gap: 2px;
   padding: 14px 6px 12px;
   border-radius: 16px;
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
   border: 1px solid var(--line);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--g1) 10%, transparent);
   color: var(--gold);
   text-align: center;
+}
+
+.stat-tile .glyph {
+  stroke: url(#glyph-shine);
 }
 
 .stat-tile strong {
@@ -1349,7 +1446,7 @@ button.row:active {
 }
 
 .stat-tile.is-glow {
-  border-color: var(--g2);
+  --selected: linear-gradient(180deg, color-mix(in srgb, var(--g2) 12%, var(--surface-2)), var(--surface));
   box-shadow: 0 0 22px color-mix(in srgb, var(--g2) 25%, transparent);
 }
 
@@ -1361,8 +1458,10 @@ button.row:active {
   text-align: left;
   padding: 14px 12px 14px 16px;
   border-radius: 16px;
-  border: 1px dashed var(--line-strong);
-  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--matt);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--g2) 7%, var(--surface)), color-mix(in srgb, var(--surface) 80%, transparent) 60%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--g1) 10%, transparent);
   margin-bottom: 14px;
 }
 
@@ -1374,6 +1473,7 @@ button.row:active {
 
 .hint-card > .glyph {
   color: var(--gold);
+  stroke: url(#glyph-shine);
   margin-top: 2px;
 }
 
@@ -1401,9 +1501,29 @@ button.row:active {
 
 .hint-card.is-action {
   align-items: center;
-  border-style: solid;
 }
 
 .hint-card.is-action > .glyph:last-child {
   color: var(--ink-faint);
+  stroke: currentColor;
+}
+
+/* ─── Selected ───────────────────────────────────────────────────────────── */
+
+/* Whatever is chosen, current or earned wears a polished rim instead of matt trim. */
+.tr-item.is-on,
+.stat-tile.is-glow,
+.path-item.is-active,
+.goal-item.is-on,
+.book-cell.is-active,
+.chapter.is-next,
+.verse-pick.is-kept,
+.emblem-choice.is-on,
+.shop-item.is-equipped,
+.recite-card.is-ready {
+  --selected-tint: color-mix(in srgb, var(--g2) 10%, var(--surface));
+  border-color: transparent;
+  background:
+    var(--selected, linear-gradient(var(--selected-tint), var(--selected-tint))) padding-box,
+    var(--grad-rim) border-box;
 }

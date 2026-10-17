@@ -23,6 +23,7 @@ import './styles/components.css';
 import './styles/screens.css';
 import './styles/lesson.css';
 import './styles/reading.css';
+import './styles/metal.css';
 
 import App from './App.jsx';
 import ErrorBoundary from './components/ErrorBoundary.jsx';

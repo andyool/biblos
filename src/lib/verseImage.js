@@ -13,7 +13,7 @@ const H = 1350;
 function themeColours() {
   const css = getComputedStyle(document.documentElement);
   const v = (name) => css.getPropertyValue(name).trim();
-  return { bg: v('--bg'), bg2: v('--bg-2'), ink: v('--ink'), faint: v('--ink-faint'), gold: v('--gold'), g1: v('--g1'), g2: v('--g2'), g3: v('--g3'), accent: v('--accent'), line: v('--line-strong') };
+  return { light: css.colorScheme === 'light', bg: v('--bg'), bg2: v('--bg-2'), ink: v('--ink'), faint: v('--ink-faint'), g0: v('--g0'), g1: v('--g1'), g2: v('--g2'), g3: v('--g3'), g4: v('--g4'), matt: v('--matt'), accent: v('--accent'), line: v('--line-strong') };
 }
 
 /** The frame's top-left corner, drawn from the same SVG as the app's frames. */
@@ -23,7 +23,7 @@ async function cornerImage(variant, c) {
   flushSync(() => root.render(createElement(Corner, { variant, pos: 'tl', size: 62 })));
   const svg = div.innerHTML
     .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
-    .replace(/currentColor/g, c.gold)
+    .replace(/currentColor/g, c.matt)
     .replace(/url\(#gold-fill\)/g, c.g2)
     .replace(/var\(--accent\)/g, c.accent)
     .replace(/var\(--bg\)/g, c.bg);
@@ -84,15 +84,20 @@ export async function verseImage({ id, tr, text, frame, verseFont }) {
     ctx.restore();
   }
 
-  const gold = ctx.createLinearGradient(W / 2 - 300, 0, W / 2 + 300, 0);
-  gold.addColorStop(0, c.g2);
-  gold.addColorStop(0.45, c.g1);
-  gold.addColorStop(1, c.g3);
+  // Polished gold, as in the app's lettering (--grad-text): a dark band just below the middle of each line.
+  const bands = c.light
+    ? [[0, c.g3], [0.4, c.g2], [0.52, c.g3], [0.6, c.g4], [0.78, c.g3], [1, c.g2]]
+    : [[0, c.g0], [0.24, c.g1], [0.47, c.g2], [0.55, c.g3], [0.66, c.g2], [1, c.g1]];
+  const polished = (top, bottom) => {
+    const g = ctx.createLinearGradient(0, top, 0, bottom);
+    bands.forEach(([at, colour]) => g.addColorStop(at, colour));
+    return g;
+  };
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
 
   // The reference, a small diamond, then the verse, as large as will fit.
-  ctx.fillStyle = gold;
+  ctx.fillStyle = polished(242, 290);
   ctx.font = `600 46px ${display}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
   ctx.fillText(formatRef(id).toUpperCase(), W / 2, 282);
@@ -100,7 +105,11 @@ export async function verseImage({ id, tr, text, frame, verseFont }) {
   ctx.save();
   ctx.translate(W / 2, 330);
   ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = c.g2;
   ctx.fillRect(-8, -8, 16, 16);
+  ctx.fillStyle = c.g0;
+  ctx.globalAlpha = 0.7;
+  ctx.fillRect(-8, -8, 8, 8);
   ctx.restore();
   ctx.strokeStyle = c.line;
   ctx.lineWidth = 1.5;
@@ -134,7 +143,7 @@ export async function verseImage({ id, tr, text, frame, verseFont }) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
   ctx.fillText(tr, W / 2, 1150);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-  ctx.fillStyle = gold;
+  ctx.fillStyle = polished(1188, 1240);
   ctx.font = `46px ${script}`;
   ctx.fillText('Biblos', W / 2, 1226);
 
