@@ -12,6 +12,7 @@ import { getTranslation } from '../data/translations.js';
 import { updateReady } from '../lib/update.js';
 import { planProgress, planStatus } from '../lib/plans.js';
 import { FIRST_BOOKS } from '../data/guides/index.js';
+import Woolly from '../components/Woolly.jsx';
 
 /** The reading plan you follow: how far through, and what is left for today. */
 function PlanCard({ code, sections }) {
@@ -92,6 +93,7 @@ function Welcome() {
         <span className="gold-text">Read Through</span>
       </h1>
       <Divider width={200} className="center" />
+      <Woolly size={130} listen act="read" className="read-woolly" />
       <p className="lead read-lead">
         Read the Bible in order, one passage at a time — for the meaning, not just the words. Each reading has a focus, a few questions and a moment to take it to heart.
       </p>
@@ -234,6 +236,7 @@ export default function Read() {
       )}
 
       <Frame className="today" size={40}>
+        <Woolly size={132} listen base={failed ? 'idle' : 'read'} intro={failed ? 'look-around' : undefined} key={failed ? 'failed' : 'ok'} className="today-woolly" />
         <p className="today-kicker">{progress.finished ? 'Book complete' : progress.count ? 'Continue reading' : `Begin ${book.name}`}</p>
         {!ready ? (
           failed ? (

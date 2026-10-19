@@ -21,6 +21,8 @@ import OpeningStep from '../exercises/OpeningStep.jsx';
 import RushStep from '../exercises/RushStep.jsx';
 import SpellStep from '../exercises/SpellStep.jsx';
 import { ACTIVITY_NAMES, SKILLS } from '../lib/adapt.js';
+import Woolly from '../components/Woolly.jsx';
+import { feedbackAct } from '../mascot/reactions.js';
 
 const EXERCISES = {
   read: ReadStep,
@@ -123,7 +125,7 @@ export default function Lesson({ session, onExit, onFinish }) {
   };
 
   const exit = async () => {
-    const ok = await ask({ title: 'Leave this lesson?', message: 'Your progress in this lesson will not be saved.', confirm: 'Leave', cancel: 'Keep going' });
+    const ok = await ask({ title: 'Leave this lesson?', message: 'Your progress in this lesson will not be saved.', confirm: 'Leave', cancel: 'Keep going', woolly: 'encourage' });
     if (ok) {
       stopSpeaking();
       onExit();
@@ -168,6 +170,7 @@ export default function Lesson({ session, onExit, onFinish }) {
       {feedback && (
         <div className={`feedback is-${feedback.tone}`} role="status">
           <div className="feedback-inner">
+            <Woolly act={feedbackAct(feedback.tone, combo)} size={118} peek delay={200} className="feedback-woolly" />
             <div className="feedback-head">
               <span className="feedback-icon">
                 <Glyph name={feedback.tone === 'learning' ? 'seed' : 'check'} size={22} strokeWidth={2} />

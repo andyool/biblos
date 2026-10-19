@@ -6,6 +6,7 @@ import { getTranslation } from '../data/translations.js';
 import { versesInBook } from '../lib/plans.js';
 import { leavePlan, startPlan } from '../lib/actions.js';
 import { ask, toast } from '../lib/ui.js';
+import { cueSoon } from '../mascot/bus.js';
 
 /** Choose a reading plan: a pace through Read Through, book after book. */
 export default function PlansSheet({ onClose }) {
@@ -20,6 +21,7 @@ export default function PlansSheet({ onClose }) {
     }
     startPlan(plan.id);
     toast(`${plan.name} begins today`, 'calendar');
+    cueSoon('plan');
     return onClose();
   };
 
@@ -32,7 +34,7 @@ export default function PlansSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Reading plans" onClose={onClose}>
+    <Sheet title="Reading plans" onClose={onClose} woolly="read">
       <p className="small-print">A plan sets a pace through the books, one passage after another, and shows whether you are on track. Whatever you have already read in its books counts.</p>
       <div className="path-list">
         {PLANS.map((plan) => {

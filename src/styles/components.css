@@ -710,10 +710,16 @@
   position: fixed;
   inset: 0;
   z-index: 50;
+}
+
+.sheet-scrim,
+.dialog-scrim {
+  position: absolute;
+  inset: 0;
   background: rgba(5, 6, 12, 0.55);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  animation: fade-in 0.2s ease both;
+  animation: fade-in 0.2s ease backwards;
 }
 
 .sheet-backdrop {
@@ -728,10 +734,29 @@
   }
 }
 
-.sheet {
+/* The copy of a closed sheet or dialog that animates away (src/lib/leave.js): it has
+   already arrived, so its own entrances are skipped, and it can't be touched. */
+.is-leaving,
+.is-leaving * {
+  animation-delay: -60s !important;
+  pointer-events: none !important;
+}
+
+.sheet-panel {
   position: relative;
   width: 100%;
   max-width: 560px;
+  animation: sheet-up 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) backwards;
+}
+
+.sheet-panel.is-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sheet {
+  position: relative;
+  width: 100%;
   max-height: calc(100dvh - var(--safe-top) - 24px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -741,11 +766,15 @@
   border: 1px solid var(--trim);
   border-bottom: 0;
   border-radius: 26px 26px 0 0;
-  padding: 10px 20px calc(var(--safe-bottom) + 24px);
+  padding: 0 20px calc(var(--safe-bottom) + 24px);
   box-shadow:
     0 -10px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 color-mix(in srgb, var(--g1) 18%, transparent);
-  animation: sheet-up 0.32s cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+/* Room above the sheet for the lamb peeking over it. */
+.sheet-panel.has-woolly .sheet {
+  max-height: calc(100dvh - var(--safe-top) - 100px);
 }
 
 @keyframes sheet-up {
@@ -754,12 +783,24 @@
   }
 }
 
+/* A wide strip to take hold of: the handle is small, the place to grab it is not. */
+.sheet-grab {
+  margin: 0 -20px;
+  padding: 10px 0 6px;
+  touch-action: none;
+  cursor: grab;
+}
+
+.sheet-panel.is-dragging .sheet-grab {
+  cursor: grabbing;
+}
+
 .sheet-handle {
   width: 42px;
   height: 4px;
   border-radius: 4px;
   background: var(--trim);
-  margin: 0 auto 6px;
+  margin: 0 auto;
 }
 
 .sheet-close {
@@ -810,9 +851,15 @@
   padding: 24px;
 }
 
-.dialog {
+.dialog-wrap {
+  position: relative;
   width: 100%;
   max-width: 360px;
+}
+
+.dialog {
+  position: relative;
+  width: 100%;
   background:
     radial-gradient(100% 50% at 50% 0%, color-mix(in srgb, var(--g1) 9%, transparent), transparent),
     var(--surface);
@@ -1540,4 +1587,175 @@ button.row:active {
   background:
     var(--selected, linear-gradient(var(--selected-tint), var(--selected-tint))) padding-box,
     var(--grad-rim) border-box;
+}
+
+/* ─── Woolly, the golden lamb ───────────────────────────────────────────── */
+
+.woolly {
+  position: relative;
+  flex: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.woolly-art {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  transform-origin: 50% 97%;
+}
+
+/* Tucked behind the card it stands on, the lamb pops up once the card has arrived.
+   Each place sets where (left/right) and how much stays hidden (--tuck, of its height). */
+.woolly.is-peek {
+  position: absolute;
+  bottom: calc(100% - var(--woolly-h) * var(--tuck, 0.4));
+  animation: woolly-peek 0.6s var(--woolly-delay, 0ms) cubic-bezier(0.22, 1.45, 0.45, 1) backwards;
+}
+
+@keyframes woolly-peek {
+  from {
+    transform: translateY(calc(100% - var(--tuck, 0.4) * 100% + 4px));
+  }
+}
+
+.sheet-woolly {
+  left: 22px;
+  --tuck: 0.3;
+}
+
+.dialog-woolly {
+  left: calc(50% - var(--woolly-w) / 2);
+  --tuck: 0.32;
+}
+
+/* Popping in from the edge of the screen, leaning round it. */
+.woolly-cameo {
+  position: fixed;
+  z-index: 65;
+  bottom: calc(var(--safe-bottom) + 76px);
+  width: 170px;
+  height: 190px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.woolly-cameo.is-right {
+  right: 0;
+  --lean: -9deg;
+  --edge: 24%;
+  --away: 130%;
+}
+
+.woolly-cameo.is-left {
+  left: 0;
+  --lean: 9deg;
+  --edge: -24%;
+  --away: -130%;
+}
+
+.woolly-cameo > .woolly {
+  position: absolute;
+  bottom: 0;
+  pointer-events: auto;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.28));
+  transform: translateX(var(--edge)) rotate(var(--lean));
+  transform-origin: 50% 96%;
+  animation: woolly-lean-in 0.6s cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+}
+
+.woolly-cameo.is-right > .woolly {
+  right: 0;
+}
+
+.woolly-cameo.is-left > .woolly {
+  left: 0;
+}
+
+.woolly-cameo.is-out > .woolly {
+  animation: woolly-lean-out 0.4s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
+}
+
+@keyframes woolly-lean-in {
+  from {
+    transform: translateX(var(--away)) rotate(0deg);
+  }
+}
+
+@keyframes woolly-lean-out {
+  to {
+    transform: translateX(var(--away)) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .woolly.is-peek,
+  .woolly-cameo > .woolly {
+    animation: fade-in 0.3s var(--woolly-delay, 0ms) ease backwards;
+  }
+
+  .woolly-cameo.is-out > .woolly {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* Choosing the girl or the boy lamb. */
+.woolly-pick {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.woolly-option {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 12px 8px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.woolly-option strong {
+  font-family: var(--font-display);
+  font-size: calc(14px * var(--text-scale, 1));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.woolly-option.is-on {
+  --selected-tint: color-mix(in srgb, var(--g2) 10%, var(--surface));
+  border-color: transparent;
+  background:
+    linear-gradient(var(--selected-tint), var(--selected-tint)) padding-box,
+    var(--grad-rim) border-box;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--g2) 18%, transparent);
+}
+
+.woolly-option.is-on strong {
+  color: var(--gold);
+}
+
+/* In the settings list, under the switch. */
+.row-woolly {
+  display: block;
+  padding-top: 4px;
+}
+
+.row-woolly .woolly-pick {
+  gap: 10px;
+}
+
+.row-woolly .woolly-option {
+  grid-template-columns: auto 1fr;
+  justify-items: start;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 8px;
 }

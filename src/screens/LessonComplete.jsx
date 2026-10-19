@@ -7,6 +7,8 @@ import { BOOK_BY_CODE, formatRef } from '../data/books.js';
 import { whenText } from '../lib/dates.js';
 import { BOOK_BONUS } from '../lib/actions.js';
 import { useBack } from '../lib/nav.js';
+import Woolly from '../components/Woolly.jsx';
+import { cue } from '../mascot/bus.js';
 
 function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
@@ -24,13 +26,21 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
   useEffect(() => {
     play('complete');
     if (levelled.length) setTimeout(() => play('level'), 650);
+    // Give the lamb a moment to appear, then react to how it went.
+    const t = setTimeout(() => {
+      if (summary.kind === 'reading') cue('readFinish', { bookDone: summary.reading.bookDone });
+      else if (summary.changes.some((c) => c.note === 'almost')) cue('fail');
+      else cue('pass', { levelled: levelled.length > 0, perfect: summary.perfect });
+    }, 350);
+    return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="complete">
       <Sparkles />
       <div className="complete-hero">
-        <Laurel size={190}>
+        <Woolly size={168} listen className="complete-woolly" />
+        <Laurel size={150}>
           <div className="complete-xp">
             <span className="complete-xp-num gold-text">+{summary.xp}</span>
             <span className="complete-xp-label">XP</span>

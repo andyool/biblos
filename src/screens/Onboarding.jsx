@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Divider, EmblemBadge, LogoMark } from '../components/Ornaments.jsx';
+import { Divider, EmblemBadge } from '../components/Ornaments.jsx';
 import Glyph from '../components/Glyph.jsx';
 import TranslationPicker from '../components/TranslationPicker.jsx';
 import { PathList } from '../sheets/PathsSheet.jsx';
@@ -10,11 +10,12 @@ import { FIRST_BOOKS, loadGuide } from '../data/guides/index.js';
 import { setReadingBook, updateProfile, updateSettings } from '../lib/actions.js';
 import { planNext } from '../lib/lesson.js';
 import { bookSections, readingTr } from '../lib/reading.js';
-import { getState } from '../lib/store.js';
+import { getState, useStore } from '../lib/store.js';
 import { play } from '../lib/sound.js';
 import { useBack } from '../lib/nav.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { useApp } from '../AppContext.js';
+import Woolly, { WoollyPicker } from '../components/Woolly.jsx';
 
 const AIMS = [
   { id: 'memorise', name: 'Learn verses by heart', desc: 'A few minutes a day, until each verse is hidden in your heart' },
@@ -33,9 +34,10 @@ export default function Onboarding() {
   const [goal, setGoal] = useState(20);
   const [path, setPath] = useState('foundations');
   const [book, setBook] = useState('MRK');
+  const woollyOff = useStore((s) => s.settings.woolly === false);
 
   // A path of verses only for memorising, a first book only for reading.
-  const steps = ['welcome', 'aim', 'bible', ...(aim !== 'read' ? ['path'] : []), ...(aim !== 'memorise' ? ['book'] : []), 'goal'];
+  const steps = ['welcome', 'lamb', 'aim', 'bible', ...(aim !== 'read' ? ['path'] : []), ...(aim !== 'memorise' ? ['book'] : []), 'goal'];
   const page = steps[step];
   const last = step === steps.length - 1;
 
@@ -89,7 +91,7 @@ export default function Onboarding() {
 
       {page === 'welcome' && (
         <div className="ob-page ob-welcome">
-          <LogoMark size={128} className="float" />
+          <Woolly size={176} intro="wave" delay={350} className="ob-woolly" />
           <h1 className="logo-word gold-text">Biblos</h1>
           <Divider width={230} />
           <p className="ob-tag">Hide God’s word in your heart — a few minutes at a time.</p>
@@ -100,6 +102,19 @@ export default function Onboarding() {
           <button className="btn btn-gold btn-block btn-shine" onClick={next}>
             Begin
           </button>
+        </div>
+      )}
+
+      {page === 'lamb' && (
+        <div className="ob-page">
+          <h2 className="ob-title">Meet Woolly</h2>
+          <p className="ob-sub">A little golden lamb who keeps you company, cheers when you get it right and encourages you when you slip.</p>
+          <WoollyPicker size={150} />
+          <button className={`ob-skip ${woollyOff ? 'is-on' : ''}`} aria-pressed={woollyOff} onClick={() => updateSettings({ woolly: woollyOff })}>
+            {woollyOff ? 'Woolly will stay away' : 'I’d rather go without'}
+          </button>
+          <p className="ob-note">You can change this, or turn Woolly off, under Me.</p>
+          {cta('Continue', 'sticky-cta')}
         </div>
       )}
 

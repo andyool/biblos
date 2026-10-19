@@ -18,6 +18,7 @@ import { DAY, startOfDay } from '../lib/dates.js';
 import { bookProgress, readingTr, sectionRef, useBook } from '../lib/reading.js';
 import { planProgress, planStatus } from '../lib/plans.js';
 import { BOOK_BY_CODE } from '../data/books.js';
+import Woolly from '../components/Woolly.jsx';
 
 const SWAY = [0, 54, 82, 54, 0, -54, -82, -54];
 const GAP = 118;
@@ -222,6 +223,9 @@ function ReadingToday({ state }) {
   );
 }
 
+// Woolly waves once each time the app is opened.
+let waved = false;
+
 export default function Home() {
   const state = useStore();
   const { start, openVerse, openSheet } = useApp();
@@ -232,6 +236,10 @@ export default function Home() {
   const nextId = learning.find((id) => !resting(state.verses[id])) || learning[0];
   const memorised = path.verses.filter((id) => (state.verses[id]?.level || 0) >= 4).length;
   const complete = path.verses.length > 0 && memorised === path.verses.length;
+
+  useEffect(() => {
+    waved = true;
+  }, []);
 
   // Fetch the next few verses quietly so lessons open instantly.
   useEffect(() => {
@@ -247,6 +255,7 @@ export default function Home() {
       <BackupHint />
 
       <Frame className="today" size={40}>
+        <Woolly size={132} listen intro={waved ? undefined : 'wave'} delay={250} className="today-woolly" />
         <p className="today-kicker">
           Today’s practice
           {practisedToday(state) && (

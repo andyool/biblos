@@ -95,7 +95,7 @@ export default function VerseSheet({ id, onClose }) {
   };
 
   return (
-    <Sheet title={formatRef(id)} onClose={onClose} className="verse-sheet">
+    <Sheet title={formatRef(id)} onClose={onClose} className="verse-sheet" woolly="read">
       <div className="chip-row">
         <button className="chip" onClick={() => setMode(mode === 'translation' ? null : 'translation')}>
           {tr} <Glyph name="down" size={14} />

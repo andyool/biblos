@@ -12,6 +12,7 @@ import { getText, useTextsVersion } from '../lib/texts.js';
 import { tokenize } from '../lib/text.js';
 import { addCustomVerses, setActivePath } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
+import { cueSoon } from '../mascot/bus.js';
 
 export default function AddVerseSheet({ onClose }) {
   const settings = useStore((s) => s.settings);
@@ -58,13 +59,14 @@ export default function AddVerseSheet({ onClose }) {
     addCustomVerses(ids, tr);
     setActivePath('mine');
     toast(fresh.length ? `${formatRef(id)} added to My Verses` : 'Already in My Verses', 'check');
+    if (fresh.length && !andStart) cueSoon('verseAdded');
     onClose();
     if (andStart) start({ kind: 'learn', verseIds: [ids[0]], title: 'Sow a new verse', detail: formatRef(ids[0]) });
     else go('path');
   };
 
   return (
-    <Sheet title="Add a verse" onClose={onClose}>
+    <Sheet title="Add a verse" onClose={onClose} woolly="nod">
       <label className="field">
         <span>Reference</span>
         <input

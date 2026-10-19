@@ -7,6 +7,7 @@ import { addCustomVerses } from '../lib/actions.js';
 import { setText } from '../lib/texts.js';
 import { toast } from '../lib/ui.js';
 import { getTranslation } from '../data/translations.js';
+import { cue } from '../mascot/bus.js';
 
 /** Take it to heart: a question to ponder, a note to keep, and a verse to memorise. */
 export default function ReflectStep({ step, session, onComplete }) {
@@ -22,6 +23,7 @@ export default function ReflectStep({ step, session, onComplete }) {
     setText(tr, id, { verses: [{ v: v.v, t: v.t }], src: getTranslation(tr).source });
     addCustomVerses([id], tr);
     toast(`Verse ${v.v} added to My Verses — learn it from the Path tab.`, 'heart');
+    cue('verseAdded');
   };
 
   return (

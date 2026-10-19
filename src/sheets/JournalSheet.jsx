@@ -8,6 +8,7 @@ import { formatRef } from '../data/books.js';
 import { dayKey } from '../lib/dates.js';
 import { shareFile } from '../lib/device.js';
 import { toast } from '../lib/ui.js';
+import { cue } from '../mascot/bus.js';
 
 /** The guide's title for a passage, once its guide has loaded. */
 function titleOf(id) {
@@ -55,11 +56,12 @@ export default function JournalSheet({ onClose }) {
     }
     const file = new File([lines.join('\n')], `biblos-journal-${dayKey()}.txt`, { type: 'text/plain' });
     const result = await shareFile(file, 'Biblos journal');
+    cue('journal');
     if (result === 'downloaded') toast('Journal saved to your downloads', 'check');
   };
 
   return (
-    <Sheet title="Your journal" onClose={onClose} className="journal-sheet">
+    <Sheet title="Your journal" onClose={onClose} className="journal-sheet" woolly="pray">
       {entries.length > 2 && (
         <label className="journal-search">
           <Glyph name="search" size={18} />

@@ -12,6 +12,8 @@ import PassageStep from '../reading/PassageStep.jsx';
 import ChoiceStep from '../reading/ChoiceStep.jsx';
 import SequenceStep from '../reading/SequenceStep.jsx';
 import ReflectStep from '../reading/ReflectStep.jsx';
+import Woolly from '../components/Woolly.jsx';
+import { feedbackAct } from '../mascot/reactions.js';
 
 const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, reflect: ReflectStep };
 const GRADED = new Set(['question', 'summary', 'flow', 'recap']);
@@ -55,7 +57,7 @@ export default function Reading({ session, onExit, onFinish }) {
   };
 
   const exit = async () => {
-    const ok = await ask({ title: 'Stop reading?', message: 'Your place in the book is kept — this passage will be waiting.', confirm: 'Stop', cancel: 'Keep reading' });
+    const ok = await ask({ title: 'Stop reading?', message: 'Your place in the book is kept — this passage will be waiting.', confirm: 'Stop', cancel: 'Keep reading', woolly: 'encourage' });
     if (ok) {
       stopSpeaking();
       onExit();
@@ -85,6 +87,7 @@ export default function Reading({ session, onExit, onFinish }) {
       {feedback && (
         <div className={`feedback is-${feedback.tone}`} role="status">
           <div className="feedback-inner">
+            <Woolly act={feedbackAct(feedback.tone)} size={118} peek delay={200} className="feedback-woolly" />
             <div className="feedback-head">
               <span className="feedback-icon">
                 <Glyph name={feedback.tone === 'learning' ? 'seed' : 'check'} size={22} strokeWidth={2} />

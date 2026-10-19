@@ -25,6 +25,9 @@ export function freshState() {
       yvKey: '',
       activePath: 'foundations',
       focus: 'both', // what you came for: 'memorise', 'read' or 'both'
+      // Woolly, the golden lamb who keeps you company: shown or not, and a girl or a boy lamb.
+      woolly: true,
+      woollyLamb: 'female',
       installDismissed: false,
       // Backups: when the last was saved, how many lessons and readings had been done then,
       // and until when the reminder is put off.

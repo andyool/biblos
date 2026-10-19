@@ -17,6 +17,7 @@ import { getTranslation } from '../data/translations.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { formatRef } from '../data/books.js';
 import { LEVELS } from '../data/levels.js';
+import Woolly from '../components/Woolly.jsx';
 
 function verseOfTheDay() {
   const key = dayKey();
@@ -150,6 +151,7 @@ export default function Library() {
         </>
       )}
 
+      {!mine.length && <Woolly size={120} act="look-around" className="empty-woolly" />}
       {!mine.length && (
         <p className="empty">
           The verses you learn will gather here.

@@ -3,6 +3,7 @@ const VERSION = '__VERSION__';
 const SHELL = `biblos-shell-${VERSION}`;
 const RUNTIME = 'biblos-runtime';
 const TEXTS = 'biblos-texts'; // also filled by "Download for offline" (src/lib/offline.js)
+const WOOLLY = 'biblos-woolly'; // the lamb's drawings: fetched when first shown, kept across versions
 const PRECACHE = __PRECACHE__;
 
 // Built files have hashed names; the page, manifest and icons don't, so those are fetched fresh.
@@ -78,6 +79,10 @@ self.addEventListener('fetch', (event) => {
   }
 
   // App files have hashed names, so a cached copy is always correct.
+  if (url.origin === self.location.origin && url.pathname.startsWith('/assets/woolly-')) {
+    event.respondWith(cacheFirst(request, WOOLLY));
+    return;
+  }
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request, RUNTIME));
     return;

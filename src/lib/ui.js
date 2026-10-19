@@ -6,7 +6,8 @@ let toastItem = null;
 const listeners = new Set();
 const emit = () => listeners.forEach((l) => l());
 
-export function ask({ title, message, confirm = 'Yes', cancel = 'Cancel', danger = false }) {
+// `woolly` names what the lamb does as it peeks over the dialog (if the lamb is on).
+export function ask({ title, message, confirm = 'Yes', cancel = 'Cancel', danger = false, woolly = null }) {
   return new Promise((resolve) => {
     dialog = {
       title,
@@ -14,6 +15,7 @@ export function ask({ title, message, confirm = 'Yes', cancel = 'Cancel', danger
       confirm,
       cancel,
       danger,
+      woolly,
       resolve: (v) => {
         dialog = null;
         emit();

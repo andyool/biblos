@@ -14,6 +14,8 @@ function serviceWorker() {
     generateBundle(_options, bundle) {
       const built = Object.keys(bundle).filter((file) => {
         if (file === 'index.html' || file.endsWith('.map')) return false;
+        // Woolly's drawings are fetched when first shown, and kept in their own cache.
+        if (file.startsWith('assets/woolly-')) return false;
         // Only precache the Latin font files; other alphabets load on demand.
         if (/\.(woff2?|ttf)$/.test(file)) return file.endsWith('.woff2') && /-latin-\d/.test(file);
         return true;
@@ -61,5 +63,7 @@ function devApi() {
 
 export default defineConfig({
   plugins: [react(), serviceWorker(), devApi()],
+  // The app's only page (other folders hold stand-alone previews with their own scripts).
+  optimizeDeps: { entries: ['index.html'] },
   define: { __BUILD__: JSON.stringify(BUILD) },
 });

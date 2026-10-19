@@ -8,6 +8,8 @@ import { EMBLEMS, FONTS, FRAMES, OIL, THEMES } from '../data/shop.js';
 import { buy, buyOil, equip } from '../lib/actions.js';
 import { ask, toast } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
+import Woolly from '../components/Woolly.jsx';
+import { cue } from '../mascot/bus.js';
 
 function SealDetail({ id, onClose }) {
   const state = useStore();
@@ -15,7 +17,7 @@ function SealDetail({ id, onClose }) {
   const earnedAt = state.achievements[id];
   const p = a.progress(state);
   return (
-    <Sheet title={a.name} onClose={onClose}>
+    <Sheet title={a.name} onClose={onClose} woolly={earnedAt ? 'celebrate' : 'encourage'}>
       <div className="seal-detail">
         <Seal icon={a.icon} earned={!!earnedAt} size={110} />
         <p className="lead">{a.desc}</p>
@@ -65,20 +67,24 @@ function useItemAction(kind) {
     if (owned) {
       equip(kind, item.id);
       play('tap');
+      cue('equip');
       return;
     }
     if (item.unlock) {
       toast(`Earn the “${ACHIEVEMENT_BY_ID[item.unlock].name}” seal to unlock this.`, 'lock');
+      cue('empty');
       return;
     }
     if (state.stats.talents < item.price) {
       toast(`You need ${item.price - state.stats.talents} more talents.`, 'coin');
+      cue('cantAfford');
       return;
     }
-    const ok = await ask({ title: `${item.name}`, message: `Spend ${item.price} talents?`, confirm: 'Buy' });
+    const ok = await ask({ title: `${item.name}`, message: `Spend ${item.price} talents?`, confirm: 'Buy', woolly: 'listen' });
     if (ok && buy(kind, item.id)) {
       equip(kind, item.id);
       play('level');
+      cue('purchase');
       toast(`${item.name} is yours`, 'sparkle');
     }
   };
@@ -96,10 +102,14 @@ function Shop() {
 
   const getOil = async () => {
     if (stats.freezes >= OIL.max) return toast('Your flasks are full.', 'lamp');
-    if (stats.talents < OIL.price) return toast(`You need ${OIL.price - stats.talents} more talents.`, 'coin');
-    const ok = await ask({ title: 'A flask of oil', message: `Spend ${OIL.price} talents? If you miss a day, the oil keeps your lamp — and your streak — burning.`, confirm: 'Buy' });
+    if (stats.talents < OIL.price) {
+      cue('cantAfford');
+      return toast(`You need ${OIL.price - stats.talents} more talents.`, 'coin');
+    }
+    const ok = await ask({ title: 'A flask of oil', message: `Spend ${OIL.price} talents? If you miss a day, the oil keeps your lamp — and your streak — burning.`, confirm: 'Buy', woolly: 'listen' });
     if (ok && buyOil()) {
       play('level');
+      cue('purchase');
       toast('Flask filled', 'lamp');
     }
   };
@@ -189,6 +199,7 @@ export default function Treasury() {
           <strong className="purse-num gold-text">{state.stats.talents.toLocaleString()}</strong>
           <span>talents</span>
         </div>
+        <Woolly size={104} listen className="purse-woolly" />
       </div>
       <p className="purse-note">Earned by faithful practice — lessons, flawless rounds, streaks and seals.</p>
 

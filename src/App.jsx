@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { getState, useStore } from './lib/store.js';
 import { AppContext } from './AppContext.js';
-import { GoldDefs, LogoMark } from './components/Ornaments.jsx';
+import { GoldDefs } from './components/Ornaments.jsx';
 import { TabBar } from './components/Chrome.jsx';
 import Overlays from './components/Overlays.jsx';
 import Home from './screens/Home.jsx';
@@ -33,6 +33,8 @@ import { toast } from './lib/ui.js';
 import { useBack } from './lib/nav.js';
 import { useUpdateReady } from './lib/update.js';
 import Glyph from './components/Glyph.jsx';
+import Woolly, { WoollyCameo } from './components/Woolly.jsx';
+import { cue } from './mascot/bus.js';
 
 const THEME_BG = Object.fromEntries(THEMES.map((t) => [t.id, t.colors[0]]));
 
@@ -103,6 +105,7 @@ export default function App() {
   useEffect(() => {
     const check = () => {
       const event = checkStreak();
+      if (event) cue(event.type === 'lost' ? 'streakLost' : 'streakKept');
       if (event?.type === 'oil') toast(`A flask of oil kept your lamp burning (${event.missed} day${event.missed > 1 ? 's' : ''} missed).`, 'lamp');
       if (event?.type === 'lost') toast(`Your ${event.streak}-day streak has ended. Light the lamp again today.`, 'lamp');
     };
@@ -292,10 +295,11 @@ export default function App() {
       {sheetView}
       {preparing && (
         <div className="preparing" role="status">
-          <LogoMark size={86} className="spin-slow" />
+          <Woolly size={150} act="read" />
           <p>Unrolling the scroll…</p>
         </div>
       )}
+      <WoollyCameo />
       <Overlays />
     </AppContext.Provider>
   );

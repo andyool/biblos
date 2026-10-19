@@ -437,6 +437,6 @@ export function restoreBackup(data) {
 export function resetEverything() {
   const keep = getState().settings;
   const fresh = freshState();
-  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, theme: keep.theme } });
+  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, theme: keep.theme, woolly: keep.woolly, woollyLamb: keep.woollyLamb } });
   clearTexts();
 }

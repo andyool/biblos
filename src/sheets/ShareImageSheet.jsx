@@ -6,6 +6,7 @@ import { verseImage } from '../lib/verseImage.js';
 import { shareFile } from '../lib/device.js';
 import { toast } from '../lib/ui.js';
 import { formatRef } from '../data/books.js';
+import { cue } from '../mascot/bus.js';
 
 /**
  * A verse as a picture, to look at first and then share. (Phones only open the share sheet
@@ -35,6 +36,7 @@ export default function ShareImageSheet({ id, tr, text, onClose }) {
   }, [id, tr, text, frame, verseFont]);
 
   const share = async () => {
+    cue('share');
     const result = await shareFile(file, formatRef(id));
     if (result === 'downloaded') toast('Picture saved to your downloads', 'check');
   };

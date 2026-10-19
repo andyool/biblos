@@ -4,3 +4,10 @@ dist
 .env
 .env.local
 .DS_Store
+
+# Copies of the mascot reference images used by mascot-lab/index.html
+mascot-lab/refs/
+
+# Woolly's original drawings (130 MB). The app uses the sheets that
+# scripts/build-woolly.py makes from them, in src/mascot/sheets.
+biblos-generated-frame-core/

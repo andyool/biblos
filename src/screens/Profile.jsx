@@ -15,6 +15,8 @@ import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
 import { SKILLS, weakestSkill } from '../lib/adapt.js';
+import Woolly, { WoollyPicker } from '../components/Woolly.jsx';
+import { cue } from '../mascot/bus.js';
 
 function ThemeChips({ themes, isOn }) {
   return (
@@ -117,9 +119,11 @@ function Offline({ tr }) {
   const onDownload = async () => {
     if (navigator.onLine === false) {
       toast('Connect to the internet first, then try again.');
+      cue('problem');
       return;
     }
     const result = await downloadAll();
+    cue(result.done < result.total || result.failed ? 'problem' : 'download');
     if (result.done < result.total) toast('The connection dropped. Tap again to finish when you’re back online.');
     else if (result.failed) toast(`${result.failed} ${result.failed === 1 ? 'chapter' : 'chapters'} didn’t download. Tap again to finish.`);
     else toast(`The ${result.tr} is saved for offline`, 'check');
@@ -216,6 +220,7 @@ export default function Profile() {
 
   const onExport = async () => {
     const result = await exportBackup();
+    if (result !== 'cancelled') cue('backup');
     if (result === 'downloaded') toast('Backup saved to your downloads', 'check');
   };
 
@@ -230,6 +235,7 @@ export default function Profile() {
   return (
     <div className="screen profile">
       <Frame className="profile-card" size={40}>
+        <Woolly size={96} listen className="profile-woolly" />
         <button className="profile-emblem" onClick={() => go('treasury')} aria-label="Change emblem">
           <EmblemBadge id={profile.emblem} size={84} />
         </button>
@@ -290,6 +296,16 @@ export default function Profile() {
         <Row icon="target" label="Daily goal" value={`${GOALS.find((g) => g.xp === settings.dailyGoal)?.name || ''} · ${settings.dailyGoal} XP`} onClick={() => setSheet('goal')} />
         <Row icon="sparkle" label="Theme" value={settings.autoTheme ? 'Matches your phone' : THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
         <Row icon="eye" label="Text size" value={(TEXT_SIZES.find((t) => t.scale === settings.textSize) || TEXT_SIZES[0]).name} onClick={() => setSheet('text')} />
+        <label className="row">
+          <Glyph name="heart" size={20} />
+          <span className="row-label">Woolly the lamb</span>
+          <input type="checkbox" className="switch" checked={settings.woolly !== false} onChange={(e) => updateSettings({ woolly: e.target.checked })} />
+        </label>
+        {settings.woolly !== false && (
+          <div className="row row-woolly">
+            <WoollyPicker size={52} />
+          </div>
+        )}
         <label className="row">
           <Glyph name="speaker" size={20} />
           <span className="row-label">Sound effects</span>

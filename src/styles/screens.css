@@ -1252,6 +1252,25 @@
   font-style: italic;
 }
 
+.ob-skip {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 16px;
+  border-radius: 12px;
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+.ob-skip.is-on {
+  color: var(--gold);
+}
+
+.ob-note {
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: calc(14px * var(--text-scale, 1));
+}
+
 .emblem-pick {
   display: flex;
   justify-content: center;
@@ -1479,4 +1498,40 @@
     opacity: 0;
     transform: translate(var(--dx), var(--dy)) scale(1);
   }
+}
+
+/* ─── Where Woolly stands ────────────────────────────────────────────────── */
+
+.today-woolly {
+  margin: -16px auto -2px;
+}
+
+.complete-woolly {
+  margin: 0 auto -8px;
+}
+
+.ob-woolly {
+  margin: 0 auto -6px;
+}
+
+.profile-card {
+  position: relative;
+}
+
+.profile-woolly {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+}
+
+.purse-woolly {
+  margin: -18px -6px -14px 0;
+}
+
+.read-woolly {
+  margin: 4px auto -6px;
+}
+
+.empty-woolly {
+  margin: 18px auto -4px;
 }
