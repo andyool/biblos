@@ -287,6 +287,17 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* On iPhone and iPad (-webkit-touch-callout is theirs alone), in Safari and as a Home Screen app alike, the
+   top of the page is blurred in a band that reaches a little below the status bar, even with the page at the
+   top, and a page can't turn it off. So everything starts clear of that band: at the top it blurs only
+   background, and content scrolling up still passes under it. The safe area alone isn't enough, since a Home
+   Screen app can report none while the band is still there. */
+@supports (-webkit-touch-callout: none) {
+  :root {
+    --safe-top: calc(env(safe-area-inset-top, 0px) + 20px);
+  }
+}
+
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 
 *,
