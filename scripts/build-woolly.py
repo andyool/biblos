@@ -24,6 +24,9 @@ CROP = (0, 8, 384, 440)
 SCALE = 0.75
 CELL = (round((CROP[2] - CROP[0]) * SCALE), round((CROP[3] - CROP[1]) * SCALE))
 
+# Clips that play slower in the app than drawn (a share of their manifest speed).
+PACE = {"read": 0.5}
+
 
 def main():
     manifest = json.loads((SOURCE / "manifest.json").read_text())
@@ -45,7 +48,7 @@ def main():
         clips.setdefault(lamb, {})[name] = {
             "cells": len(drawings),
             "order": [drawings.index(n) for n in clip["sequence"]],
-            "fps": clip["fps"],
+            "fps": clip["fps"] * PACE.get(name, 1),
             "loop": clip["loop"],
         }
     data = {"cell": list(CELL), "clips": clips}
