@@ -25,6 +25,7 @@ async function cornerImage(variant, c) {
     .replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"')
     .replace(/currentColor/g, c.matt)
     .replace(/url\(#gold-fill\)/g, c.g2)
+    .replace(/url\(#pearl\)/g, c.g0)
     .replace(/var\(--accent\)/g, c.accent)
     .replace(/var\(--bg\)/g, c.bg);
   root.unmount();

@@ -192,8 +192,15 @@
   pointer-events: none;
 }
 
-.frame-illuminated {
+.frame-illuminated,
+.frame-greekkey,
+.frame-cathedral {
   border-radius: 6px;
+}
+
+.frame-greekkey::before,
+.frame-cathedral::before {
+  border-radius: 2px;
 }
 
 .frame-illuminated::before {

@@ -228,6 +228,158 @@
   color-scheme: light;
 }
 
+/* Deep water at dusk. */
+[data-theme='galilee'] {
+  --bg: #061518;
+  --bg-2: #081b1f;
+  --surface: #0b2227;
+  --surface-2: #102b31;
+  --surface-3: #16363d;
+  --ink: #f0ede0;
+  --ink-soft: rgba(240, 237, 224, 0.76);
+  --ink-faint: rgba(240, 237, 224, 0.54);
+  --g0: #fff8e2;
+  --g1: #fae3a2;
+  --g2: #e9bf50;
+  --g3: #ad8323;
+  --g4: #69490c;
+  --gold: #efcc6a;
+  --matt: #a99a6c;
+  --matt-deep: #5d5434;
+  --line: rgba(169, 154, 108, 0.24);
+  --line-strong: rgba(169, 154, 108, 0.52);
+  --accent: #1d5c68;
+  --glow: rgba(90, 190, 200, 0.1);
+  --logo-lines: rgba(6, 21, 24, 0.55);
+}
+
+/* Warm, dark wood. */
+[data-theme='cedar'] {
+  --bg: #140d08;
+  --bg-2: #1a110b;
+  --surface: #20160e;
+  --surface-2: #2a1d13;
+  --surface-3: #35261a;
+  --ink: #f6ecdc;
+  --ink-soft: rgba(246, 236, 220, 0.76);
+  --ink-faint: rgba(246, 236, 220, 0.54);
+  --g0: #fff7e2;
+  --g1: #fce2a2;
+  --g2: #eabd55;
+  --g3: #b2842a;
+  --g4: #6c4910;
+  --gold: #f0c96c;
+  --matt: #b39a6a;
+  --matt-deep: #67512f;
+  --line: rgba(179, 154, 106, 0.24);
+  --line-strong: rgba(179, 154, 106, 0.52);
+  --accent: #74351f;
+  --glow: rgba(220, 150, 80, 0.11);
+  --logo-lines: rgba(20, 13, 8, 0.55);
+}
+
+/* Silver tried in a furnace, purified seven times (Psalm 12:6). */
+[data-theme='silver'] {
+  --bg: #0d0f12;
+  --bg-2: #111419;
+  --surface: #161a20;
+  --surface-2: #1c2129;
+  --surface-3: #252b35;
+  --ink: #eef0f2;
+  --ink-soft: rgba(238, 240, 242, 0.76);
+  --ink-faint: rgba(238, 240, 242, 0.54);
+  --g0: #ffffff;
+  --g1: #e4e8ed;
+  --g2: #b9c0ca;
+  --g3: #7b8592;
+  --g4: #3f4652;
+  --gold: #d2d8e0;
+  --gold-ink: #14171c;
+  --matt: #8f969f;
+  --matt-deep: #50565f;
+  --line: rgba(143, 150, 159, 0.24);
+  --line-strong: rgba(143, 150, 159, 0.52);
+  --accent: #2f4a68;
+  --glow: rgba(200, 212, 228, 0.1);
+  --logo-lines: rgba(13, 15, 18, 0.55);
+}
+
+/* Sage green and gold. */
+[data-theme='lily'] {
+  --bg: #edefe2;
+  --bg-2: #e4e7d6;
+  --surface: #fafbf3;
+  --surface-2: #f2f4e7;
+  --surface-3: #e5e9d5;
+  --ink: #232a1e;
+  --ink-soft: rgba(35, 42, 30, 0.76);
+  --ink-faint: rgba(35, 42, 30, 0.64);
+  --g0: #fff9e0;
+  --g1: #f2d985;
+  --g2: #c99e36;
+  --g3: #8f6c18;
+  --g4: #54400a;
+  --gold: #85661a;
+  --gold-ink: #241c05;
+  --matt: #a0925f;
+  --matt-deep: #736840;
+  --line: rgba(118, 116, 68, 0.26);
+  --line-strong: rgba(118, 116, 68, 0.52);
+  --accent: #4b6a3a;
+  --ok: #2f6b3f;
+  --bad: #a83a2b;
+  --glow: rgba(201, 158, 54, 0.12);
+  --shadow: 0 12px 30px rgba(50, 60, 30, 0.12);
+  --logo-lines: rgba(255, 255, 248, 0.7);
+  --grain: 0.08;
+  --emboss: rgba(255, 255, 248, 0.9);
+  --t0: var(--g3);
+  --t1: var(--g2);
+  --t2: var(--g3);
+  --t3: var(--g4);
+  --t4: var(--g3);
+  --t5: var(--g2);
+  color-scheme: light;
+}
+
+/* Sand and bronze. */
+[data-theme='desert'] {
+  --bg: #f3e4d0;
+  --bg-2: #ecd8bf;
+  --surface: #fcf4ea;
+  --surface-2: #f6e8d6;
+  --surface-3: #eddac2;
+  --ink: #33231a;
+  --ink-soft: rgba(51, 35, 26, 0.76);
+  --ink-faint: rgba(51, 35, 26, 0.64);
+  --g0: #fff2e4;
+  --g1: #f2c99e;
+  --g2: #c98a52;
+  --g3: #8f5528;
+  --g4: #522d10;
+  --gold: #8a4f24;
+  --gold-ink: #2e1a0a;
+  --matt: #ad8a66;
+  --matt-deep: #7d5f42;
+  --line: rgba(150, 105, 70, 0.26);
+  --line-strong: rgba(150, 105, 70, 0.52);
+  --accent: #96364a;
+  --ok: #3b6e45;
+  --bad: #ad3b2a;
+  --glow: rgba(201, 138, 82, 0.15);
+  --shadow: 0 12px 30px rgba(90, 55, 25, 0.14);
+  --logo-lines: rgba(255, 248, 240, 0.7);
+  --grain: 0.11;
+  --emboss: rgba(255, 250, 242, 0.85);
+  --t0: var(--g3);
+  --t1: var(--g2);
+  --t2: var(--g3);
+  --t3: var(--g4);
+  --t4: var(--g3);
+  --t5: var(--g2);
+  color-scheme: light;
+}
+
 :root {
   /* Polished gold: lit from above, deepening towards the bottom edge. The moving reflections are in metal.css. */
   --grad-shine: linear-gradient(180deg, var(--g0) 0%, var(--g1) 12%, var(--g1) 34%, color-mix(in srgb, var(--g1) 40%, var(--g2)) 58%, var(--g2) 84%, color-mix(in srgb, var(--g2) 55%, var(--g3)) 100%);

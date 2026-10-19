@@ -7,7 +7,7 @@ Biblos is a phone app for learning Bible verses by heart, a few minutes at a tim
 - **Read through**: read whole books of the Bible in order, one passage at a sitting, for the meaning rather than the words. Every book is guided: each passage has a focus, questions on the meaning (with an explanation after each answer), a summary to choose and something to reflect on. A new chapter starts by recalling the story so far, and any verse you read can be added to your memory path.
 - **Spaced review**: memorised verses come back just before you'd forget them. A verse is *Hidden in the Heart* once you can still recall it after a gap of three weeks.
 - **Rewards**: XP, a daily goal, a streak lamp (with "flasks of oil" that keep a streak alive if you miss a day), talents to spend, and 27 seals to earn.
-- **Customisation**: 7 themes, 5 verse letterings, 3 card frames and 19 emblems.
+- **Customisation**: 12 themes, 8 verse letterings, 8 card frames and 21 emblems.
 - **Translations**: NIV, NIV (Anglicised), ESV, NKJV, NLT, NRSV Catholic Edition, CSB, NASB, LSB, NET, AMP, MSG, KJV, BSB and WEB. You can switch the whole app, or a single verse. With the Catholic Edition, Read Through also has Tobit, Judith, Wisdom, Sirach, Baruch, 1–2 Maccabees and the longer Esther and Daniel.
 - It works offline once installed. In **Me → Use it offline**, download the whole Bible and every memory verse to the phone (on Wi-Fi, about 6 MB per translation). You can keep several translations and remove them again. Every translation can be downloaded except the NIV, because YouVersion only allows 200 requests an hour for the whole app. Progress stays on your phone, and you can save or restore a backup from the **Me** tab.
 

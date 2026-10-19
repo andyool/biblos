@@ -17,6 +17,13 @@ import '@fontsource/eb-garamond/latin-500.css';
 import '@fontsource/eb-garamond/latin-400-italic.css';
 import '@fontsource/im-fell-english/latin-400.css';
 import '@fontsource/im-fell-english/latin-400-italic.css';
+import '@fontsource/jost/latin-400.css';
+import '@fontsource/jost/latin-500.css';
+import '@fontsource/jost/latin-400-italic.css';
+import '@fontsource/alegreya-sans/latin-400.css';
+import '@fontsource/alegreya-sans/latin-500.css';
+import '@fontsource/alegreya-sans/latin-400-italic.css';
+import '@fontsource/unifrakturmaguntia/latin-400.css';
 
 import './styles/base.css';
 import './styles/components.css';

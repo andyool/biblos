@@ -26,6 +26,11 @@ export function GoldDefs() {
         <radialGradient id="gold-glow" cx="0.5" cy="0.5" r="0.5">
           {stops([[0, 'g1', 0.55], [1, 'g2', 0]])}
         </radialGradient>
+        {/* Lustrous white, shading to the trim at its edge. */}
+        <radialGradient id="pearl" cx="0.36" cy="0.3" r="0.8">
+          <stop offset="0" stopColor="#fff" />
+          {stops([[0.42, 'g0'], [0.86, 'matt'], [1, 'matt-deep']])}
+        </radialGradient>
         {/* For the 24×24 line glyphs: set in their own units, so straight lines catch it too. */}
         <linearGradient id="glyph-shine" x1="0" y1="2" x2="0" y2="22" gradientUnits="userSpaceOnUse">
           {stops([[0, 't0'], [0.26, 't1'], [0.47, 't2'], [0.56, 't3'], [0.68, 't4'], [1, 't5']])}
@@ -66,6 +71,59 @@ export function Divider({ className = '', width = 220 }) {
   );
 }
 
+const polar = (cx, cy, r, deg) => [cx + r * Math.cos((deg * Math.PI) / 180), cy + r * Math.sin((deg * Math.PI) / 180)];
+const pt = ([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`;
+
+/** Three pointed lobes, each the lens where two of three overlapping circles of radius r meet. */
+function triquetra(cx, cy, r, lobes) {
+  return lobes
+    .map((deg) => {
+      const inner = pt(polar(cx, cy, -r / Math.sqrt(3), deg));
+      const outer = pt(polar(cx, cy, (2 * r) / Math.sqrt(3), deg));
+      return `M${inner} A${r} ${r} 0 0 1 ${outer} A${r} ${r} 0 0 1 ${inner}Z`;
+    })
+    .join(' ');
+}
+
+/** Four round lobes, as in Gothic tracery. */
+function quatrefoil(cx, cy, r, turn = 0) {
+  const cusps = [0, 90, 180, 270].map((deg) => pt(polar(cx, cy, r * Math.SQRT2, deg + turn)));
+  return `M${cusps[0]} ${cusps.map((_, i) => `A${r} ${r} 0 0 1 ${cusps[(i + 1) % 4]}`).join(' ')}Z`;
+}
+
+/** A star whose points take turns at each radius in `radii`. */
+function starOf(cx, cy, radii, inner) {
+  const n = radii.length;
+  const d = [];
+  for (let i = 0; i < n * 2; i += 1) {
+    const r = i % 2 ? inner : radii[(i / 2) % n];
+    d.push(`${i ? 'L' : 'M'}${pt(polar(cx, cy, r, (180 * i) / n - 90))}`);
+  }
+  return `${d.join(' ')}Z`;
+}
+
+const TRIQUETRA = triquetra(14, 14, 8, [-135, -15, 105]);
+const QUATREFOIL = quatrefoil(16, 16, 3.4, 45);
+const COMPASS_STAR = starOf(13, 13, [10, 5.4, 10, 5.4, 10, 5.4, 10, 5.4], 1.9);
+const SPARKLE = starOf(9, 33, [3.6, 3.6, 3.6, 3.6], 0.9);
+
+// A string of pearls, smaller and smaller, hanging from the corner jewel.
+const PEARLS = [];
+for (let i = 0, y = 18.8, prev = 0; i < 8; i += 1) {
+  const r = 2 * 0.86 ** i;
+  y += prev + r + 0.7;
+  PEARLS.push([y, r]);
+  prev = r;
+}
+
+/** Draws one half of a corner, and its reflection across the diagonal. */
+const mirrored = (half) => (
+  <>
+    {half}
+    <g transform="matrix(0 1 1 0 0 0)">{half}</g>
+  </>
+);
+
 const CORNERS = {
   filigree: (
     <>
@@ -99,6 +157,79 @@ const CORNERS = {
       <path d="M9 3.5 L 14.5 9 L 9 14.5 L 3.5 9 Z" fill="url(#gold-fill)" stroke="none" />
       <circle cx="9" cy="9" r="1.4" fill="var(--accent)" stroke="none" />
       <path d="M22 9 h 6 M 34 9 h 3 M 9 22 v 6 M 9 34 v 3" strokeWidth="1.6" />
+    </>
+  ),
+  greekkey: (
+    <>
+      {mirrored(
+        <>
+          <path d="M3 60 V3" strokeWidth="1.5" />
+          <path d="M14 14 V48" strokeWidth="1" />
+          <path d="M14 17 H6 V25 H12 V20 H9 V22.5 M14 27 H6 V35 H12 V30 H9 V32.5 M14 37 H6 V45 H12 V40 H9 V42.5" strokeWidth="1" strokeLinecap="square" />
+          <circle cx="14" cy="51" r="1.6" fill="url(#gold-fill)" stroke="none" />
+        </>,
+      )}
+      <rect x="6" y="6" width="8" height="8" strokeWidth="1" />
+      <path d="M10 7.2 L 12.8 10 L 10 12.8 L 7.2 10 Z" fill="url(#gold-fill)" stroke="none" />
+    </>
+  ),
+  trinity: (
+    <>
+      {mirrored(
+        <>
+          <path d="M3.4 14 V58" />
+          <path d="M8 22.7 V46" strokeWidth="0.7" opacity="0.6" />
+          <circle cx="3.4" cy="58" r="1.9" fill="url(#gold-fill)" stroke="none" />
+        </>,
+      )}
+      <circle cx="14" cy="14" r="10.6" />
+      <path d={TRIQUETRA} strokeWidth="1.1" />
+      <circle cx="14" cy="14" r="1.3" fill="url(#gold-fill)" stroke="none" />
+    </>
+  ),
+  starry: (
+    <>
+      {mirrored(
+        <>
+          <path d="M3 25 V58" />
+          <path d={SPARKLE} fill="url(#gold-fill)" stroke="none" />
+          <circle cx="15.5" cy="28" r="0.9" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="44" r="0.8" fill="currentColor" stroke="none" />
+          <circle cx="3" cy="58" r="1.6" fill="url(#gold-fill)" stroke="none" />
+        </>,
+      )}
+      <circle cx="13" cy="13" r="11" strokeWidth="0.9" strokeDasharray="0.1 2.6" />
+      <path d={COMPASS_STAR} fill="url(#gold-fill)" stroke="none" />
+    </>
+  ),
+  cathedral: (
+    <>
+      {mirrored(
+        <>
+          <path d="M3 60 V3" strokeWidth="1.6" />
+          <path d="M7 16 V60" strokeWidth="0.8" />
+          <path d="M7 27 a3 3 0 0 1 0 6 a3 3 0 0 1 0 6 a3 3 0 0 1 0 6 a3 3 0 0 1 0 6" strokeWidth="0.8" />
+        </>,
+      )}
+      <circle cx="16" cy="16" r="9" />
+      <path d={QUATREFOIL} fill="var(--accent)" fillOpacity="0.55" strokeWidth="1" />
+      <circle cx="16" cy="16" r="1.4" fill="url(#gold-fill)" stroke="none" />
+    </>
+  ),
+  pearl: (
+    <>
+      {mirrored(
+        <>
+          <path d="M3 24 V58" />
+          <path d="M13 17.6 V44" strokeWidth="0.5" />
+          {PEARLS.map(([y, r]) => (
+            <circle key={y} cx="13" cy={y.toFixed(2)} r={r.toFixed(2)} fill="url(#pearl)" strokeWidth="0.4" />
+          ))}
+        </>,
+      )}
+      <path d="M3 24 C 3 12, 12 3, 24 3" />
+      <circle cx="13" cy="13" r="4.6" strokeWidth="1.1" />
+      <circle cx="13" cy="13" r="3.4" fill="url(#pearl)" stroke="none" />
     </>
   ),
 };
