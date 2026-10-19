@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { getState, useStore } from './lib/store.js';
 import { AppContext } from './AppContext.js';
 import { GoldDefs } from './components/Ornaments.jsx';
-import { TabBar } from './components/Chrome.jsx';
+import { TabBar, TopCap } from './components/Chrome.jsx';
 import Overlays from './components/Overlays.jsx';
 import Home from './screens/Home.jsx';
 import Library from './screens/Library.jsx';
@@ -291,6 +291,7 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       <GoldDefs />
+      <TopCap key={!onboarded ? 'onboarding' : session ? session.startedAt : reading ? reading.startedAt : summary ? 'summary' : tab} />
       {body}
       {sheetView}
       {preparing && (

@@ -632,6 +632,28 @@
   flex: none;
 }
 
+/* See TopCap in Chrome.jsx. Only Safari on iPhone and iPad needs it (-webkit-touch-callout is theirs alone).
+   Its colour is the page at the top, the background with a little of the glow, so the tint meets the page
+   without a line. Safari needs it at least 3px tall to sample it. */
+.top-cap {
+  display: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .top-cap {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    height: max(var(--safe-top), 3px);
+    pointer-events: none;
+    background: var(--bg);
+    background: color-mix(in srgb, rgb(from var(--glow) r g b / 1) 5%, var(--bg));
+  }
+}
+
 .tabbar {
   position: fixed;
   left: 0;

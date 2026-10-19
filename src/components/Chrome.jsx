@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store.js';
 import { dayKey } from '../lib/dates.js';
 import { toast } from '../lib/ui.js';
@@ -49,6 +50,26 @@ export function TopBar() {
       </button>
     </header>
   );
+}
+
+/**
+ * Safari on iOS 26 blurs the top of the page under the status bar, which at rest also blurs the top bar.
+ * A solid strip at the top edge makes Safari tint that area instead, so the strip is there only while the
+ * page is at the top. Once it scrolls (the tab screens, or the document on the others), the strip goes and
+ * Safari's blur is back over the passing content. Remount it (by key) when the page changes.
+ */
+export function TopCap() {
+  const [atTop, setAtTop] = useState(true);
+  useEffect(() => {
+    const onScroll = (e) => {
+      const el = e.target === document ? document.scrollingElement : e.target;
+      if (el === document.scrollingElement || el.classList?.contains('app-main')) setAtTop(el.scrollTop <= 0);
+    };
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
+  // Safari still samples a strip with opacity 0, so it has to leave the page.
+  return atTop ? <div className="top-cap" aria-hidden="true" /> : null;
 }
 
 const TABS = [
