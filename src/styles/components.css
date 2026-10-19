@@ -632,6 +632,27 @@
   flex: none;
 }
 
+/* See TopEdge in Chrome.jsx. Only iPhone and iPad need it (-webkit-touch-callout is theirs alone). WebKit
+   looks 4px below the top edge, and takes the colour of a box taller and wider than 10px. A colour this faint
+   leaves the box invisible: WebKit lays it over the page background, so the edge takes the background's colour. */
+.top-edge {
+  display: none;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .top-edge {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 15;
+    height: 12px;
+    pointer-events: none;
+    background-color: color-mix(in srgb, var(--bg) 2%, transparent);
+  }
+}
+
 .tabbar {
   position: fixed;
   left: 0;

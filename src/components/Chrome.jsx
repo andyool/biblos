@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store.js';
 import { dayKey } from '../lib/dates.js';
 import { toast } from '../lib/ui.js';
@@ -49,6 +50,27 @@ export function TopBar() {
       </button>
     </header>
   );
+}
+
+/**
+ * On iPhone and iPad, iOS blurs the top edge of the page under the status bar. WebKit leaves the blur off when
+ * a fixed, full-width box with a background colour sits at the top edge, and tints the edge with that colour
+ * instead (LocalFrameView::fixedContainerEdges). This is that box, kept only while the page is at the top: once
+ * it scrolls (the tab screens, or the document on the others), the box goes and the blur is back over the
+ * passing content. Remount it (by key) when the page changes, so each page starts at the top.
+ */
+export function TopEdge() {
+  const [atTop, setAtTop] = useState(true);
+  useEffect(() => {
+    const onScroll = (e) => {
+      const el = e.target === document ? document.scrollingElement : e.target;
+      if (el === document.scrollingElement || el.classList?.contains('app-main')) setAtTop(el.scrollTop <= 0);
+    };
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    return () => document.removeEventListener('scroll', onScroll, { capture: true });
+  }, []);
+  // WebKit still finds a box with opacity 0, so it has to leave the page.
+  return atTop ? <div className="top-edge" aria-hidden="true" /> : null;
 }
 
 const TABS = [
