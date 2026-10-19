@@ -15,7 +15,7 @@ import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
 import { SKILLS, weakestSkill } from '../lib/adapt.js';
-import Woolly, { WoollyPicker } from '../components/Woolly.jsx';
+import Woolly, { WoollyPicker, useWoolly } from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
 
 function ThemeChips({ themes, isOn }) {
@@ -113,17 +113,18 @@ function Skills({ skills }) {
 
 function Offline({ tr }) {
   const { progress, saved } = useOffline();
+  const woolly = useWoolly();
   const niv = getTranslation(tr).source === 'yv';
   const unfinished = !progress.running && progress.tr === tr && progress.total > 0 && (progress.done < progress.total || progress.failed > 0);
 
   const onDownload = async () => {
     if (navigator.onLine === false) {
       toast('Connect to the internet first, then try again.');
-      cue('problem');
+      cue('problem', { offline: true });
       return;
     }
     const result = await downloadAll();
-    cue(result.done < result.total || result.failed ? 'problem' : 'download');
+    cue(result.done < result.total || result.failed ? 'problem' : 'download', { offline: navigator.onLine === false });
     if (result.done < result.total) toast('The connection dropped. Tap again to finish when you’re back online.');
     else if (result.failed) toast(`${result.failed} ${result.failed === 1 ? 'chapter' : 'chapters'} didn’t download. Tap again to finish.`);
     else toast(`The ${result.tr} is saved for offline`, 'check');
@@ -142,7 +143,7 @@ function Offline({ tr }) {
     const pct = Math.round((progress.done / progress.total) * 100) || 0;
     current = (
       <div className="row">
-        <Glyph name="upload" size={20} />
+        {woolly ? <Woolly act="download" size={46} className="row-woolly-icon" /> : <Glyph name="upload" size={20} />}
         <div className="row-label">
           Saving the {progress.tr}…
           <span className="mini-bar">
@@ -208,7 +209,7 @@ export default function Profile() {
     if (!file) return;
     try {
       const data = await readBackup(file);
-      const ok = await ask({ title: 'Restore this backup?', message: 'Your current progress on this device will be replaced.', confirm: 'Restore' });
+      const ok = await ask({ title: 'Restore this backup?', message: 'Your current progress on this device will be replaced.', confirm: 'Restore', woolly: 'unsure' });
       if (ok) {
         restoreBackup(data);
         toast('Backup restored', 'check');

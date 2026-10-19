@@ -114,7 +114,7 @@ export default function Lesson({ session, onExit, onFinish }) {
     const tone = result.mistakes === 0 ? 'perfect' : result.mistakes <= 2 && result.correct > 0 ? 'good' : 'learning';
     setCombo((c) => (tone === 'perfect' ? c + 1 : 0));
     if (tone !== 'learning') play('correct');
-    setFeedback({ tone, title: result.swift ? 'Swift and sure!' : pick(PRAISE[tone]), result: r, after, last: after >= nextQueue.length });
+    setFeedback({ tone, title: result.swift ? 'Swift and sure!' : pick(PRAISE[tone]), result: r, after, last: after >= nextQueue.length, again: nextQueue !== queue, combo: tone === 'perfect' ? combo + 1 : 0 });
   };
 
   const next = () => {
@@ -170,7 +170,7 @@ export default function Lesson({ session, onExit, onFinish }) {
       {feedback && (
         <div className={`feedback is-${feedback.tone}`} role="status">
           <div className="feedback-inner">
-            <Woolly act={feedbackAct(feedback.tone, combo)} size={118} peek delay={200} className="feedback-woolly" />
+            <Woolly act={feedbackAct(feedback.tone, feedback)} size={118} peek delay={200} className="feedback-woolly" />
             <div className="feedback-head">
               <span className="feedback-icon">
                 <Glyph name={feedback.tone === 'learning' ? 'seed' : 'check'} size={22} strokeWidth={2} />

@@ -30,7 +30,13 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
     const t = setTimeout(() => {
       if (summary.kind === 'reading') cue('readFinish', { bookDone: summary.reading.bookDone });
       else if (summary.changes.some((c) => c.note === 'almost')) cue('fail');
-      else cue('pass', { levelled: levelled.length > 0, perfect: summary.perfect });
+      else
+        cue('pass', {
+          mastered: levelled.some((c) => c.to >= 4),
+          perfect: summary.perfect,
+          rewarded: summary.earned.length > 0 || summary.goalReached,
+          streak: summary.streakExtended,
+        });
     }, 350);
     return () => clearTimeout(t);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -39,7 +45,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
     <div className="complete">
       <Sparkles />
       <div className="complete-hero">
-        <Woolly size={168} listen className="complete-woolly" />
+        <Woolly size={168} listen base={summary.kind === 'reading' ? 'read' : 'idle'} className="complete-woolly" />
         <Laurel size={150}>
           <div className="complete-xp">
             <span className="complete-xp-num gold-text">+{summary.xp}</span>

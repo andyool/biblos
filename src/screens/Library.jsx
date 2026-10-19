@@ -151,7 +151,7 @@ export default function Library() {
         </>
       )}
 
-      {!mine.length && <Woolly size={120} act="look-around" className="empty-woolly" />}
+      {!mine.length && <Woolly size={120} act="present" delay={300} className="empty-woolly" />}
       {!mine.length && (
         <p className="empty">
           The verses you learn will gather here.

@@ -236,7 +236,14 @@ export default function Read() {
       )}
 
       <Frame className="today" size={40}>
-        <Woolly size={132} listen base={failed ? 'idle' : 'read'} intro={failed ? 'look-around' : undefined} key={failed ? 'failed' : 'ok'} className="today-woolly" />
+        <Woolly
+          size={132}
+          listen
+          base={failed ? (navigator.onLine === false ? 'offline' : 'idle') : ready ? 'read' : 'loading'}
+          intro={failed && navigator.onLine !== false ? 'error' : undefined}
+          key={failed ? 'failed' : 'ok'}
+          className="today-woolly"
+        />
         <p className="today-kicker">{progress.finished ? 'Book complete' : progress.count ? 'Continue reading' : `Begin ${book.name}`}</p>
         {!ready ? (
           failed ? (

@@ -296,7 +296,7 @@ export default function App() {
       {sheetView}
       {preparing && (
         <div className="preparing" role="status">
-          <Woolly size={150} act="read" />
+          <Woolly size={150} act="loading" />
           <p>Unrolling the scroll…</p>
         </div>
       )}

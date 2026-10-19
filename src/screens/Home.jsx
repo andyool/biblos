@@ -223,8 +223,12 @@ function ReadingToday({ state }) {
   );
 }
 
-// Woolly waves once each time the app is opened.
+// Woolly waves once each time the app is opened, and sleeps late at night.
 let waved = false;
+const bedtime = () => {
+  const hour = new Date().getHours();
+  return hour >= 22 || hour < 5;
+};
 
 export default function Home() {
   const state = useStore();
@@ -255,7 +259,15 @@ export default function Home() {
       <BackupHint />
 
       <Frame className="today" size={40}>
-        <Woolly size={132} listen intro={waved ? undefined : 'wave'} delay={250} className="today-woolly" />
+        <Woolly
+          size={132}
+          listen
+          base={bedtime() ? 'sleep' : plan ? 'idle' : 'breathe'}
+          // Someone new is welcomed and shown where to begin.
+          intro={waved || bedtime() ? undefined : plan && !state.stats.lessons ? ['welcome', 'point-down'] : 'wave'}
+          delay={250}
+          className="today-woolly"
+        />
         <p className="today-kicker">
           Today’s practice
           {practisedToday(state) && (

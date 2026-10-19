@@ -17,7 +17,7 @@ function SealDetail({ id, onClose }) {
   const earnedAt = state.achievements[id];
   const p = a.progress(state);
   return (
-    <Sheet title={a.name} onClose={onClose} woolly={earnedAt ? 'celebrate' : 'encourage'}>
+    <Sheet title={a.name} onClose={onClose} woolly={earnedAt ? 'reward' : 'encourage'}>
       <div className="seal-detail">
         <Seal icon={a.icon} earned={!!earnedAt} size={110} />
         <p className="lead">{a.desc}</p>
@@ -72,7 +72,7 @@ function useItemAction(kind) {
     }
     if (item.unlock) {
       toast(`Earn the “${ACHIEVEMENT_BY_ID[item.unlock].name}” seal to unlock this.`, 'lock');
-      cue('empty');
+      cue('locked');
       return;
     }
     if (state.stats.talents < item.price) {
@@ -80,7 +80,7 @@ function useItemAction(kind) {
       cue('cantAfford');
       return;
     }
-    const ok = await ask({ title: `${item.name}`, message: `Spend ${item.price} talents?`, confirm: 'Buy', woolly: 'listen' });
+    const ok = await ask({ title: `${item.name}`, message: `Spend ${item.price} talents?`, confirm: 'Buy', woolly: 'think' });
     if (ok && buy(kind, item.id)) {
       equip(kind, item.id);
       play('level');
@@ -106,7 +106,7 @@ function Shop() {
       cue('cantAfford');
       return toast(`You need ${OIL.price - stats.talents} more talents.`, 'coin');
     }
-    const ok = await ask({ title: 'A flask of oil', message: `Spend ${OIL.price} talents? If you miss a day, the oil keeps your lamp — and your streak — burning.`, confirm: 'Buy', woolly: 'listen' });
+    const ok = await ask({ title: 'A flask of oil', message: `Spend ${OIL.price} talents? If you miss a day, the oil keeps your lamp — and your streak — burning.`, confirm: 'Buy', woolly: 'think' });
     if (ok && buyOil()) {
       play('level');
       cue('purchase');

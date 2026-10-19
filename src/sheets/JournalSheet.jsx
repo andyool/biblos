@@ -61,7 +61,7 @@ export default function JournalSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Your journal" onClose={onClose} className="journal-sheet" woolly="pray">
+    <Sheet title="Your journal" onClose={onClose} className="journal-sheet" woolly="write">
       {entries.length > 2 && (
         <label className="journal-search">
           <Glyph name="search" size={18} />

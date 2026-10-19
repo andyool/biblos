@@ -16,7 +16,7 @@ export default function PlansSheet({ onClose }) {
   const choose = async (plan) => {
     if (plan.id === current) return onClose();
     if (current) {
-      const ok = await ask({ title: `Start ${plan.name.replace(/^The /, 'the ')}?`, message: 'You will stop following your current plan. Everything you have read stays read.', confirm: 'Start' });
+      const ok = await ask({ title: `Start ${plan.name.replace(/^The /, 'the ')}?`, message: 'You will stop following your current plan. Everything you have read stays read.', confirm: 'Start', woolly: 'think' });
       if (!ok) return undefined;
     }
     startPlan(plan.id);
@@ -34,7 +34,7 @@ export default function PlansSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Reading plans" onClose={onClose} woolly="read">
+    <Sheet title="Reading plans" onClose={onClose} woolly="present">
       <p className="small-print">A plan sets a pace through the books, one passage after another, and shows whether you are on track. Whatever you have already read in its books counts.</p>
       <div className="path-list">
         {PLANS.map((plan) => {

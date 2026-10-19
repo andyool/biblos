@@ -23,7 +23,7 @@ export default function TextProblemSheet({ id, tr, error, plan, onClose }) {
   };
 
   return (
-    <Sheet title={needsKey ? `Unlock the ${tr}` : 'The words wouldn’t load'} onClose={onClose} woolly="encourage">
+    <Sheet title={needsKey ? `Unlock the ${tr}` : 'The words wouldn’t load'} onClose={onClose} woolly={needsKey ? 'hint' : navigator.onLine === false ? 'offline' : 'error'}>
       <p className="lead">
         {needsKey
           ? `To learn ${formatRef(id)} in the ${tr}, connect a free YouVersion key — or paste the words yourself.`

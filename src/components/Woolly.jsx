@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store.js';
 import { updateSettings } from '../lib/actions.js';
 import { onCue } from '../mascot/bus.js';
-import { CAMEOS, reaction, tapReaction } from '../mascot/reactions.js';
-import { ASPECT, LOOPS, Lamb, warm } from '../mascot/woolly.js';
+import { CAMEOS, RUN_IN, reaction, tapReaction } from '../mascot/reactions.js';
+import { ASPECT, RESTS, Lamb, warm } from '../mascot/woolly.js';
 
 const stillPlease = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -17,7 +17,7 @@ export function useWoolly() {
 /**
  * Woolly, the golden lamb.
  *
- * `base` is the loop it rests in (idle, read, pray, listen); `intro` plays once it appears,
+ * `base` is the loop it rests in (one of RESTS: idle, read, write…); `intro` plays once it appears,
  * after `delay` ms; `act` is a shorthand for either. With `listen` it answers cues from
  * anywhere in the app (mascot/bus.js). With `peek` it pops up from behind whatever card it
  * is placed on (the CSS for each place tucks it in). `onDone` follows the intro.
@@ -26,7 +26,7 @@ export default function Woolly({ size = 140, base = 'idle', intro, act, listen =
   const chosen = useWoolly();
   const lamb = only || chosen;
   if (act) {
-    if (LOOPS.has(act)) base = act;
+    if (RESTS.has(act)) base = act;
     else intro = act;
   }
   const art = useRef(null);
@@ -72,7 +72,7 @@ export default function Woolly({ size = 140, base = 'idle', intro, act, listen =
     return onCue((name, data) => {
       const r = reaction(name, data);
       const l = inst.current;
-      if (!r || !l || !l.visible) return false;
+      if (!r || !l || !l.inView()) return false;
       run(r);
       return true;
     });
@@ -83,10 +83,14 @@ export default function Woolly({ size = 140, base = 'idle', intro, act, listen =
   const tap = () => {
     const l = inst.current;
     if (!l) return;
-    // Holding a book or praying, the lamb only gives a little hop; otherwise a new trick each time.
-    if (l.base === 'read' || l.base === 'pray') {
-      if (!stillPlease()) art.current.animate([{ transform: 'none' }, { transform: 'translateY(-7%) scale(0.98, 1.02)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
-    } else run(tapReaction(taps.current++));
+    const r = tapReaction(taps.current, l.base);
+    if (r) {
+      taps.current++;
+      run(r);
+    } else if (!stillPlease()) {
+      // Busy with something in its paws: just a little hop.
+      art.current.animate([{ transform: 'none' }, { transform: 'translateY(-7%) scale(0.98, 1.02)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' });
+    }
   };
 
   const width = Math.round(size * ASPECT);
@@ -121,7 +125,7 @@ export function WoollyPicker({ size = 120 }) {
             className={`woolly-option ${picked ? 'is-on' : ''}`}
             onClick={() => updateSettings({ woolly: true, woollyLamb: lamb })}
           >
-            <Woolly lamb={lamb} size={size} intro={picked ? 'wave' : undefined} key={picked ? 'picked' : 'not'} />
+            <Woolly lamb={lamb} size={size} intro={picked ? ['wave', 'speak'] : undefined} key={picked ? 'picked' : 'not'} />
             <strong>{name}</strong>
           </button>
         );
@@ -131,8 +135,8 @@ export function WoollyPicker({ size = 120 }) {
 }
 
 /**
- * When something worth a cheer happens and no lamb is on screen, Woolly leans in from the
- * edge of the screen, plays its part, and slips away again.
+ * When something worth a cheer happens and no lamb is on screen, Woolly runs (or walks) in
+ * from the left edge of the screen, plays its part, waves goodbye and slips away again.
  */
 export function WoollyCameo() {
   const lamb = useWoolly();
@@ -152,7 +156,8 @@ export function WoollyCameo() {
         const r = CAMEOS.has(name) && reaction(name, data);
         if (!r) return;
         clearTimeout(leaving.current);
-        setVisit({ id: Date.now(), clips: r.clips, side: name === 'problem' || name === 'streakLost' ? 'left' : 'right', out: false });
+        const gait = RUN_IN.has(name) ? 'run' : 'walk';
+        setVisit({ id: Date.now(), clips: [gait, ...r.clips, 'goodbye'], gait, out: false });
       },
       { cameo: true },
     );
@@ -161,15 +166,15 @@ export function WoollyCameo() {
   // However the visit goes, it doesn't outstay its welcome.
   useEffect(() => {
     if (!visit || visit.out) return undefined;
-    const t = setTimeout(leave, 7000);
+    const t = setTimeout(leave, 10000);
     return () => clearTimeout(t);
   }, [visit]);
 
   if (!visit || !lamb) return null;
 
   return (
-    <div key={visit.id} className={`woolly-cameo is-${visit.side} ${visit.out ? 'is-out' : ''}`} onClick={leave}>
-      <Woolly size={124} intro={visit.clips} delay={380} onDone={() => setTimeout(leave, 500)} />
+    <div key={visit.id} className={`woolly-cameo is-${visit.gait} ${visit.out ? 'is-out' : ''}`} onClick={leave}>
+      <Woolly size={124} intro={visit.clips} onDone={leave} />
     </div>
   );
 }

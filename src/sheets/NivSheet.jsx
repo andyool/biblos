@@ -51,7 +51,7 @@ export default function NivSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Unlock the NIV" onClose={onClose}>
+    <Sheet title="Unlock the NIV" onClose={onClose} woolly="hint">
       <p className="lead">
         The New International Version is copyrighted by Biblica, so free Bible services may not share it. YouVersion — the makers of the Bible App — give a free key that unlocks it.
       </p>

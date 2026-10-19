@@ -91,7 +91,7 @@ export default function Onboarding() {
 
       {page === 'welcome' && (
         <div className="ob-page ob-welcome">
-          <Woolly size={176} intro="wave" delay={350} className="ob-woolly" />
+          <Woolly size={176} intro="welcome" delay={350} className="ob-woolly" />
           <h1 className="logo-word gold-text">Biblos</h1>
           <Divider width={230} />
           <p className="ob-tag">Hide God’s word in your heart — a few minutes at a time.</p>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Sheet from '../components/Sheet.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { VerseText } from '../components/VerseText.jsx';
@@ -47,6 +47,14 @@ export default function VerseSheet({ id, onClose }) {
   const { entry, status, error, retry } = useVerseText(tr, id);
   const [mode, setMode] = useState(null); // 'translation' | 'edit'
   const [sharing, setSharing] = useState(false);
+  // While the verse is read aloud, Woolly listens along.
+  const [listening, setListening] = useState(false);
+  const listens = useRef(0);
+  const listen = () => {
+    const n = ++listens.current;
+    setListening(true);
+    speak(`${formatRef(id)}. ${joinVerses(entry)}`, { onEnd: () => n === listens.current && setListening(false) });
+  };
   const due = isDue(v);
   const fresh = freshness(v);
   const isCustom = state.custom.includes(id);
@@ -95,7 +103,7 @@ export default function VerseSheet({ id, onClose }) {
   };
 
   return (
-    <Sheet title={formatRef(id)} onClose={onClose} className="verse-sheet" woolly="read">
+    <Sheet title={formatRef(id)} onClose={onClose} className="verse-sheet" woolly={listening ? 'listen' : 'read'}>
       <div className="chip-row">
         <button className="chip" onClick={() => setMode(mode === 'translation' ? null : 'translation')}>
           {tr} <Glyph name="down" size={14} />
@@ -169,7 +177,7 @@ export default function VerseSheet({ id, onClose }) {
         </button>
         <div className="sheet-actions-row">
           {canSpeak() && status === 'ready' && (
-            <button className="btn btn-ghost btn-small" onClick={() => speak(`${formatRef(id)}. ${joinVerses(entry)}`)}>
+            <button className="btn btn-ghost btn-small" onClick={listen}>
               <Glyph name="speaker" size={16} /> Listen
             </button>
           )}

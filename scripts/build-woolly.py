@@ -1,7 +1,7 @@
 """Turn Woolly's generated drawings into the sprite sheets the app plays.
 
     python3 -m pip install pillow
-    python3 scripts/build-woolly.py [path/to/biblos-generated-frame-core]
+    python3 scripts/build-woolly.py [path/to/biblos-lambs-all-44]
 
 Reads the frame folder's manifest.json and frames/<lamb>/<clip>/NNN.png, and writes
 src/mascot/sheets/woolly-<lamb>-<clip>.webp (each drawing a clip uses, once, left to right)
@@ -15,7 +15,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "biblos-generated-frame-core"
+SOURCE = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "biblos-lambs-all-44"
 OUT = ROOT / "src" / "mascot"
 
 # Every drawing sits on the same 384 × 480 canvas. This band holds the highest jump and the
@@ -28,6 +28,8 @@ CELL = (round((CROP[2] - CROP[0]) * SCALE), round((CROP[3] - CROP[1]) * SCALE))
 def main():
     manifest = json.loads((SOURCE / "manifest.json").read_text())
     (OUT / "sheets").mkdir(parents=True, exist_ok=True)
+    for old in (OUT / "sheets").glob("woolly-*.webp"):
+        old.unlink()
     clips = {}
     total = 0
     for clip in manifest["clips"]:

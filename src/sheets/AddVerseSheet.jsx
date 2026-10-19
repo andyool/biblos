@@ -66,7 +66,7 @@ export default function AddVerseSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Add a verse" onClose={onClose} woolly="nod">
+    <Sheet title="Add a verse" onClose={onClose} woolly="search">
       <label className="field">
         <span>Reference</span>
         <input

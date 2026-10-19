@@ -7,8 +7,8 @@ const urls = import.meta.glob('./sheets/*.webp', { eager: true, query: '?url', i
 
 /** Width over height of one drawing. */
 export const ASPECT = data.cell[0] / data.cell[1];
-/** Clips that repeat until something else happens. */
-export const LOOPS = new Set(['idle', 'read', 'pray', 'listen', 'sway', 'look-around', 'spin']);
+/** Loops the lamb can rest in until something else happens. Every other clip plays once. */
+export const RESTS = new Set(['idle', 'breathe', 'read', 'listen', 'speak', 'pray', 'reflect', 'write', 'search', 'think', 'loading', 'download', 'offline', 'sleep']);
 
 // Each sheet is fetched and decoded once, then shared by every lamb on screen.
 const sheets = new Map();
@@ -34,7 +34,7 @@ export function loadClip(lamb, name) {
 }
 
 // Once a lamb is showing, fetch the clips the app uses most, one at a time, while it's quiet.
-const COMMON = ['nod', 'wave', 'jump', 'encourage', 'celebrate', 'sway', 'look-around', 'spin', 'turn-away-and-back'];
+const COMMON = ['wave', 'correct', 'clap', 'encourage', 'celebrate', 'hop', 'nod', 'sway', 'look-around', 'breathe', 'heart'];
 const warmed = new Set();
 export function warm(lamb) {
   if (warmed.has(lamb) || navigator.connection?.saveData) return;
@@ -53,13 +53,13 @@ function tick(now) {
   if (running.size) raf = requestAnimationFrame(tick);
 }
 
-const FIDGETS = ['sway', 'look-around'];
+const FIDGETS = ['sway', 'look-around', 'breathe'];
 
 export class Lamb {
   /**
    * @param el the element to paint
    * @param lamb 'female' or 'male'
-   * @param base the loop to rest in: 'idle', 'read', 'pray' or 'listen'
+   * @param base the loop to rest in (one of RESTS)
    * @param still show poses without movement (reduced motion)
    */
   constructor(el, { lamb, base = 'idle', still = false }) {
@@ -88,6 +88,12 @@ export class Lamb {
     }
     this.rest();
     return true;
+  }
+
+  /** On screen right now (checked directly, for moments too rare to wait on the observer). */
+  inView() {
+    const r = this.el.getBoundingClientRect();
+    return r.width > 0 && r.bottom > 0 && r.top < window.innerHeight && r.right > 0 && r.left < window.innerWidth;
   }
 
   get resting() {

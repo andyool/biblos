@@ -643,6 +643,11 @@
   line-height: 1.4;
 }
 
+/* Woolly takes the quill's place beside the prompt. */
+.reflect-woolly {
+  margin: -6px -4px -10px -6px;
+}
+
 .reflect-card .glyph {
   color: var(--gold);
   stroke: url(#glyph-shine);

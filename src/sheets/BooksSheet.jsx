@@ -50,7 +50,7 @@ export default function BooksSheet({ onClose }) {
   };
 
   return (
-    <Sheet title="Choose a book" onClose={onClose} className="books-sheet">
+    <Sheet title="Choose a book" onClose={onClose} className="books-sheet" woolly="search">
       <p className="small-print">Every book comes with a focus for each reading, questions on the meaning and a summary to choose.</p>
 
       <h3 className="section-heading">Good places to start</h3>

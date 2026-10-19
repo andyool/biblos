@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Woolly, { useWoolly } from '../components/Woolly.jsx';
 import Glyph from '../components/Glyph.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { renderWord } from '../components/VerseText.jsx';
@@ -11,6 +12,8 @@ import { cue } from '../mascot/bus.js';
 
 /** Take it to heart: a question to ponder, a note to keep, and a verse to memorise. */
 export default function ReflectStep({ step, session, onComplete }) {
+  const woolly = useWoolly();
+  const [writing, setWriting] = useState(false);
   const verses = useStore((s) => s.verses);
   const [note, setNote] = useState('');
   const [choosing, setChoosing] = useState(false);
@@ -30,13 +33,16 @@ export default function ReflectStep({ step, session, onComplete }) {
     <div className="ex ex-reflect">
       <p className="ex-kicker">Take it to heart</p>
       <div className="reflect-card">
-        <Glyph name="quill" size={24} />
+        {/* Woolly reflects with you, and writes while you do. */}
+        {woolly ? <Woolly act={writing ? 'write' : 'reflect'} size={84} className="reflect-woolly" /> : <Glyph name="quill" size={24} />}
         <p>{step.prompt}</p>
       </div>
       <textarea
         className="input textarea reflect-note"
         value={note}
         onChange={(e) => setNote(e.target.value)}
+        onFocus={() => setWriting(true)}
+        onBlur={() => setWriting(false)}
         placeholder="Write a thought or a prayer, if you like. It stays on your phone."
         rows={4}
         maxLength={1000}
@@ -59,7 +65,7 @@ export default function ReflectStep({ step, session, onComplete }) {
       </div>
 
       {choosing && (
-        <Sheet title="Memorise a verse" onClose={() => setChoosing(false)} className="verse-pick-sheet">
+        <Sheet title="Memorise a verse" onClose={() => setChoosing(false)} className="verse-pick-sheet" woolly="heart">
           <p className="small-print">Read through and tap the verse you would like to learn by heart. It goes into My Verses, ready on the Path tab.</p>
           <div className="verse-pick-list">
             {session.verses.map((v) => {
