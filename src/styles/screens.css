@@ -1500,6 +1500,131 @@
   }
 }
 
+/* ─── Levels ─────────────────────────────────────────────────────────────── */
+
+.level-medal {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+  background: var(--grad-dome);
+  color: var(--gold-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--g0) 60%, transparent);
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 3px color-mix(in srgb, var(--matt) 70%, transparent),
+    0 4px 12px color-mix(in srgb, var(--g3) 35%, transparent),
+    inset 0 -2px 4px color-mix(in srgb, var(--g4) 45%, transparent),
+    inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* The new level is struck on the medal. */
+.level-medal.is-new {
+  animation: level-strike 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes level-strike {
+  0% {
+    transform: scale(0.4) rotate(-20deg);
+    filter: brightness(1.8);
+  }
+  60% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+    filter: none;
+  }
+}
+
+.level-bar,
+.level-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.level-bar {
+  max-width: 300px;
+  margin-top: 12px;
+}
+
+.level-bar-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.level-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.level-bar-head strong {
+  font-family: var(--font-display);
+  font-size: calc(13px * var(--text-scale, 1));
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.level-bar-head small {
+  font-size: calc(14px * var(--text-scale, 1));
+  font-style: italic;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+:is(.level-bar, .level-progress) .mini-bar.is-wide {
+  max-width: none;
+  margin: 6px 0 0;
+}
+
+.mini-bar-done.is-filling {
+  transition: width 0.9s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+
+.level-progress {
+  position: relative;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  animation: screen-in 0.5s 0.3s ease both;
+}
+
+.level-progress.is-up {
+  border-color: transparent;
+  background:
+    linear-gradient(color-mix(in srgb, var(--g2) 10%, var(--surface)), color-mix(in srgb, var(--g2) 10%, var(--surface))) padding-box,
+    var(--grad-rim) border-box;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--g2) 25%, transparent);
+}
+
+.level-progress.is-up .level-bar-head :is(strong, small) {
+  color: var(--gold);
+  font-style: normal;
+}
+
+.level-progress .sparkles {
+  top: 50%;
+  left: 42px;
+}
+
+.complete-seal-unlock {
+  font-style: italic;
+}
+
+.today-bonus {
+  color: var(--gold);
+}
+
 /* ─── Where Woolly stands ────────────────────────────────────────────────── */
 
 .today-woolly {

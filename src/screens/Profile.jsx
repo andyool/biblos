@@ -4,6 +4,7 @@ import { useApp } from '../AppContext.js';
 import Glyph from '../components/Glyph.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
+import { LevelBar } from '../components/XpLevel.jsx';
 import TranslationPicker from '../components/TranslationPicker.jsx';
 import { GOALS, LEVELS, titleFor } from '../data/levels.js';
 import { TRANSLATIONS, getTranslation } from '../data/translations.js';
@@ -261,6 +262,7 @@ export default function Profile() {
         <p className="profile-title">
           {title} · since {since}
         </p>
+        <LevelBar xp={stats.xp} />
       </Frame>
 
       <div className="stat-grid">

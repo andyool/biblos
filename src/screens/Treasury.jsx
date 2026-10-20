@@ -4,8 +4,8 @@ import Glyph from '../components/Glyph.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { Corner, Divider, EmblemBadge, Seal } from '../components/Ornaments.jsx';
 import { ACHIEVEMENTS, ACHIEVEMENT_BY_ID } from '../data/achievements.js';
-import { EMBLEMS, FONTS, FRAMES, OIL, THEMES } from '../data/shop.js';
-import { buy, buyOil, equip } from '../lib/actions.js';
+import { EMBLEMS, FONTS, FRAMES, OIL, THEMES, unlocksFor } from '../data/shop.js';
+import { buy, buyOil, claimUnlocks, equip } from '../lib/actions.js';
 import { ask, toast } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
 import Woolly from '../components/Woolly.jsx';
@@ -35,7 +35,7 @@ function SealDetail({ id, onClose }) {
         )}
         <p className="small-print">
           Reward: {a.reward} talents
-          {EMBLEMS.find((e) => e.unlock === id) && ` and the ${EMBLEMS.find((e) => e.unlock === id).name} emblem`}
+          {unlocksFor(id).map((u) => ` and the ${u}`)}
         </p>
       </div>
     </Sheet>
@@ -60,6 +60,15 @@ function Price({ item, kind }) {
   );
 }
 
+/** What a locked adornment asks for: the seal, what earns it and how far along you are. */
+function sealNeeded(sealId, state) {
+  const seal = ACHIEVEMENT_BY_ID[sealId];
+  const p = seal.progress(state);
+  const what = seal.desc.charAt(0).toLowerCase() + seal.desc.slice(1).replace(/\.$/, '');
+  const sofar = p.target > 1 ? ` (${p.value.toLocaleString()} of ${p.target.toLocaleString()} so far)` : '';
+  return `Earn the “${seal.name}” seal to unlock this: ${what}${sofar}.`;
+}
+
 function useItemAction(kind) {
   const state = useStore();
   return async (item) => {
@@ -70,8 +79,16 @@ function useItemAction(kind) {
       cue('equip');
       return;
     }
+    if (item.unlock && state.achievements[item.unlock]) {
+      // The seal was earned before this came with it.
+      claimUnlocks();
+      equip(kind, item.id);
+      play('tap');
+      cue('equip');
+      return;
+    }
     if (item.unlock) {
-      toast(`Earn the “${ACHIEVEMENT_BY_ID[item.unlock].name}” seal to unlock this.`, 'lock');
+      toast(sealNeeded(item.unlock, state), 'lock');
       cue('locked');
       return;
     }

@@ -3,6 +3,7 @@ import { DAY, addDays, dayKey, daysBetween } from './dates.js';
 import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
 import { GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
+import { levelReward, xpLevel } from '../data/levels.js';
 import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
 import { clearTexts, replaceTexts } from './texts.js';
 import { carryOver } from './reading.js';
@@ -95,6 +96,21 @@ export function checkStreak() {
 
 // ── Achievements ───────────────────────────────────────────────────────────────
 
+/** The adornments that come with the seals you have: emblems, frames and themes. */
+function withUnlocks(state) {
+  let owned = state.owned;
+  for (const [kind, items] of Object.entries(SHOP)) {
+    const add = items.filter((i) => i.unlock && state.achievements[i.unlock] && !owned[kind].includes(i.id)).map((i) => i.id);
+    if (add.length) owned = { ...owned, [kind]: [...owned[kind], ...add] };
+  }
+  return owned === state.owned ? state : { ...state, owned };
+}
+
+/** Give the adornments for seals earned before those adornments came with them. */
+export function claimUnlocks() {
+  setState(withUnlocks);
+}
+
 function awardAchievements(state) {
   const earned = newlyEarned(state);
   if (!earned.length) return { state, earned };
@@ -104,10 +120,7 @@ function awardAchievements(state) {
     achievements[a.id] = Date.now();
     talents += a.reward;
   }
-  // Seals that unlock emblems
-  const unlocked = SHOP.emblem.filter((e) => e.unlock && achievements[e.unlock] && !state.owned.emblem.includes(e.id)).map((e) => e.id);
-  const owned = unlocked.length ? { ...state.owned, emblem: [...state.owned.emblem, ...unlocked] } : state.owned;
-  return { state: { ...state, achievements, owned, stats: { ...state.stats, talents } }, earned };
+  return { state: withUnlocks({ ...state, achievements, stats: { ...state.stats, talents } }), earned };
 }
 
 // ── Finishing a lesson ─────────────────────────────────────────────────────────
@@ -116,14 +129,26 @@ const STREAK_BONUS = { 7: 25, 30: 75, 100: 200, 365: 500 };
 
 const REVIEW_GRADED = new Set(['letters', 'reference', 'opening']);
 
-/** Count practice towards today: XP, the daily goal, the streak and the early/late seals. */
-function creditDay(stats, xp, dailyGoal, now) {
+/**
+ * Count practice towards today: XP, the daily goal, the streak, levels and the early/late seals.
+ * The first lesson or reading of the day is first fruits, and counts double.
+ */
+function creditDay(stats, earned, dailyGoal, now) {
   const today = dayKey(now);
   const hour = new Date(now).getHours();
   const before = stats.days[today] || 0;
+  const firstFruits = before === 0;
+  const xp = firstFruits ? earned * 2 : earned;
   const after = before + xp;
   const goalReached = before < dailyGoal && after >= dailyGoal;
   let talents = goalReached ? 5 : 0;
+
+  // Each level reached brings talents.
+  const from = xpLevel(stats.xp).level;
+  const to = xpLevel(stats.xp + xp).level;
+  let levelTalents = 0;
+  for (let level = from + 1; level <= to; level += 1) levelTalents += levelReward(level);
+  talents += levelTalents;
 
   let streakExtended = false;
   let streak = stats.streak;
@@ -147,6 +172,9 @@ function creditDay(stats, xp, dailyGoal, now) {
       night: stats.night || hour >= 22,
     },
     talents,
+    xp,
+    firstFruits,
+    levelUp: to > from ? { from, to, talents: levelTalents } : null,
     streak,
     streakExtended,
     goalReached,
@@ -266,7 +294,10 @@ export function finishSession(session, results) {
     const earnedTalents = awarded.earned.reduce((a, e) => a + e.reward, 0);
     summary = {
       kind: session.kind,
-      xp,
+      xp: day.xp,
+      firstFruits: day.firstFruits,
+      levelUp: day.levelUp,
+      totalXp: day.stats.xp,
       talents: talents + earnedTalents,
       accuracy,
       perfect,
@@ -355,7 +386,10 @@ export function finishReading(session, results) {
     const awarded = awardAchievements({ ...s0, stats, reading });
     summary = {
       kind: 'reading',
-      xp,
+      xp: day.xp,
+      firstFruits: day.firstFruits,
+      levelUp: day.levelUp,
+      totalXp: day.stats.xp,
       talents: talents + awarded.earned.reduce((a, e) => a + e.reward, 0),
       accuracy: correct + mistakes ? correct / (correct + mistakes) : 1,
       perfect,

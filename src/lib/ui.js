@@ -31,10 +31,11 @@ export function toast(message, icon = null) {
   toastItem = { message, icon, id: Date.now() };
   emit();
   clearTimeout(toastTimer);
+  // Long enough to read.
   toastTimer = setTimeout(() => {
     toastItem = null;
     emit();
-  }, 2800);
+  }, Math.max(2800, message.length * 55));
 }
 
 export function useOverlays() {

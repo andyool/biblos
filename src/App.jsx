@@ -24,7 +24,7 @@ import PlansSheet from './sheets/PlansSheet.jsx';
 import JournalSheet from './sheets/JournalSheet.jsx';
 import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
-import { checkStreak, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
+import { checkStreak, claimUnlocks, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
 import { planProgress } from './lib/plans.js';
 import { bookProgress, bookSections, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
 import { guideNow, loadGuide } from './data/guides/index.js';
@@ -99,6 +99,11 @@ export default function App() {
 
   useEffect(() => {
     checkServerKey();
+  }, []);
+
+  // Adornments that now come with a seal you already have.
+  useEffect(() => {
+    claimUnlocks();
   }, []);
 
   // Streak upkeep at launch and whenever the app comes back to the foreground.

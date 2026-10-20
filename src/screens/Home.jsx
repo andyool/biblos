@@ -14,7 +14,7 @@ import { getTranslation } from '../data/translations.js';
 import { androidBrowser, backupDue, exportBackup, isAndroid, isIOS, isStandalone, useInstallPrompt } from '../lib/device.js';
 import { snoozeBackup, updateSettings } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
-import { DAY, startOfDay } from '../lib/dates.js';
+import { DAY, dayKey, startOfDay } from '../lib/dates.js';
 import { bookProgress, readingTr, sectionRef, useBook } from '../lib/reading.js';
 import { planProgress, planStatus } from '../lib/plans.js';
 import { BOOK_BY_CODE } from '../data/books.js';
@@ -284,7 +284,10 @@ export default function Home() {
             <button className="btn btn-gold btn-block btn-shine" onClick={() => start(plan)}>
               {plan.kind === 'review' ? 'Begin review' : plan.kind === 'practice' ? 'Practise' : 'Begin'}
             </button>
-            <p className="today-time">About {plan.kind === 'review' ? plan.verseIds.length : 2}–3 minutes</p>
+            <p className="today-time">
+              About {plan.kind === 'review' ? plan.verseIds.length : 2}–3 minutes
+              {!state.stats.days[dayKey()] && <span className="today-bonus"> · first fruits: double XP</span>}
+            </p>
           </>
         ) : (
           <>

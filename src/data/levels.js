@@ -26,6 +26,22 @@ export const GOALS = [
   { xp: 100, name: 'Zealous', desc: 'Five or more' },
 ];
 
+// Levels grow with XP. Each takes 50 XP more than the last (100, 150, 200…), so level 20 comes
+// at about 10,000 XP, and each brings talents.
+const levelSpan = (level) => 50 + 50 * level;
+
+export function xpLevel(xp) {
+  let level = 1;
+  let floor = 0;
+  while (xp >= floor + levelSpan(level)) {
+    floor += levelSpan(level);
+    level += 1;
+  }
+  return { level, into: xp - floor, span: levelSpan(level) };
+}
+
+export const levelReward = (level) => 10 + 5 * level;
+
 // Titles grow with the number of verses hidden in the heart.
 export const TITLES = [
   { at: 0, name: 'Seeker' },

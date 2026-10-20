@@ -11,7 +11,7 @@ export const THEMES = [
   { id: 'cedar', name: 'Cedar of Lebanon', price: 240, colors: ['#140d08', '#2a1d13', '#eabd55'] },
   { id: 'desert', name: 'Desert in Bloom', price: 260, light: true, colors: ['#f0d2b6', '#fcefe2', '#c98a52'] },
   { id: 'crimson', name: 'Crimson & Gold', price: 280, colors: ['#1a080c', '#34121b', '#efc35c'] },
-  { id: 'silver', name: 'Refined Silver', price: 300, colors: ['#0d0f12', '#1c2129', '#b9c0ca'] },
+  { id: 'silver', name: 'Refined Silver', price: 0, unlock: 'perfect_25', colors: ['#0d0f12', '#1c2129', '#b9c0ca'] },
 ];
 
 export const isLightTheme = (id) => Boolean(THEMES.find((t) => t.id === id)?.light);
@@ -47,8 +47,8 @@ export const FRAMES = [
   { id: 'trinity', name: 'Trinity Knot', price: 160 },
   { id: 'starry', name: 'Starry Host', price: 180 },
   { id: 'illuminated', name: 'Illuminated', price: 220 },
-  { id: 'cathedral', name: 'Cathedral', price: 220 },
-  { id: 'pearl', name: 'Gates of Pearl', price: 260 },
+  { id: 'cathedral', name: 'Cathedral', price: 0, unlock: 'book_1' },
+  { id: 'pearl', name: 'Gates of Pearl', price: 0, unlock: 'heart_50' },
 ];
 
 export const EMBLEMS = [
@@ -78,5 +78,11 @@ export const EMBLEMS = [
 export const OIL = { price: 50, max: 2 };
 
 export const SHOP = { theme: THEMES, font: FONTS, frame: FRAMES, emblem: EMBLEMS };
+
+const KIND_NAMES = { theme: 'theme', font: 'lettering', frame: 'frame', emblem: 'emblem' };
+
+/** What a seal brings with it, such as "Gates of Pearl frame". */
+export const unlocksFor = (sealId) =>
+  Object.entries(SHOP).flatMap(([kind, items]) => items.filter((i) => i.unlock === sealId).map((i) => `${i.name} ${KIND_NAMES[kind]}`));
 
 export const fontFor = (id) => FONTS.find((f) => f.id === id) || FONTS[0];

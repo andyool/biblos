@@ -6,6 +6,8 @@ import { LEVELS } from '../data/levels.js';
 import { BOOK_BY_CODE, formatRef } from '../data/books.js';
 import { whenText } from '../lib/dates.js';
 import { BOOK_BONUS } from '../lib/actions.js';
+import { unlocksFor } from '../data/shop.js';
+import { LevelProgress } from '../components/XpLevel.jsx';
 import { useBack } from '../lib/nav.js';
 import Woolly from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
@@ -34,7 +36,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
         cue('pass', {
           mastered: levelled.some((c) => c.to >= 4),
           perfect: summary.perfect,
-          rewarded: summary.earned.length > 0 || summary.goalReached,
+          rewarded: summary.earned.length > 0 || summary.goalReached || !!summary.levelUp,
           streak: summary.streakExtended,
         });
     }, 350);
@@ -73,6 +75,8 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
           <span>day streak</span>
         </div>
       </div>
+
+      <LevelProgress xp={summary.xp} totalXp={summary.totalXp} levelUp={summary.levelUp} />
 
       <div className="complete-list">
         {summary.changes.map((c) => (
@@ -118,6 +122,11 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
             <Glyph name="crown" size={20} /> You have read all of {BOOK_BY_CODE[summary.reading.book].name} — +{BOOK_BONUS} talents
           </div>
         )}
+        {summary.firstFruits && (
+          <div className="complete-banner">
+            <Glyph name="wheat" size={20} /> First fruits — double XP for your first practice today
+          </div>
+        )}
         {summary.goalReached && (
           <div className="complete-banner">
             <Glyph name="target" size={20} /> Daily goal reached — +5 talents
@@ -134,6 +143,11 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
                 <Seal icon={a.icon} size={70} />
                 <strong>{a.name}</strong>
                 <small>+{a.reward} talents</small>
+                {unlocksFor(a.id).map((u) => (
+                  <small key={u} className="complete-seal-unlock">
+                    + {u}
+                  </small>
+                ))}
               </div>
             ))}
           </div>
