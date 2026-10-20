@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import { getTranslation } from '../data/translations.js';
+import { getText } from './texts.js';
 
 // All progress lives on the device in localStorage (export a backup from the Me tab).
 const KEY = 'biblos.state.v1';
@@ -10,7 +12,9 @@ export function freshState() {
     profile: { name: '', emblem: 'cross', since: Date.now() },
     settings: {
       onboarded: false,
-      translation: 'NIV',
+      translation: 'ESV',
+      // The NIV is only offered on a phone it has been unlocked on (see withoutNiv below).
+      nivUnlocked: false,
       dailyGoal: 20,
       sound: true,
       speechRate: 0.92,
@@ -73,10 +77,31 @@ export function freshState() {
   };
 }
 
+/**
+ * Unless this phone has the NIV unlocked (tap "About" on the Me page), the NIV is put away:
+ * your Bible becomes the ESV, and so does any verse whose NIV words aren't on the phone.
+ * Verses with their NIV words saved keep them, and their progress.
+ */
+export function withoutNiv(state) {
+  if (state.settings.nivUnlocked) return state;
+  const isNiv = (tr) => getTranslation(tr).source === 'yv';
+  const settings = isNiv(state.settings.translation) ? { ...state.settings, translation: 'ESV', nivWas: state.settings.translation } : state.settings;
+  const verses = { ...state.verses };
+  let moved = false;
+  for (const v of Object.values(verses)) {
+    if (isNiv(v.tr) && !getText(v.tr, v.id)) {
+      verses[v.id] = { ...v, tr: 'ESV' };
+      moved = true;
+    }
+  }
+  if (settings === state.settings && !moved) return state;
+  return { ...state, settings, verses: moved ? verses : state.verses };
+}
+
 export function migrate(data) {
   const base = freshState();
   if (!data || typeof data !== 'object') return base;
-  return {
+  return withoutNiv({
     ...base,
     ...data,
     profile: { ...base.profile, ...data.profile },
@@ -87,7 +112,7 @@ export function migrate(data) {
     custom: data.custom || [],
     reading: { ...base.reading, ...data.reading },
     achievements: data.achievements || {},
-  };
+  });
 }
 
 function load() {

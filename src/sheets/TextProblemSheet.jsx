@@ -2,7 +2,6 @@ import Sheet from '../components/Sheet.jsx';
 import Glyph from '../components/Glyph.jsx';
 import PasteText from './PasteText.jsx';
 import { useApp } from '../AppContext.js';
-import { getState } from '../lib/store.js';
 import { setVerseTranslation } from '../lib/actions.js';
 import { formatRef } from '../data/books.js';
 
@@ -42,7 +41,7 @@ export default function TextProblemSheet({ id, tr, error, plan, onClose }) {
       </div>
       <p className="small-print">Paste the {tr} text of {formatRef(id)}:</p>
       <PasteText id={id} tr={tr} saveLabel="Save & begin" onSaved={retry} />
-      {getState().settings.translation !== fallback && (
+      {tr !== fallback && (
         <button className="btn btn-ghost btn-block" onClick={useFallback}>
           Learn this verse in the {fallback} instead
         </button>

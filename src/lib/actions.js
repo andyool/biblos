@@ -1,4 +1,4 @@
-import { getState, setState, freshState, migrate } from './store.js';
+import { getState, setState, freshState, migrate, withoutNiv } from './store.js';
 import { DAY, addDays, dayKey, daysBetween } from './dates.js';
 import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
 import { GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from './lesson.js';
@@ -14,6 +14,25 @@ import { updateSkills, updateWeak } from './adapt.js';
 
 export function updateSettings(patch) {
   setState((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
+}
+
+// The secret word that unlocks the NIV, kept as a hash so it can't be read straight from the code.
+// It's a light lock, not real security: anyone who digs into the app could get round it.
+const NIV_WORD = 2087556069;
+const hashWord = (word) => [...word.trim().toLowerCase()].reduce((h, ch) => ((h * 33) ^ ch.charCodeAt(0)) >>> 0, 5381);
+
+/** Unlock the NIV on this phone, and go back to it if it was put away. False if the word is wrong. */
+export function unlockNiv(word) {
+  if (hashWord(word) !== NIV_WORD) return false;
+  setState((s) => {
+    const { nivWas, ...settings } = s.settings;
+    return { ...s, settings: { ...settings, nivUnlocked: true, translation: nivWas || settings.translation } };
+  });
+  return true;
+}
+
+export function lockNiv() {
+  setState((s) => withoutNiv({ ...s, settings: { ...s.settings, nivUnlocked: false } }));
 }
 
 export function updateProfile(patch) {
@@ -463,14 +482,15 @@ export function snoozeBackup(days = 7) {
 }
 
 export function restoreBackup(data) {
-  setState(migrate(data.state));
+  // The words first, so verses whose NIV words come with the backup keep the NIV.
   if (data.texts) replaceTexts(data.texts);
+  setState(migrate(data.state));
   noteBackup(Date.parse(data.exported) || Date.now());
 }
 
 export function resetEverything() {
   const keep = getState().settings;
   const fresh = freshState();
-  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, theme: keep.theme, woolly: keep.woolly, woollyLamb: keep.woollyLamb } });
+  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, nivUnlocked: keep.nivUnlocked, theme: keep.theme, woolly: keep.woolly, woollyLamb: keep.woollyLamb } });
   clearTexts();
 }

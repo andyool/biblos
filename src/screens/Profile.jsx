@@ -10,7 +10,7 @@ import { GOALS, LEVELS, titleFor } from '../data/levels.js';
 import { TRANSLATIONS, getTranslation } from '../data/translations.js';
 import { FONTS, TEXT_SIZES, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
-import { resetEverything, restoreBackup, setAutoTheme, updateProfile, updateSettings, equip } from '../lib/actions.js';
+import { lockNiv, resetEverything, restoreBackup, setAutoTheme, unlockNiv, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
@@ -196,6 +196,8 @@ export default function Profile() {
   const nivReady = useYouVersionReady();
   const [editingName, setEditingName] = useState(false);
   const [sheet, setSheet] = useState(null);
+  const [word, setWord] = useState('');
+  const [wrongWord, setWrongWord] = useState(false);
   const fileRef = useRef(null);
   const all = Object.values(verses);
   const counts = LEVELS.map((l) => all.filter((v) => v.level === l.n).length);
@@ -224,6 +226,30 @@ export default function Profile() {
     const result = await exportBackup();
     if (result !== 'cancelled') cue('backup');
     if (result === 'downloaded') toast('Backup saved to your downloads', 'check');
+  };
+
+  // The "About" heading is a hidden door: it asks for the word that unlocks the NIV.
+  const onAbout = async () => {
+    if (!settings.nivUnlocked) {
+      setWord('');
+      setWrongWord(false);
+      setSheet('unlock');
+      return;
+    }
+    const ok = await ask({ title: 'Lock the NIV?', message: 'It will be hidden on this phone until it is unlocked again.', confirm: 'Lock' });
+    if (ok) {
+      lockNiv();
+      toast('NIV locked');
+    }
+  };
+
+  const onUnlock = () => {
+    if (!unlockNiv(word)) {
+      setWrongWord(true);
+      return;
+    }
+    setSheet(null);
+    toast('NIV unlocked', 'key');
   };
 
   const onReset = async () => {
@@ -295,7 +321,7 @@ export default function Profile() {
       <h2 className="section-heading">Settings</h2>
       <div className="rows">
         <Row icon="book" label="Bible translation" value={settings.translation} onClick={() => setSheet('translation')} />
-        <Row icon="key" label="NIV access" value={nivReady ? 'Connected' : 'Not connected'} onClick={() => openSheet({ type: 'niv' })} />
+        {settings.nivUnlocked && <Row icon="key" label="NIV access" value={nivReady ? 'Connected' : 'Not connected'} onClick={() => openSheet({ type: 'niv' })} />}
         <Row icon="target" label="Daily goal" value={`${GOALS.find((g) => g.xp === settings.dailyGoal)?.name || ''} · ${settings.dailyGoal} XP`} onClick={() => setSheet('goal')} />
         <Row icon="sparkle" label="Theme" value={settings.autoTheme ? 'Matches your phone' : THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
         <Row icon="eye" label="Text size" value={(TEXT_SIZES.find((t) => t.scale === settings.textSize) || TEXT_SIZES[0]).name} onClick={() => setSheet('text')} />
@@ -337,7 +363,9 @@ export default function Profile() {
         {!isStandalone() && <Row icon="phone" label="Add to Home Screen" onClick={() => setSheet('install')} />}
       </div>
 
-      <h2 className="section-heading">About</h2>
+      <h2 className="section-heading" onClick={onAbout}>
+        About
+      </h2>
       <div className="about">
         <p>
           <em>Biblos</em> helps you hide God’s word in your heart, a few minutes at a time. Verses grow from <strong>Sown</strong> to <strong>Hidden in the Heart</strong> as you recall them across days and weeks.
@@ -364,6 +392,30 @@ export default function Profile() {
               if (getTranslation(id).source === 'yv' && !hasYouVersion()) openSheet({ type: 'niv' });
             }}
           />
+        </Sheet>
+      )}
+      {sheet === 'unlock' && (
+        <Sheet title="Password" onClose={() => setSheet(null)}>
+          <input
+            className="input input-large"
+            type="password"
+            value={word}
+            onChange={(e) => {
+              setWord(e.target.value);
+              setWrongWord(false);
+            }}
+            onKeyDown={(e) => e.key === 'Enter' && onUnlock()}
+            aria-label="Password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            enterKeyHint="done"
+            autoFocus
+          />
+          {wrongWord && <p className="field-note is-error">That’s not it.</p>}
+          <button className="btn btn-gold btn-block" onClick={onUnlock} disabled={!word.trim()}>
+            Unlock
+          </button>
         </Sheet>
       )}
       {sheet === 'goal' && (

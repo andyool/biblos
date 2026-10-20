@@ -29,12 +29,16 @@ export async function checkServerKey() {
   }
 }
 
-export const hasYouVersion = () => Boolean(youVersionKey()) || serverHasKey;
+/** The NIV is only for a phone it has been unlocked on (Me → tap "About"). */
+export const nivUnlocked = () => Boolean(getState().settings.nivUnlocked);
+
+export const hasYouVersion = () => nivUnlocked() && (Boolean(youVersionKey()) || serverHasKey);
 export const serverKeyConfigured = () => serverHasKey;
 
 /** True when NIV text can be fetched (a key on this device or on the server). */
 export function useYouVersionReady() {
   useStore((s) => s.settings.yvKey);
+  useStore((s) => s.settings.nivUnlocked);
   const [, force] = useState(0);
   useEffect(() => {
     const l = () => force((n) => n + 1);
@@ -204,6 +208,8 @@ export function versesFromHtml(html) {
 const yvChapters = new Map();
 
 function youVersionChapter(translation, book, chapter) {
+  // Words already on the phone still open (loadPassage looks there first); nothing new is fetched.
+  if (!nivUnlocked()) return Promise.reject(new BibleError('locked', `The ${translation.id} isn’t available. Choose another translation.`));
   const key = `${translation.yv}/${book}.${chapter}`;
   if (!yvChapters.has(key)) {
     const p = youVersionPassage(translation.yv, `${book}.${chapter}`, youVersionKey(), 'html')
