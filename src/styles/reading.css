@@ -686,11 +686,9 @@
   text-align: left;
 }
 
-.verse-pick:active:not(.is-kept) {
+.verse-pick:active:not(.is-kept):not(.is-on) {
   background: var(--surface-3);
 }
-
-
 
 .verse-pick-num {
   font-family: var(--font-display);
@@ -720,7 +718,208 @@
   border: 1px solid var(--trim);
 }
 
-.verse-pick.is-kept .verse-pick-mark {
+.verse-pick.is-kept .verse-pick-mark,
+.verse-pick.is-on .verse-pick-mark {
   color: var(--gold-ink);
   border-color: var(--matt-deep);
+}
+
+/* ─── Add a verse: book, chapter, verses ─────────────────────────────────── */
+
+/* The sheet keeps its height from step to step instead of jumping. */
+.sheet-panel.has-woolly .sheet.add-verse-sheet {
+  height: calc(100dvh - var(--safe-top) - 100px);
+}
+
+.pick-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+}
+
+.pick-search {
+  flex: 1;
+  min-width: 0;
+}
+
+.pick-back {
+  flex: none;
+  padding-left: 0;
+}
+
+.pick-title {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: calc(16px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pick-hint {
+  margin-bottom: 0;
+}
+
+.book-cell.is-plain {
+  position: relative;
+  min-height: 50px;
+  align-content: center;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+/* Room for "Deuteronomy" and "Thessalonians" on one line in a phone's three columns. */
+.book-cell.is-plain .book-cell-name {
+  font-size: calc(11px * var(--text-scale, 1));
+}
+
+.chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px;
+}
+
+.chapter-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-family: var(--font-display);
+  font-size: calc(15px * var(--text-scale, 1));
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.chapter-cell:active:not(.is-on) {
+  background: var(--surface-3);
+}
+
+/* Something of it is already in My Verses. */
+.pick-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+.verse-pick.is-tile {
+  gap: 10px;
+  padding: 10px 10px 10px 8px;
+}
+
+.verse-pick.is-tile .verse-pick-num {
+  min-width: 30px;
+  padding-top: 0;
+  font-size: calc(19px * var(--text-scale, 1));
+  line-height: 1.2;
+  text-align: center;
+}
+
+.verse-pick.is-tile .verse-pick-text {
+  font-size: calc(15.5px * var(--verse-scale) * var(--text-scale, 1));
+  line-height: 1.4;
+  color: var(--ink-soft);
+}
+
+.verse-pick.is-tile.is-on .verse-pick-text {
+  color: var(--ink);
+}
+
+.verse-pick.is-tile .verse-pick-mark {
+  width: 24px;
+  height: 24px;
+}
+
+.verse-pick.is-loading {
+  display: block;
+  padding: 2px 14px;
+}
+
+.verse-pick-saved {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-size: calc(10.5px * var(--text-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* What you have chosen, and the buttons to add it, stay in view at the foot of the sheet. */
+.pick-footer {
+  position: sticky;
+  bottom: calc(-1 * (var(--safe-bottom) + 24px));
+  z-index: 2;
+  display: grid;
+  gap: 12px;
+  margin: 18px -20px calc(-1 * (var(--safe-bottom) + 24px));
+  padding: 14px 20px calc(var(--safe-bottom) + 18px);
+  background: var(--surface);
+  border-top: 1px solid var(--trim);
+  box-shadow: 0 -12px 24px rgba(0, 0, 0, 0.22);
+  animation: pick-footer-up 0.25s cubic-bezier(0.2, 0.9, 0.25, 1) backwards;
+}
+
+@keyframes pick-footer-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.pick-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pick-summary strong {
+  font-family: var(--font-display);
+  font-size: calc(16px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pick-summary .btn-link {
+  flex: none;
+  padding-right: 0;
+}
+
+.pick-actions {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 10px;
+}
+
+.pick-actions .btn {
+  min-height: 48px;
+  padding: 10px 12px;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.pick-footer .textarea {
+  min-height: 0;
+  height: 96px;
+}
+
+.pick-footer .toggle-row,
+.pick-footer .small-print {
+  margin: 0;
+  font-size: calc(15px * var(--text-scale, 1));
 }

@@ -1607,6 +1607,8 @@ button.row:active {
 .book-cell.is-active,
 .chapter.is-next,
 .verse-pick.is-kept,
+.verse-pick.is-on,
+.chapter-cell.is-on,
 .emblem-choice.is-on,
 .shop-item.is-equipped,
 .recite-card.is-ready {

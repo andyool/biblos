@@ -59,7 +59,8 @@
 .chapter.is-done .chapter-num,
 .section-row.is-done .section-mark,
 .seq-slot.is-filled .seq-num,
-.verse-pick.is-kept .verse-pick-mark {
+.verse-pick.is-kept .verse-pick-mark,
+.verse-pick.is-on .verse-pick-mark {
   background-image: var(--glare), var(--grad-dome-shade);
   background-size:
     200% 200%,
@@ -144,6 +145,7 @@ span.gold-text:is(.screen-title *, .script-name, .purse-num, .complete-xp-num) {
     .section-row.is-done .section-mark,
     .seq-slot.is-filled .seq-num,
     .verse-pick.is-kept .verse-pick-mark,
+    .verse-pick.is-on .verse-pick-mark,
     .seal.is-earned,
     .gold-text,
     .sheet-title,
