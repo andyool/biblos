@@ -154,14 +154,14 @@
 }
 
 [data-theme='ivory'] {
-  --bg: #f8f4ea;
-  --bg-2: #f1eadb;
+  --bg: #eef0f4;
+  --bg-2: #e4e7ee;
   --surface: #ffffff;
-  --surface-2: #faf6ec;
-  --surface-3: #f1e9d6;
-  --ink: #241e18;
-  --ink-soft: rgba(36, 30, 24, 0.74);
-  --ink-faint: rgba(36, 30, 24, 0.64);
+  --surface-2: #f6f7fa;
+  --surface-3: #e6e9f0;
+  --ink: #1c2230;
+  --ink-soft: rgba(28, 34, 48, 0.74);
+  --ink-faint: rgba(28, 34, 48, 0.62);
   --g0: #fff9e2;
   --g1: #f3d886;
   --g2: #d0a038;
@@ -177,9 +177,9 @@
   --ok: #2f6e43;
   --bad: #a83a2b;
   --glow: rgba(208, 160, 56, 0.12);
-  --shadow: 0 12px 30px rgba(60, 45, 20, 0.12);
+  --shadow: 0 12px 30px rgba(30, 40, 70, 0.12);
   --logo-lines: rgba(255, 255, 255, 0.7);
-  --grain: 0.07;
+  --grain: 0.05;
   --emboss: rgba(255, 255, 255, 0.9);
   --t0: var(--g3);
   --t1: var(--g2);
@@ -192,11 +192,11 @@
 
 /* Rose gold. */
 [data-theme='rose'] {
-  --bg: #f4e6e1;
-  --bg-2: #eedad3;
-  --surface: #fdf6f3;
-  --surface-2: #f8ebe6;
-  --surface-3: #f0dbd4;
+  --bg: #f3d9dc;
+  --bg-2: #ebcbcf;
+  --surface: #fdf2f3;
+  --surface-2: #f8e4e6;
+  --surface-3: #efd0d4;
   --ink: #3a2328;
   --ink-soft: rgba(58, 35, 40, 0.76);
   --ink-faint: rgba(58, 35, 40, 0.64);
@@ -306,14 +306,14 @@
 
 /* Sage green and gold. */
 [data-theme='lily'] {
-  --bg: #edefe2;
-  --bg-2: #e4e7d6;
-  --surface: #fafbf3;
-  --surface-2: #f2f4e7;
-  --surface-3: #e5e9d5;
-  --ink: #232a1e;
-  --ink-soft: rgba(35, 42, 30, 0.76);
-  --ink-faint: rgba(35, 42, 30, 0.64);
+  --bg: #dce7d3;
+  --bg-2: #d0ddc5;
+  --surface: #f4f8ef;
+  --surface-2: #e7efdf;
+  --surface-3: #d6e2ca;
+  --ink: #1d2a1a;
+  --ink-soft: rgba(29, 42, 26, 0.76);
+  --ink-faint: rgba(29, 42, 26, 0.64);
   --g0: #fff9e0;
   --g1: #f2d985;
   --g2: #c99e36;
@@ -323,8 +323,8 @@
   --gold-ink: #241c05;
   --matt: #a0925f;
   --matt-deep: #736840;
-  --line: rgba(118, 116, 68, 0.26);
-  --line-strong: rgba(118, 116, 68, 0.52);
+  --line: rgba(104, 112, 62, 0.28);
+  --line-strong: rgba(104, 112, 62, 0.54);
   --accent: #4b6a3a;
   --ok: #2f6b3f;
   --bad: #a83a2b;
@@ -344,14 +344,14 @@
 
 /* Sand and bronze. */
 [data-theme='desert'] {
-  --bg: #f3e4d0;
-  --bg-2: #ecd8bf;
-  --surface: #fcf4ea;
-  --surface-2: #f6e8d6;
-  --surface-3: #eddac2;
-  --ink: #33231a;
-  --ink-soft: rgba(51, 35, 26, 0.76);
-  --ink-faint: rgba(51, 35, 26, 0.64);
+  --bg: #f0d2b6;
+  --bg-2: #e7c29f;
+  --surface: #fcefe2;
+  --surface-2: #f6ddc6;
+  --surface-3: #ebc9a9;
+  --ink: #3a2416;
+  --ink-soft: rgba(58, 36, 22, 0.76);
+  --ink-faint: rgba(58, 36, 22, 0.64);
   --g0: #fff2e4;
   --g1: #f2c99e;
   --g2: #c98a52;
