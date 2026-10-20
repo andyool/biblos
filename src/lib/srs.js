@@ -34,6 +34,20 @@ export function review(schedule, accuracy, now = Date.now()) {
   return { interval, ease, reps, lapses, last: now, due: startOfDay(now) + interval * DAY, q };
 }
 
+/** How many more good reviews a Fruitful verse needs to be hidden in the heart: [if near perfect, if just good]. */
+export function reviewsToHidden(schedule) {
+  const count = (accuracy) => {
+    let s = schedule;
+    let n = 0;
+    do {
+      s = review(s, accuracy);
+      n += 1;
+    } while (s.interval < HIDDEN_AFTER_DAYS && n < 20);
+    return n;
+  };
+  return [count(1), count(0.85)];
+}
+
 export const isDue = (verse, now = Date.now()) => !!verse && verse.level >= 4 && !!verse.srs && verse.srs.due <= now;
 
 /** 0–1: how fresh a memorised verse is (drops below 0.5 once it is due). */

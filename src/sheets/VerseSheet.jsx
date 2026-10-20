@@ -10,7 +10,7 @@ import { useApp } from '../AppContext.js';
 import { useVerseText } from '../lib/hooks.js';
 import { tokenize } from '../lib/text.js';
 import { learnPlan, resting, verseTr } from '../lib/lesson.js';
-import { freshness, isDue } from '../lib/srs.js';
+import { freshness, isDue, reviewsToHidden } from '../lib/srs.js';
 import { whenText } from '../lib/dates.js';
 import { removeCustomVerse, resetVerse, setVerseTranslation } from '../lib/actions.js';
 import { ask, toast } from '../lib/ui.js';
@@ -60,6 +60,8 @@ export default function VerseSheet({ id, onClose }) {
   const isCustom = state.custom.includes(id);
 
   const settling = resting(v);
+  const [fewest, most] = level === 4 && v?.srs ? reviewsToHidden(v.srs) : [0, 0];
+  const toHidden = fewest === 0 ? '' : most === 1 ? 'One more good review' : `${fewest === most ? fewest : `${fewest}–${most}`} more good reviews`;
   const primary = level >= 4 ? (due ? 'Review now' : 'Practise') : level === 0 ? 'Begin learning' : settling ? 'Practise' : LESSON_NAMES[level];
 
   const begin = () => {
@@ -159,6 +161,12 @@ export default function VerseSheet({ id, onClose }) {
           <>
             {' '}
             {due ? 'It is ready to be recalled now.' : `Next review ${whenText(v.srs.due)}.`}
+          </>
+        )}
+        {toHidden && (
+          <>
+            {' '}
+            {toHidden} and it will be Hidden in the Heart.
           </>
         )}
       </p>
