@@ -1,7 +1,11 @@
-import { DAY, startOfDay } from './dates.js';
+import { DAY, dayKey, startOfDay } from './dates.js';
 
 // Spaced repetition (a gentle SM-2): each good review pushes the next one further away.
 export const HIDDEN_AFTER_DAYS = 21;
+
+// Of the days a review came late, how many count towards the next interval, by grade: a verse
+// recalled well after a longer gap than planned has shown it lasts that long.
+const LATE_CREDIT = { 3: 0, 4: 0.5, 5: 1 };
 
 export function newSchedule(now = Date.now()) {
   return { interval: 1, ease: 2.5, reps: 0, lapses: 0, last: now, due: startOfDay(now) + DAY };
@@ -19,14 +23,19 @@ export function review(schedule, accuracy, now = Date.now()) {
   const q = grade(accuracy);
   let { interval = 1, ease = 2.5, reps = 0, lapses = 0 } = schedule || {};
   if (q < 3) {
+    // A near miss on a verse known for a while goes back a step; one that has slipped away
+    // starts over.
+    const near = q === 2 && reps >= 2;
     lapses += 1;
-    reps = 0;
+    reps = near ? 1 : 0;
     interval = 1;
-    ease = Math.max(1.3, ease - 0.2);
+    ease = Math.max(1.3, ease - (near ? 0.1 : 0.2));
   } else {
-    if (reps === 0) interval = q === 5 ? 3 : 2;
-    else if (reps === 1) interval = q === 5 ? 7 : q === 4 ? 6 : 4;
-    else interval = Math.round(interval * ease * (q === 5 ? 1.15 : q === 3 ? 0.8 : 1));
+    const elapsed = schedule?.last ? Math.round((startOfDay(now) - startOfDay(schedule.last)) / DAY) : interval;
+    const stretch = 1 + (Math.max(0, elapsed - interval) * LATE_CREDIT[q]) / interval;
+    // The first two reviews come at set steps, unless a late recall has already carried it further.
+    const step = [q === 5 ? 3 : 2, q === 5 ? 7 : q === 4 ? 6 : 4][reps];
+    interval = Math.round((step > interval ? step : interval * ease * (q === 5 ? 1.15 : q === 3 ? 0.8 : 1)) * stretch);
     ease = Math.min(3, Math.max(1.3, ease + (q === 5 ? 0.1 : q === 3 ? -0.14 : 0)));
     reps += 1;
   }
@@ -34,13 +43,35 @@ export function review(schedule, accuracy, now = Date.now()) {
   return { interval, ease, reps, lapses, last: now, due: startOfDay(now) + interval * DAY, q };
 }
 
+/**
+ * Move a review a little earlier or later, to the quietest day near it, so verses learned
+ * together don't all fall due on the same day. Short intervals stay as they are, and a review
+ * never crosses the three weeks that hide a verse in the heart. load: { [dayKey]: reviews due }.
+ */
+export function spread(schedule, load = {}) {
+  const { interval, due } = schedule;
+  if (interval < 4) return schedule;
+  const reach = Math.max(1, Math.round(interval * 0.1));
+  const hidden = interval >= HIDDEN_AFTER_DAYS;
+  let best = 0;
+  for (let d = 1; d <= reach; d += 1) {
+    // Earlier before later: a review a day early is safer than one a day late.
+    for (const shift of [-d, d]) {
+      if ((interval + shift >= HIDDEN_AFTER_DAYS) !== hidden) continue;
+      if ((load[dayKey(due + shift * DAY)] || 0) < (load[dayKey(due + best * DAY)] || 0)) best = shift;
+    }
+  }
+  return best ? { ...schedule, interval: interval + best, due: due + best * DAY } : schedule;
+}
+
 /** How many more good reviews a Fruitful verse needs to be hidden in the heart: [if near perfect, if just good]. */
-export function reviewsToHidden(schedule) {
+export function reviewsToHidden(schedule, now = Date.now()) {
   const count = (accuracy) => {
     let s = schedule;
     let n = 0;
     do {
-      s = review(s, accuracy);
+      // Each review on the day it falls due, or today if it is overdue.
+      s = review(s, accuracy, Math.max(s.due, now));
       n += 1;
     } while (s.interval < HIDDEN_AFTER_DAYS && n < 20);
     return n;

@@ -1,7 +1,7 @@
 import { getState, setState, freshState, migrate, withoutNiv } from './store.js';
 import { DAY, addDays, dayKey, daysBetween } from './dates.js';
-import { newSchedule, review, HIDDEN_AFTER_DAYS } from './srs.js';
-import { GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from './lesson.js';
+import { newSchedule, review, spread, HIDDEN_AFTER_DAYS } from './srs.js';
+import { FADED_AFTER_DAYS, GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from './lesson.js';
 import { newlyEarned } from '../data/achievements.js';
 import { levelReward, xpLevel } from '../data/levels.js';
 import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
@@ -241,6 +241,12 @@ export function finishSession(session, results) {
     let talents = 3 + (perfect ? 2 : 0);
     const changes = [];
 
+    // How many reviews fall on each day, so new ones can be spread over the quieter days.
+    const load = {};
+    for (const v of Object.values(verses)) {
+      if (v.srs && !session.verseIds.includes(v.id)) load[dayKey(v.srs.due)] = (load[dayKey(v.srs.due)] || 0) + 1;
+    }
+
     for (const id of session.verseIds) {
       if (!per[id] && session.kind !== 'learn') continue;
       const old = verses[id] || { id, tr: session.trs[id], level: 0, added: now };
@@ -256,6 +262,10 @@ export function finishSession(session, results) {
         const grown = grownToday(old, now);
         if (grown >= GROWTH_PER_DAY) {
           note = 'rest';
+        } else if (acc < PASS_MARK[from] && from >= 2 && now - (old.lastPracticed || now) >= FADED_AFTER_DAYS * DAY) {
+          // Left a long while, it has faded: a stage back, so the next lesson is gentler.
+          to = from - 1;
+          note = 'faded';
         } else if (acc < PASS_MARK[from]) {
           note = 'almost';
         } else {
@@ -267,8 +277,9 @@ export function finishSession(session, results) {
           }
         }
       } else if (session.kind === 'review' || (session.kind === 'recite' && old.srs && old.srs.due <= now)) {
-        const next = review(old.srs, acc, now);
+        const next = spread(review(old.srs, acc, now), load);
         v.srs = next;
+        load[dayKey(next.due)] = (load[dayKey(next.due)] || 0) + 1;
         if (next.q < 3) note = 'lapse';
         if (next.interval >= HIDDEN_AFTER_DAYS && from === 4) {
           to = 5;

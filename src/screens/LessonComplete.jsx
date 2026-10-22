@@ -16,7 +16,7 @@ function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
   if (summary.changes.some((c) => c.to === 5 && c.from === 4)) return 'Hidden in your heart';
   if (summary.changes.some((c) => c.to === 4 && c.from === 3)) return 'It bears fruit!';
-  if (summary.changes.some((c) => c.note === 'almost')) return 'Keep pressing on';
+  if (summary.changes.some((c) => c.note === 'almost' || c.note === 'faded')) return 'Keep pressing on';
   if (summary.perfect) return 'Flawless';
   if (summary.kind === 'review') return 'Well tended';
   return 'Well done';
@@ -31,7 +31,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
     // Give the lamb a moment to appear, then react to how it went.
     const t = setTimeout(() => {
       if (summary.kind === 'reading') cue('readFinish', { bookDone: summary.reading.bookDone });
-      else if (summary.changes.some((c) => c.note === 'almost')) cue('fail');
+      else if (summary.changes.some((c) => c.note === 'almost' || c.note === 'faded')) cue('fail');
       else
         cue('pass', {
           mastered: levelled.some((c) => c.to >= 4),
@@ -96,6 +96,10 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
               ) : c.note === 'almost' ? (
                 <span>
                   Not quite {LEVELS[c.from + 1].name.toLowerCase()} yet — try this lesson again.
+                </span>
+              ) : c.note === 'faded' ? (
+                <span>
+                  It has faded since you last practised it, so it goes back to {LEVELS[c.to].name.toLowerCase()}. The next lesson is gentler.
                 </span>
               ) : c.note === 'lapse' ? (
                 <span>Slipping a little — we’ll bring it back tomorrow.</span>

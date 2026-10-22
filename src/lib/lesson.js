@@ -3,8 +3,8 @@ import { LESSON_NAMES, LEVELS } from '../data/levels.js';
 import { formatRef, parseId } from '../data/books.js';
 import { allTexts, getText } from './texts.js';
 import { STOP, bare, midSentence, norm, orderGroups, phrases, pick, shuffle, tokenize } from './text.js';
-import { isDue } from './srs.js';
-import { dayKey } from './dates.js';
+import { freshness, isDue } from './srs.js';
+import { dayKey, startOfDay } from './dates.js';
 import { choose, pickContext, weakIndices } from './adapt.js';
 import { chainStep, glimpseStep, openingStep, pairsStep, rushStep, slipStep, sortStep, spellStep } from './activities.js';
 
@@ -19,6 +19,14 @@ export const GROWTH_PER_DAY = 2;
 // stays where it is and the lesson can be tried again.
 export const PASS_MARK = [0.6, 0.6, 0.6, 0.8];
 
+// A verse left half-learned this long has faded: if its lesson falls short, it steps back a stage
+// so the next lesson is gentler, rather than repeating one that is now too hard.
+export const FADED_AFTER_DAYS = 7;
+
+// Up to three verses grow side by side. Each one's lessons are spaced out by the others' (a little
+// forgetting between lessons makes each one count), and few enough are begun that each is finished.
+export const FIELD = 3;
+
 /** How many stages a verse has grown today. */
 export const grownToday = (verse, now = Date.now()) => (verse?.grew?.day === dayKey(now) ? verse.grew.n : 0);
 
@@ -27,9 +35,33 @@ export const resting = (verse, now = Date.now()) => (verse?.level || 0) < 4 && g
 
 // ── What to do next ────────────────────────────────────────────────────────────
 
+/**
+ * The verse to learn next. First one carried over from an earlier day, the longest left first;
+ * then a new verse from the path, if fewer than FIELD are growing; then the one practised longest
+ * ago today, so the verse just done waits its turn. A new verse is also begun once every growing
+ * verse has grown all it can today. `among`: only these verses (a path's own). Null when nothing
+ * can grow today.
+ */
+export function nextToLearn(state, path, now = Date.now(), among = null) {
+  const field = Object.values(state.verses).filter((v) => v.level >= 1 && v.level <= 3 && (!among || among.includes(v.id)));
+  const ready = field.filter((v) => !resting(v, now)).sort((a, b) => (a.lastPracticed || 0) - (b.lastPracticed || 0));
+  const carried = ready.find((v) => (v.lastPracticed || 0) < startOfDay(now));
+  if (carried) return carried.id;
+  const fresh = path.verses.find((id) => verseLevel(state, id) === 0);
+  if (fresh && (field.length < FIELD || !ready.length)) return fresh;
+  return ready[0]?.id || null;
+}
+
+// The words of a verse stumbled on lately (see adapt.js).
+const shaky = (v) => Object.values(v.weak || {}).filter((w) => w >= 0.5).length;
+
+/** How much a memorised verse needs practice: the less fresh, the more stumbles and slips, the more. */
+const need = (v, now) => 1 - (freshness(v, now) ?? 1) + 0.08 * Math.min(shaky(v), 6) + 0.12 * Math.min(v.srs?.lapses || 0, 4);
+
 export function planNext(state, now = Date.now()) {
   const all = Object.values(state.verses);
-  const due = all.filter((v) => isDue(v, now)).sort((a, b) => a.srs.due - b.srs.due);
+  // The verses most likely forgotten first: the most overdue for how long they were meant to last.
+  const due = all.filter((v) => isDue(v, now)).sort((a, b) => freshness(a, now) - freshness(b, now));
   if (due.length) {
     return {
       kind: 'review',
@@ -38,29 +70,27 @@ export function planNext(state, now = Date.now()) {
       detail: `${due.length} ${due.length === 1 ? 'verse is' : 'verses are'} ready to be recalled`,
     };
   }
-  const learning = all.filter((v) => v.level >= 1 && v.level <= 3 && !resting(v, now)).sort((a, b) => (a.lastPracticed || 0) - (b.lastPracticed || 0));
-  if (learning.length) {
-    const v = learning[0];
-    return {
-      kind: 'learn',
-      verseIds: [v.id],
-      title: LESSON_NAMES[v.level],
-      detail: `${formatRef(v.id)} · ${LEVELS[v.level].name} → ${LEVELS[v.level + 1].name}`,
-    };
-  }
   const path = getPath(state, state.settings.activePath);
-  const fresh = path.verses.find((id) => verseLevel(state, id) === 0);
-  if (fresh) return { kind: 'learn', verseIds: [fresh], title: 'Sow a new verse', detail: formatRef(fresh) };
+  const id = nextToLearn(state, path, now);
+  if (id) {
+    const level = verseLevel(state, id);
+    if (!level) return { kind: 'learn', verseIds: [id], title: 'Sow a new verse', detail: formatRef(id) };
+    return { kind: 'learn', verseIds: [id], title: LESSON_NAMES[level], detail: `${formatRef(id)} · ${LEVELS[level].name} → ${LEVELS[level + 1].name}` };
+  }
   const nextPath = PATHS.find((p) => p.verses.some((id) => verseLevel(state, id) === 0));
   if (nextPath) {
     const id = nextPath.verses.find((v) => verseLevel(state, v) === 0);
     return { kind: 'learn', verseIds: [id], title: 'Sow a new verse', detail: `${formatRef(id)} · ${nextPath.title}`, pathId: nextPath.id };
   }
-  const known = all.filter((v) => v.level >= 4).sort((a, b) => a.srs.due - b.srs.due);
+  // The shakiest verses first, and those not yet practised today before those that were.
+  const today = startOfDay(now);
+  const known = all
+    .filter((v) => v.level >= 4)
+    .sort((a, b) => ((a.lastPracticed || 0) >= today) - ((b.lastPracticed || 0) >= today) || need(b, now) - need(a, now));
   if (known.length) {
     return { kind: 'practice', verseIds: known.slice(0, 3).map((v) => v.id), title: 'Strengthen your verses', detail: 'Nothing is due — keep them shining' };
   }
-  const settling = all.filter((v) => resting(v, now));
+  const settling = all.filter((v) => resting(v, now)).sort((a, b) => (a.lastPracticed || 0) - (b.lastPracticed || 0));
   if (settling.length) {
     return { kind: 'practice', verseIds: settling.slice(0, 3).map((v) => v.id), title: 'Go over today’s verses', detail: 'They grow again tomorrow' };
   }

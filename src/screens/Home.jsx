@@ -7,7 +7,7 @@ import { Divider, EmblemBadge, Frame, LevelRing } from '../components/Ornaments.
 import { getPath } from '../data/paths.js';
 import { formatRefShort } from '../data/books.js';
 import { LEVELS, roman } from '../data/levels.js';
-import { planNext, recitePlan, resting, verseTr } from '../lib/lesson.js';
+import { FIELD, nextToLearn, planNext, recitePlan, verseTr } from '../lib/lesson.js';
 import { isDue } from '../lib/srs.js';
 import { prefetch, useYouVersionReady } from '../lib/bible.js';
 import { getTranslation } from '../data/translations.js';
@@ -235,9 +235,9 @@ export default function Home() {
   const { start, openVerse, openSheet } = useApp();
   const plan = useMemo(() => planNext(state), [state]);
   const path = getPath(state, state.settings.activePath);
-  // The next verse to learn: one that can still grow today, if there is one.
-  const learning = path.verses.filter((id) => (state.verses[id]?.level || 0) < 4);
-  const nextId = learning.find((id) => !resting(state.verses[id])) || learning[0];
+  // Where the path goes on: the verse today's lesson is for, when it is on this path, otherwise
+  // this path's own next. None when nothing on it can grow until tomorrow.
+  const nextId = plan?.kind === 'learn' && path.verses.includes(plan.verseIds[0]) ? plan.verseIds[0] : nextToLearn(state, path, Date.now(), path.verses);
   const memorised = path.verses.filter((id) => (state.verses[id]?.level || 0) >= 4).length;
   const complete = path.verses.length > 0 && memorised === path.verses.length;
 
@@ -247,7 +247,7 @@ export default function Home() {
 
   // Fetch the next few verses quietly so lessons open instantly.
   useEffect(() => {
-    const ids = new Set([...(plan?.verseIds || []), ...path.verses.filter((id) => (state.verses[id]?.level || 0) < 4).slice(0, 3)]);
+    const ids = new Set([...(plan?.verseIds || []), ...path.verses.filter((id) => (state.verses[id]?.level || 0) < 4).slice(0, FIELD + 1)]);
     prefetch([...ids].map((id) => [verseTr(state, id), id]));
   }, [plan, path.id]); // eslint-disable-line react-hooks/exhaustive-deps
 

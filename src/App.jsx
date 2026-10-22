@@ -263,8 +263,9 @@ export default function App() {
       />
     );
   } else if (summary) {
-    // A lesson that fell short of its pass mark is offered again straight away.
-    const missed = summary.changes.find((c) => c.note === 'almost');
+    // A lesson that fell short of its pass mark is offered again straight away (a gentler one,
+    // if the verse had faded).
+    const missed = summary.changes.find((c) => c.note === 'almost' || c.note === 'faded');
     const more = missed ? learnPlan(getState(), missed.id) : planNext(getState());
     body = (
       <LessonComplete
