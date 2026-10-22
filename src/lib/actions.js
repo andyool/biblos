@@ -35,6 +35,18 @@ export function lockNiv() {
   setState((s) => withoutNiv({ ...s, settings: { ...s.settings, nivUnlocked: false } }));
 }
 
+/** Open the hidden talent door on this phone with the same word, and pay out the tap that asked for it. False if the word is wrong. */
+export function unlockTalents(word) {
+  if (hashWord(word) !== NIV_WORD) return false;
+  updateSettings({ talentsUnlocked: true });
+  addTalents(5);
+  return true;
+}
+
+export function addTalents(n) {
+  setState((s) => ({ ...s, stats: { ...s.stats, talents: s.stats.talents + n } }));
+}
+
 export function updateProfile(patch) {
   setState((s) => ({ ...s, profile: { ...s.profile, ...patch } }));
 }
@@ -502,6 +514,6 @@ export function restoreBackup(data) {
 export function resetEverything() {
   const keep = getState().settings;
   const fresh = freshState();
-  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, nivUnlocked: keep.nivUnlocked, theme: keep.theme, woolly: keep.woolly, woollyLamb: keep.woollyLamb } });
+  setState({ ...fresh, settings: { ...fresh.settings, yvKey: keep.yvKey, nivUnlocked: keep.nivUnlocked, talentsUnlocked: keep.talentsUnlocked, theme: keep.theme, woolly: keep.woolly, woollyLamb: keep.woollyLamb } });
   clearTexts();
 }

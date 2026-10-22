@@ -10,7 +10,7 @@ import { GOALS, LEVELS, titleFor } from '../data/levels.js';
 import { TRANSLATIONS, getTranslation } from '../data/translations.js';
 import { FONTS, TEXT_SIZES, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
-import { lockNiv, resetEverything, restoreBackup, setAutoTheme, unlockNiv, updateProfile, updateSettings, equip } from '../lib/actions.js';
+import { addTalents, lockNiv, resetEverything, restoreBackup, setAutoTheme, unlockNiv, unlockTalents, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
 import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
@@ -243,13 +243,27 @@ export default function Profile() {
     }
   };
 
+  // The flourish above Settings is another: after the same word is given once, each tap adds five talents.
+  const onFlourish = () => {
+    if (settings.talentsUnlocked) {
+      addTalents(5);
+      toast('+5 talents', 'coin');
+      return;
+    }
+    setWord('');
+    setWrongWord(false);
+    setSheet('talents');
+  };
+
   const onUnlock = () => {
-    if (!unlockNiv(word)) {
+    const talents = sheet === 'talents';
+    if (!(talents ? unlockTalents(word) : unlockNiv(word))) {
       setWrongWord(true);
       return;
     }
     setSheet(null);
-    toast('NIV unlocked', 'key');
+    if (talents) toast('+5 talents', 'coin');
+    else toast('NIV unlocked', 'key');
   };
 
   const onReset = async () => {
@@ -316,7 +330,7 @@ export default function Profile() {
 
       <Skills skills={stats.skills} />
 
-      <Divider width={200} className="center spaced" />
+      <Divider width={200} className="center spaced" onClick={onFlourish} />
 
       <h2 className="section-heading">Settings</h2>
       <div className="rows">
@@ -394,7 +408,7 @@ export default function Profile() {
           />
         </Sheet>
       )}
-      {sheet === 'unlock' && (
+      {(sheet === 'unlock' || sheet === 'talents') && (
         <Sheet title="Password" onClose={() => setSheet(null)}>
           <input
             className="input input-large"

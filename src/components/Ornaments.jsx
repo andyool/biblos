@@ -42,7 +42,7 @@ export function GoldDefs() {
 }
 
 /** A centred flourish: diamond, curls and fading rules. */
-export function Divider({ className = '', width = 220 }) {
+export function Divider({ className = '', width = 220, onClick }) {
   const id = useId().replace(/:/g, '');
   const half = (
     <>
@@ -54,7 +54,7 @@ export function Divider({ className = '', width = 220 }) {
     </>
   );
   return (
-    <svg className={`divider ${className}`} width={width} viewBox="0 0 240 24" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" aria-hidden="true">
+    <svg className={`divider ${className}`} width={width} viewBox="0 0 240 24" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" aria-hidden="true" onClick={onClick}>
       <defs>
         <linearGradient id={`${id}-fade`} x1="166" x2="238" y1="0" y2="0" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="currentColor" stopOpacity="0.9" />

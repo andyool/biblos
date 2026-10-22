@@ -15,6 +15,8 @@ export function freshState() {
       translation: 'ESV',
       // The NIV is only offered on a phone it has been unlocked on (see withoutNiv below).
       nivUnlocked: false,
+      // The flourish on the Me page hands out talents once the same word has been given.
+      talentsUnlocked: false,
       dailyGoal: 20,
       sound: true,
       speechRate: 0.92,
