@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import Glyph from './Glyph.jsx';
+import { useStore } from '../lib/store.js';
 
 const stops = (list) => list.map(([offset, g, opacity]) => <stop key={offset} offset={offset} style={{ stopColor: `var(--${g})`, stopOpacity: opacity }} />);
 
@@ -245,14 +246,16 @@ export function Corner({ variant = 'filigree', pos = 'tl', size = 46 }) {
   );
 }
 
-/** Ornamented card. */
-export function Frame({ variant = 'filigree', className = '', children, size = 46, ...rest }) {
+/** Ornamented card, in the frame you have chosen in the Treasury unless it is given one. */
+export function Frame({ variant, className = '', children, size = 46, ...rest }) {
+  const chosen = useStore((s) => s.settings.frame);
+  const look = variant || chosen || 'filigree';
   return (
-    <div className={`frame frame-${variant} ${className}`} {...rest}>
-      <Corner variant={variant} pos="tl" size={size} />
-      <Corner variant={variant} pos="tr" size={size} />
-      <Corner variant={variant} pos="bl" size={size} />
-      <Corner variant={variant} pos="br" size={size} />
+    <div className={`frame frame-${look} ${className}`} {...rest}>
+      <Corner variant={look} pos="tl" size={size} />
+      <Corner variant={look} pos="tr" size={size} />
+      <Corner variant={look} pos="bl" size={size} />
+      <Corner variant={look} pos="br" size={size} />
       {children}
     </div>
   );
