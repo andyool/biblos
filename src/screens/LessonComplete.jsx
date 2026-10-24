@@ -24,6 +24,8 @@ function headline(summary) {
 
 export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
   const levelled = summary.changes.filter((c) => c.to > c.from);
+  // The very first lesson or reading: all the XP there is came from it.
+  const first = summary.totalXp === summary.xp;
   useBack(onDone);
   useEffect(() => {
     play('complete');
@@ -58,25 +60,34 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
         <Divider width={200} />
       </div>
 
-      <div className="complete-stats">
-        <div className="stat-tile">
-          <Glyph name="target" size={20} />
-          <strong>{Math.round(summary.accuracy * 100)}%</strong>
-          <span>accuracy</span>
-        </div>
-        <div className="stat-tile">
-          <Glyph name="coin" size={20} className="coin" />
-          <strong>+{summary.talents}</strong>
-          <span>talents</span>
-        </div>
-        <div className={`stat-tile ${summary.streakExtended ? 'is-glow' : ''}`}>
-          <Glyph name="lamp" size={22} lit />
-          <strong>{summary.streak}</strong>
-          <span>day streak</span>
-        </div>
-      </div>
+      <p className="complete-facts">
+        <span>
+          <Glyph name="target" size={16} /> {Math.round(summary.accuracy * 100)}%
+        </span>
+        <span>
+          <Glyph name="coin" size={16} className="coin" /> +{summary.talents}
+        </span>
+        <span className={summary.streakExtended ? 'is-glow' : ''}>
+          <Glyph name="lamp" size={17} lit /> {summary.streak} day{summary.streak === 1 ? '' : 's'}
+        </span>
+      </p>
 
-      <LevelProgress xp={summary.xp} totalXp={summary.totalXp} levelUp={summary.levelUp} />
+      {summary.levelUp && <LevelProgress xp={summary.xp} totalXp={summary.totalXp} levelUp={summary.levelUp} />}
+
+      {/* The first time, a word on what was just earned (nothing is explained before it happens). */}
+      {first && (
+        <div className="complete-first">
+          <p>
+            <Glyph name="lamp" size={18} lit /> Your lamp is lit. Practise each day to keep your streak burning.
+          </p>
+          <p>
+            <Glyph name="coin" size={18} className="coin" /> Talents buy new themes and frames in the Treasury.
+          </p>
+          <p>
+            <Glyph name="target" size={18} /> The ring at the top fills up towards your daily goal.
+          </p>
+        </div>
+      )}
 
       <div className="complete-list">
         {summary.changes.map((c) => (
@@ -124,11 +135,6 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
         {summary.reading?.bookDone && (
           <div className="complete-banner">
             <Glyph name="crown" size={20} /> You have read all of {BOOK_BY_CODE[summary.reading.book].name} — +{BOOK_BONUS} talents
-          </div>
-        )}
-        {summary.firstFruits && (
-          <div className="complete-banner">
-            <Glyph name="wheat" size={20} /> First fruits — double XP for your first practice today
           </div>
         )}
         {summary.goalReached && (

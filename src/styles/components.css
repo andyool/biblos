@@ -1592,6 +1592,19 @@ button.row:active {
   align-items: center;
 }
 
+.hint-card.is-warning {
+  border-left-color: var(--bad);
+}
+
+.hint-card.is-warning > .glyph {
+  color: var(--bad);
+  stroke: currentColor;
+}
+
+.hint-card.is-warning strong {
+  color: var(--bad);
+}
+
 .hint-card.is-action > .glyph:last-child {
   color: var(--ink-faint);
   stroke: currentColor;
@@ -1609,7 +1622,6 @@ button.row:active {
 .verse-pick.is-kept,
 .verse-pick.is-on,
 .chapter-cell.is-on,
-.emblem-choice.is-on,
 .shop-item.is-equipped,
 .recite-card.is-ready {
   --selected-tint: color-mix(in srgb, var(--g2) 10%, var(--surface));

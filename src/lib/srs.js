@@ -1,4 +1,4 @@
-import { DAY, dayKey, startOfDay } from './dates.js';
+import { DAY, dayAfter, dayKey, startOfDay } from './dates.js';
 
 // Spaced repetition (a gentle SM-2): each good review pushes the next one further away.
 export const HIDDEN_AFTER_DAYS = 21;
@@ -8,7 +8,7 @@ export const HIDDEN_AFTER_DAYS = 21;
 const LATE_CREDIT = { 3: 0, 4: 0.5, 5: 1 };
 
 export function newSchedule(now = Date.now()) {
-  return { interval: 1, ease: 2.5, reps: 0, lapses: 0, last: now, due: startOfDay(now) + DAY };
+  return { interval: 1, ease: 2.5, reps: 0, lapses: 0, last: now, due: dayAfter(now, 1) };
 }
 
 export function grade(accuracy) {
@@ -40,7 +40,7 @@ export function review(schedule, accuracy, now = Date.now()) {
     reps += 1;
   }
   interval = Math.max(1, Math.min(interval, 365));
-  return { interval, ease, reps, lapses, last: now, due: startOfDay(now) + interval * DAY, q };
+  return { interval, ease, reps, lapses, last: now, due: dayAfter(now, interval), q };
 }
 
 /**
@@ -58,10 +58,10 @@ export function spread(schedule, load = {}) {
     // Earlier before later: a review a day early is safer than one a day late.
     for (const shift of [-d, d]) {
       if ((interval + shift >= HIDDEN_AFTER_DAYS) !== hidden) continue;
-      if ((load[dayKey(due + shift * DAY)] || 0) < (load[dayKey(due + best * DAY)] || 0)) best = shift;
+      if ((load[dayKey(dayAfter(due, shift))] || 0) < (load[dayKey(dayAfter(due, best))] || 0)) best = shift;
     }
   }
-  return best ? { ...schedule, interval: interval + best, due: due + best * DAY } : schedule;
+  return best ? { ...schedule, interval: interval + best, due: dayAfter(due, best) } : schedule;
 }
 
 /** How many more good reviews a Fruitful verse needs to be hidden in the heart: [if near perfect, if just good]. */

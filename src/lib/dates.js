@@ -14,6 +14,12 @@ export function startOfDay(time = Date.now()) {
   return d.getTime();
 }
 
+/** The start of the day n calendar days after time's day. Counted in days, not hours, so a clock change can't move it. */
+export function dayAfter(time, n) {
+  const d = new Date(time);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n).getTime();
+}
+
 function keyToUTC(key) {
   const [y, m, d] = key.split('-').map(Number);
   return Date.UTC(y, m - 1, d);

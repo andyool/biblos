@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { exportBackup } from '../lib/device.js';
+import { savingWorks } from '../lib/store.js';
 
 /** If something breaks while drawing a screen, offer a way back instead of a blank page. */
 export default class ErrorBoundary extends Component {
@@ -34,7 +35,11 @@ export default class ErrorBoundary extends Component {
         <h1 className="screen-title">
           <span className="gold-text">Something went wrong</span>
         </h1>
-        <p className="lead">Biblos ran into a problem showing this page. Your progress is kept on this phone, so reloading is safe.</p>
+        <p className="lead">
+          {savingWorks()
+            ? 'Biblos ran into a problem showing this page. Your progress is kept on this phone, so reloading is safe.'
+            : 'Biblos ran into a problem showing this page. This browser isn’t keeping your progress, so save a backup before you reload.'}
+        </p>
         <button className="btn btn-gold btn-block" onClick={() => window.location.reload()}>
           Reload Biblos
         </button>

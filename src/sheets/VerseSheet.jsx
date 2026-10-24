@@ -19,6 +19,7 @@ import { joinVerses, removeText } from '../lib/texts.js';
 import { formatRef } from '../data/books.js';
 import { LEVELS, LESSON_NAMES } from '../data/levels.js';
 import { getTranslation } from '../data/translations.js';
+import { CURATED_IDS } from '../data/paths.js';
 
 function ErrorNote({ error, retry, tr, onConnect }) {
   return (
@@ -92,7 +93,13 @@ export default function VerseSheet({ id, onClose }) {
   };
 
   const remove = async () => {
-    const ok = await ask({ title: 'Remove this verse?', message: 'It will be taken out of My Verses along with its progress.', confirm: 'Remove', danger: true });
+    const onPath = CURATED_IDS.includes(id);
+    const ok = await ask({
+      title: 'Remove this verse?',
+      message: onPath ? 'It leaves your own verses, but stays on its path with its progress.' : 'It will be taken out of My Verses along with its progress.',
+      confirm: 'Remove',
+      danger: !onPath,
+    });
     if (ok) {
       removeCustomVerse(id);
       onClose();
@@ -156,7 +163,7 @@ export default function VerseSheet({ id, onClose }) {
       </div>
       <p className="growth-desc">
         {LEVELS[level].desc}
-        {settling && ' It has grown twice today, so let it settle: it can grow again tomorrow.'}
+        {settling && ' It has grown enough for today, and can grow again tomorrow.'}
         {v?.srs && level >= 4 && (
           <>
             {' '}

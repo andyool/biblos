@@ -66,7 +66,7 @@ export default function ReflectStep({ step, session, onComplete }) {
 
       {choosing && (
         <Sheet title="Memorise a verse" onClose={() => setChoosing(false)} className="verse-pick-sheet" woolly="heart">
-          <p className="small-print">Read through and tap the verse you would like to learn by heart. It goes into My Verses, ready on the Path tab.</p>
+          <p className="small-print">Tap a verse to learn it by heart. It goes into My Verses.</p>
           <div className="verse-pick-list">
             {session.verses.map((v) => {
               const isKept = Boolean(verses[idOf(v)]);

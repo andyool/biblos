@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { getState, useStore } from './lib/store.js';
+import { getState, useSaving, useStore } from './lib/store.js';
 import { AppContext } from './AppContext.js';
 import { GoldDefs } from './components/Ornaments.jsx';
 import { TabBar, TopEdge } from './components/Chrome.jsx';
@@ -22,6 +22,7 @@ import BooksSheet from './sheets/BooksSheet.jsx';
 import SectionSheet from './sheets/SectionSheet.jsx';
 import PlansSheet from './sheets/PlansSheet.jsx';
 import JournalSheet from './sheets/JournalSheet.jsx';
+import TranslationSheet from './sheets/TranslationSheet.jsx';
 import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
 import { checkStreak, claimUnlocks, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
@@ -57,6 +58,21 @@ function UpdateNote() {
         <p>Tap to reload. Your progress is kept.</p>
       </div>
     </button>
+  );
+}
+
+/** The browser is refusing to keep progress (private browsing, storage blocked or full). */
+function SavingNote() {
+  const saving = useSaving();
+  if (saving) return null;
+  return (
+    <div className="hint-card is-warning" role="alert">
+      <Glyph name="info" size={24} />
+      <div>
+        <strong>Your progress isn’t being saved</strong>
+        <p>This browser won’t let Biblos keep anything, so it will be lost when you close it. Leave private browsing, or allow this site to store data.</p>
+      </div>
+    </div>
   );
 }
 
@@ -106,9 +122,14 @@ export default function App() {
     claimUnlocks();
   }, []);
 
+  // Not while a lesson or reading is open: one that runs past midnight counts for the day it began.
+  const busy = useRef(false);
+  busy.current = Boolean(session || reading);
+
   // Streak upkeep at launch and whenever the app comes back to the foreground.
   useEffect(() => {
     const check = () => {
+      if (busy.current) return;
       const event = checkStreak();
       if (event) cue(event.type === 'lost' ? 'streakLost' : 'streakKept');
       if (event?.type === 'oil') toast(`A flask of oil kept your lamp burning (${event.missed} day${event.missed > 1 ? 's' : ''} missed).`, 'lamp');
@@ -207,6 +228,8 @@ export default function App() {
         return <PlansSheet key="plans" onClose={close} />;
       case 'journal':
         return <JournalSheet key="journal" onClose={close} />;
+      case 'translation':
+        return <TranslationSheet key="translation" onClose={close} />;
       default:
         return null;
     }
@@ -282,6 +305,7 @@ export default function App() {
     body = (
       <div className="app">
         <main className="app-main" ref={mainRef}>
+          <SavingNote />
           <UpdateNote />
           {tab === 'path' && <Home />}
           {tab === 'read' && <Read />}

@@ -5,10 +5,13 @@ import { getText } from './texts.js';
 // All progress lives on the device in localStorage (export a backup from the Me tab).
 const KEY = 'biblos.state.v1';
 
+// The shape of saved progress. A backup from a later shape is refused rather than half read.
+export const STATE_VERSION = 1;
+
 export function freshState() {
   const prefersLight = typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: light)').matches;
   return {
-    v: 1,
+    v: STATE_VERSION,
     profile: { name: '', emblem: 'cross', since: Date.now() },
     settings: {
       onboarded: false,
@@ -100,47 +103,106 @@ export function withoutNiv(state) {
   return { ...state, settings, verses: moved ? verses : state.verses };
 }
 
+// Saved data is laid over the defaults one level down. A part saved in the wrong shape (a list
+// where an object belongs, a null…) keeps its default rather than break a screen.
+const isObject = (x) => Boolean(x) && typeof x === 'object' && !Array.isArray(x);
+
+function merge(base, data) {
+  if (!isObject(data)) return base;
+  const out = { ...base };
+  for (const [key, value] of Object.entries(data)) {
+    if (value === undefined) continue;
+    if (isObject(base[key]) && !isObject(value)) continue;
+    if (Array.isArray(base[key]) && !Array.isArray(value)) continue;
+    out[key] = value;
+  }
+  return out;
+}
+
 export function migrate(data) {
   const base = freshState();
-  if (!data || typeof data !== 'object') return base;
+  if (!isObject(data)) return base;
   return withoutNiv({
     ...base,
     ...data,
-    profile: { ...base.profile, ...data.profile },
-    settings: { ...base.settings, ...data.settings },
-    stats: { ...base.stats, ...data.stats },
-    owned: { ...base.owned, ...data.owned },
-    verses: data.verses || {},
-    custom: data.custom || [],
-    reading: { ...base.reading, ...data.reading },
-    achievements: data.achievements || {},
+    profile: merge(base.profile, data.profile),
+    settings: merge(base.settings, data.settings),
+    stats: merge(base.stats, data.stats),
+    owned: merge(base.owned, data.owned),
+    verses: isObject(data.verses) ? data.verses : {},
+    custom: Array.isArray(data.custom) ? data.custom : [],
+    reading: merge(base.reading, data.reading),
+    achievements: isObject(data.achievements) ? data.achievements : {},
   });
 }
 
+// Progress that could not be read is copied here before anything is saved over it.
+const UNREADABLE = 'biblos.state.unreadable';
+
+// What storage held when it was last read or written. Anything else there now was saved by
+// another copy of Biblos: a second tab, or the Home Screen app beside the browser.
+let stored = null;
+
 function load() {
+  let raw = null;
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) return migrate(JSON.parse(raw));
+    raw = localStorage.getItem(KEY);
   } catch {
-    /* fall through to a fresh start */
+    return freshState();
   }
-  return freshState();
+  stored = raw;
+  if (!raw) return freshState();
+  try {
+    return migrate(JSON.parse(raw));
+  } catch {
+    try {
+      if (!localStorage.getItem(UNREADABLE)) localStorage.setItem(UNREADABLE, raw);
+    } catch {
+      /* nothing more can be done */
+    }
+    return freshState();
+  }
+}
+
+/** Can this browser keep anything at all? (Not in some private modes, or with storage blocked.) */
+function storageWorks() {
+  try {
+    localStorage.setItem('biblos.probe', '1');
+    localStorage.removeItem('biblos.probe');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 let state = load();
 const listeners = new Set();
 let saveTimer = null;
+// Changes not yet written to storage.
+let unsaved = false;
+// False while the browser refuses to save, so the app can say so.
+let saving = typeof window === 'undefined' || storageWorks();
+const savingListeners = new Set();
 
 function save() {
+  clearTimeout(saveTimer);
+  if (!unsaved) return;
+  let ok = true;
   try {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    const raw = JSON.stringify(state);
+    localStorage.setItem(KEY, raw);
+    stored = raw;
+    unsaved = false;
   } catch {
-    /* storage full or unavailable */
+    ok = false;
+  }
+  if (ok !== saving) {
+    saving = ok;
+    savingListeners.forEach((listener) => listener());
   }
 }
 
 export function flush() {
-  clearTimeout(saveTimer);
   save();
 }
 
@@ -149,9 +211,25 @@ export function getState() {
 }
 
 export function setState(update) {
-  state = typeof update === 'function' ? update(state) : update;
+  const next = typeof update === 'function' ? update(state) : update;
+  // Nothing changed, so nothing to save: an old copy of the app must not write its old progress back.
+  if (next === state) return;
+  state = next;
+  unsaved = true;
   clearTimeout(saveTimer);
   saveTimer = setTimeout(save, 120);
+  listeners.forEach((listener) => listener());
+}
+
+/** Take up what another copy of Biblos has saved, unless this one has changes of its own to save. */
+function adopt(raw) {
+  if (!raw || raw === stored || unsaved) return;
+  try {
+    state = migrate(JSON.parse(raw));
+  } catch {
+    return;
+  }
+  stored = raw;
   listeners.forEach((listener) => listener());
 }
 
@@ -169,10 +247,34 @@ export function useStore(selector = (s) => s) {
   );
 }
 
+function subscribeSaving(listener) {
+  savingListeners.add(listener);
+  return () => savingListeners.delete(listener);
+}
+
+/** False while this browser won't keep progress (storage blocked, full, or private browsing). */
+export const savingWorks = () => saving;
+
+export function useSaving() {
+  return useSyncExternalStore(subscribeSaving, savingWorks, savingWorks);
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('pagehide', flush);
+  window.addEventListener('storage', (e) => {
+    if (e.key === KEY) adopt(e.newValue);
+  });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') flush();
+    if (document.visibilityState === 'hidden') {
+      flush();
+      return;
+    }
+    // Back in front: another copy may have saved in the meantime.
+    try {
+      adopt(localStorage.getItem(KEY));
+    } catch {
+      /* storage unavailable */
+    }
   });
   // Ask the browser not to clear our storage when space runs low.
   navigator.storage?.persist?.().catch(() => {});

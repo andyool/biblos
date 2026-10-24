@@ -4,12 +4,22 @@ import { useSyncExternalStore } from 'react';
 // Entry: { verses: [{ v, t }], src: 'bolls' | 'yv' | 'user', at }
 const KEY = 'biblos.texts.v1';
 
-let texts = {};
+const read = (raw) => {
+  try {
+    const data = JSON.parse(raw || '{}');
+    return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+  } catch {
+    return {};
+  }
+};
+
+let stored = null;
 try {
-  texts = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+  stored = localStorage.getItem(KEY);
 } catch {
-  texts = {};
+  /* storage unavailable */
 }
+let texts = read(stored);
 
 let version = 0;
 const listeners = new Set();
@@ -18,12 +28,38 @@ let timer = null;
 function persist() {
   clearTimeout(timer);
   timer = setTimeout(() => {
+    timer = null;
     try {
-      localStorage.setItem(KEY, JSON.stringify(texts));
+      const raw = JSON.stringify(texts);
+      localStorage.setItem(KEY, raw);
+      stored = raw;
     } catch {
-      /* ignore */
+      /* the progress store warns when saving fails */
     }
   }, 200);
+}
+
+/** Take up words another copy of Biblos (a second tab, the Home Screen app) has saved. */
+function adopt(raw) {
+  if (!raw || raw === stored || timer) return;
+  stored = raw;
+  texts = read(raw);
+  version += 1;
+  listeners.forEach((l) => l());
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e) => {
+    if (e.key === KEY) adopt(e.newValue);
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      adopt(localStorage.getItem(KEY));
+    } catch {
+      /* storage unavailable */
+    }
+  });
 }
 
 function changed() {

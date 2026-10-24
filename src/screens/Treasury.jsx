@@ -198,11 +198,41 @@ function Shop() {
   );
 }
 
+function SealCell({ a, onOpen }) {
+  const state = useStore();
+  const got = !!state.achievements[a.id];
+  const p = a.progress(state);
+  return (
+    <button className="seal-cell" onClick={() => onOpen(a.id)}>
+      <Seal icon={a.icon} earned={got} size={74} />
+      <strong>{a.name}</strong>
+      {!got && p.target > 1 && (
+        <small>
+          {p.value}/{p.target}
+        </small>
+      )}
+    </button>
+  );
+}
+
+/** The seals still to earn that are furthest along, in the order they are listed when level. */
+function withinReach(state, count) {
+  return ACHIEVEMENTS.map((a, i) => ({ a, i, p: a.progress(state) }))
+    .filter(({ a }) => !state.achievements[a.id])
+    .sort((x, y) => y.p.value / y.p.target - x.p.value / x.p.target || x.i - y.i)
+    .slice(0, count)
+    .map(({ a }) => a);
+}
+
 export default function Treasury() {
   const state = useStore();
   const [tab, setTab] = useState('seals');
   const [detail, setDetail] = useState(null);
+  // Earned seals and the next few, until all are asked for.
+  const [allSeals, setAllSeals] = useState(false);
   const earned = Object.keys(state.achievements).length;
+  const earnedSeals = ACHIEVEMENTS.filter((a) => state.achievements[a.id]);
+  const next = withinReach(state, 3);
 
   return (
     <div className="screen treasury">
@@ -218,7 +248,7 @@ export default function Treasury() {
         </div>
         <Woolly size={104} listen className="purse-woolly" />
       </div>
-      <p className="purse-note">Earned by faithful practice — lessons, flawless rounds, streaks and seals.</p>
+      <p className="purse-note">Earned by practice, spent on themes and frames.</p>
 
       <div className="segmented" role="tablist">
         <button role="tab" aria-selected={tab === 'seals'} className={tab === 'seals' ? 'is-on' : ''} onClick={() => setTab('seals')}>
@@ -229,24 +259,40 @@ export default function Treasury() {
         </button>
       </div>
 
-      {tab === 'seals' ? (
+      {tab === 'seals' && allSeals ? (
         <div className="seal-grid">
-          {ACHIEVEMENTS.map((a) => {
-            const got = !!state.achievements[a.id];
-            const p = a.progress(state);
-            return (
-              <button key={a.id} className="seal-cell" onClick={() => setDetail(a.id)}>
-                <Seal icon={a.icon} earned={got} size={74} />
-                <strong>{a.name}</strong>
-                {!got && p.target > 1 && (
-                  <small>
-                    {p.value}/{p.target}
-                  </small>
-                )}
-              </button>
-            );
-          })}
+          {ACHIEVEMENTS.map((a) => (
+            <SealCell key={a.id} a={a} onOpen={setDetail} />
+          ))}
         </div>
+      ) : tab === 'seals' ? (
+        <>
+          {earnedSeals.length > 0 && (
+            <>
+              <h2 className="section-heading">Earned</h2>
+              <div className="seal-grid">
+                {earnedSeals.map((a) => (
+                  <SealCell key={a.id} a={a} onOpen={setDetail} />
+                ))}
+              </div>
+            </>
+          )}
+          {next.length > 0 && (
+            <>
+              <h2 className="section-heading">Within reach</h2>
+              <div className="seal-grid">
+                {next.map((a) => (
+                  <SealCell key={a.id} a={a} onOpen={setDetail} />
+                ))}
+              </div>
+            </>
+          )}
+          {earnedSeals.length + next.length < ACHIEVEMENTS.length && (
+            <button className="btn btn-ghost btn-block seal-more" onClick={() => setAllSeals(true)}>
+              See all {ACHIEVEMENTS.length} seals
+            </button>
+          )}
+        </>
       ) : (
         <Shop />
       )}

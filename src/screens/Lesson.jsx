@@ -125,7 +125,8 @@ export default function Lesson({ session, onExit, onFinish }) {
   };
 
   const exit = async () => {
-    const ok = await ask({ title: 'Leave this lesson?', message: 'Your progress in this lesson will not be saved.', confirm: 'Leave', cancel: 'Keep going', woolly: 'encourage' });
+    // Nothing done yet, so nothing to lose: no need to ask.
+    const ok = !results.length || (await ask({ title: 'Leave this lesson?', message: 'Your progress in this lesson will not be saved.', confirm: 'Leave', cancel: 'Keep going', woolly: 'encourage' }));
     if (ok) {
       stopSpeaking();
       onExit();

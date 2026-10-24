@@ -5,10 +5,11 @@ import { FADED_AFTER_DAYS, GROWTH_PER_DAY, PASS_MARK, grownToday, stepXp } from 
 import { newlyEarned } from '../data/achievements.js';
 import { levelReward, xpLevel } from '../data/levels.js';
 import { OIL, SHOP, isLightTheme, themeFor } from '../data/shop.js';
-import { clearTexts, replaceTexts } from './texts.js';
+import { allTexts, clearTexts, replaceTexts } from './texts.js';
 import { carryOver } from './reading.js';
 import { planProgress } from './plans.js';
 import { updateSkills, updateWeak } from './adapt.js';
+import { CURATED_IDS } from '../data/paths.js';
 
 // ── Settings & profile ─────────────────────────────────────────────────────────
 
@@ -71,7 +72,8 @@ export function addCustomVerses(ids, tr) {
 export function removeCustomVerse(id) {
   setState((s) => {
     const verses = { ...s.verses };
-    delete verses[id];
+    // A verse that is also on a path keeps its progress there.
+    if (!CURATED_IDS.includes(id)) delete verses[id];
     return { ...s, verses, custom: s.custom.filter((c) => c !== id) };
   });
 }
@@ -183,8 +185,12 @@ function creditDay(stats, earned, dailyGoal, now) {
 
   let streakExtended = false;
   let streak = stats.streak;
-  if (stats.lastActiveDay !== today) {
-    const gap = stats.lastActiveDay ? daysBetween(stats.lastActiveDay, today) : null;
+  let lastActiveDay = today;
+  const gap = stats.lastActiveDay ? daysBetween(stats.lastActiveDay, today) : null;
+  if (gap !== null && gap < 0) {
+    // The date went back (a flight west, a clock put right): the streak stands as it is.
+    lastActiveDay = stats.lastActiveDay;
+  } else if (gap !== 0) {
     streak = gap === 1 ? stats.streak + 1 : 1;
     streakExtended = true;
     talents += STREAK_BONUS[streak] || 0;
@@ -196,7 +202,7 @@ function creditDay(stats, earned, dailyGoal, now) {
       xp: stats.xp + xp,
       streak,
       bestStreak: Math.max(stats.bestStreak, streak),
-      lastActiveDay: today,
+      lastActiveDay,
       days: { ...stats.days, [today]: after },
       goalDays: stats.goalDays + (goalReached ? 1 : 0),
       morning: stats.morning || hour < 7,
@@ -214,6 +220,18 @@ function creditDay(stats, earned, dailyGoal, now) {
 }
 
 /**
+ * When practice counts for. A lesson begun before midnight and finished after it counts for the
+ * day it was begun, if that day had none yet: so a streak isn't broken, or a flask of oil used,
+ * by a lesson that ran on past twelve.
+ */
+function creditTime(stats, startedAt, now) {
+  if (!startedAt) return now;
+  const begun = dayKey(startedAt);
+  if (daysBetween(begun, dayKey(now)) !== 1) return now;
+  return stats.lastActiveDay && daysBetween(stats.lastActiveDay, begun) <= 0 ? now : startedAt;
+}
+
+/**
  * Apply a finished session. results: [{ verseId, type, hint, correct, mistakes }]
  * Returns a summary for the celebration screen.
  */
@@ -223,7 +241,8 @@ export function finishSession(session, results) {
   let summary = null;
 
   setState((s0) => {
-    let { stats } = reconcileStats(s0.stats, today);
+    const at = creditTime(s0.stats, session.startedAt, now);
+    let { stats } = reconcileStats(s0.stats, dayKey(at));
     const verses = { ...s0.verses };
 
     // Accuracy per verse grades it. Reading steps don't count, nor do joins with the verses
@@ -311,7 +330,7 @@ export function finishSession(session, results) {
     }
 
     const xp = results.reduce((sum, r) => sum + (r.xp ?? stepXp(r)), 0) + 5 + (perfect ? 5 : 0);
-    const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
+    const day = creditDay(stats, xp, s0.settings.dailyGoal, at);
     talents += day.talents;
     const letters = results.filter((r) => r.type === 'letters' || r.type === 'link').reduce((a, r) => a + r.correct, 0);
 
@@ -394,7 +413,8 @@ export function finishReading(session, results) {
   let summary = null;
 
   setState((s0) => {
-    let { stats } = reconcileStats(s0.stats, dayKey(now));
+    const at = creditTime(s0.stats, session.startedAt, now);
+    let { stats } = reconcileStats(s0.stats, dayKey(at));
     const correct = results.reduce((a, r) => a + (r.correct || 0), 0);
     const mistakes = results.reduce((a, r) => a + (r.mistakes || 0), 0);
     const perfect = mistakes === 0;
@@ -410,7 +430,7 @@ export function finishReading(session, results) {
     const note = results.find((r) => r.note)?.note;
     if (note) notes[sec.id] = { ...notes[sec.id], note, at: now };
 
-    const day = creditDay(stats, xp, s0.settings.dailyGoal, now);
+    const day = creditDay(stats, xp, s0.settings.dailyGoal, at);
     talents += day.talents;
     stats = {
       ...day.stats,
@@ -505,9 +525,18 @@ export function snoozeBackup(days = 7) {
 }
 
 export function restoreBackup(data) {
-  // The words first, so verses whose NIV words come with the backup keep the NIV.
+  // The words first, so verses whose NIV words come with the backup keep the NIV. If the
+  // progress can't be read after all, the words go back to how they were.
+  const before = allTexts();
   if (data.texts) replaceTexts(data.texts);
-  setState(migrate(data.state));
+  let next;
+  try {
+    next = migrate(data.state);
+  } catch (err) {
+    replaceTexts(before);
+    throw err;
+  }
+  setState(next);
   noteBackup(Date.parse(data.exported) || Date.now());
 }
 

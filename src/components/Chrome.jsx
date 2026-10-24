@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store.js';
 import { dayKey } from '../lib/dates.js';
 import { toast } from '../lib/ui.js';
+import { sessionsDone } from '../lib/actions.js';
 import Glyph from './Glyph.jsx';
 import { EmblemBadge, GoalRing } from './Ornaments.jsx';
 import { useApp } from '../AppContext.js';
@@ -15,6 +16,18 @@ export function TopBar() {
   const today = dayKey();
   const todayXp = stats.days[today] || 0;
   const lit = stats.lastActiveDay === today;
+
+  // Before the first lesson or reading there is nothing to count yet: the streak, talents and
+  // goal appear, each explained, once the first is done.
+  if (!sessionsDone(stats)) {
+    return (
+      <header className="topbar">
+        <button className="topbar-emblem" onClick={() => go('me')} aria-label="Your profile">
+          <EmblemBadge id={emblem} size={38} />
+        </button>
+      </header>
+    );
+  }
 
   return (
     <header className="topbar">

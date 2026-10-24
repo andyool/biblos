@@ -14,13 +14,6 @@
   margin: 12px 0 0;
 }
 
-.read-intro {
-  margin-top: 12px;
-  font-size: calc(17px * var(--text-scale, 1));
-  font-style: italic;
-  color: var(--ink-soft);
-  line-height: 1.45;
-}
 
 .read-links {
   margin-top: 16px;

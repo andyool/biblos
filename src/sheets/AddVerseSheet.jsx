@@ -302,12 +302,12 @@ export default function AddVerseSheet({ onClose }) {
                   <p className="small-print">Or choose the verses and paste the words yourself:</p>
                 </>
               ) : (
-                <p className="small-print">Choose another translation above, or choose the verses and paste the words yourself:</p>
+                <p className="small-print">Choose another Bible above, or paste the words yourself:</p>
               )}
             </>
           )}
 
-          {ready && <p className="small-print pick-hint">Tap a verse to choose it. You can choose several.</p>}
+          {ready && <p className="small-print pick-hint">Tap the verses you want.</p>}
 
           {ready && (
             <div className="verse-pick-list" role="group" aria-label="Verses">

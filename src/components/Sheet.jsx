@@ -162,7 +162,8 @@ export default function Sheet({ title, onClose, children, className = '', flouri
   useLeave(root, slideAway);
   const handle = useSwipeDown({ panel, scrim, sheet: ref, onClose });
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose?.();
+    // Only the sheet on top closes, when one is open over another.
+    const onKey = (e) => e.key === 'Escape' && root.current === [...document.querySelectorAll('.sheet-backdrop:not(.is-leaving)')].at(-1) && onClose?.();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);

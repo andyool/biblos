@@ -20,10 +20,12 @@ export function PathList({ onPick, active }) {
               <small>
                 {p.subtitle} · {p.verses.length} verse{p.verses.length === 1 ? '' : 's'}
               </small>
-              <span className="mini-bar">
-                <span style={{ width: `${(started / Math.max(1, p.verses.length)) * 100}%` }} className="mini-bar-started" />
-                <span style={{ width: `${(done / Math.max(1, p.verses.length)) * 100}%` }} className="mini-bar-done" />
-              </span>
+              {started > 0 && (
+                <span className="mini-bar">
+                  <span style={{ width: `${(started / Math.max(1, p.verses.length)) * 100}%` }} className="mini-bar-started" />
+                  <span style={{ width: `${(done / Math.max(1, p.verses.length)) * 100}%` }} className="mini-bar-done" />
+                </span>
+              )}
             </span>
             {active === p.id ? <Glyph name="check" size={18} /> : <Glyph name="chevron" size={18} />}
           </button>

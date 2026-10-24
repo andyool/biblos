@@ -57,7 +57,7 @@ export default function Reading({ session, onExit, onFinish }) {
   };
 
   const exit = async () => {
-    const ok = await ask({ title: 'Stop reading?', message: 'Your place in the book is kept — this passage will be waiting.', confirm: 'Stop', cancel: 'Keep reading', woolly: 'encourage' });
+    const ok = !results.length || (await ask({ title: 'Stop reading?', message: 'Your place in the book is kept — this passage will be waiting.', confirm: 'Stop', cancel: 'Keep reading', woolly: 'encourage' }));
     if (ok) {
       stopSpeaking();
       onExit();

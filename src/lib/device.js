@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getState } from './store.js';
+import { STATE_VERSION, getState } from './store.js';
 import { allTexts } from './texts.js';
 import { DAY, dayKey } from './dates.js';
 import { noteBackup, sessionsDone } from './actions.js';
@@ -102,8 +102,24 @@ export async function shareFile(file, title) {
   return 'downloaded';
 }
 
+const isObject = (x) => Boolean(x) && typeof x === 'object' && !Array.isArray(x);
+
+/** Read a backup file, and make sure it is one before anything is replaced. */
 export async function readBackup(file) {
-  const data = JSON.parse(await file.text());
-  if (data?.app !== 'biblos' || !data.state) throw new Error('That file is not a Biblos backup.');
-  return data;
+  const notBackup = new Error('That file is not a Biblos backup.');
+  let data;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    throw notBackup;
+  }
+  const s = data?.state;
+  // Every backup Biblos has saved has these, with progress in them.
+  if (data?.app !== 'biblos' || !isObject(s) || !isObject(s.settings) || !isObject(s.stats) || !isObject(s.verses)) throw notBackup;
+  if ((Number(s.v) || 1) > STATE_VERSION) throw new Error('This backup is from a newer version of Biblos. Reload Biblos to update it, then try again.');
+  // Only the words that are well formed come with it.
+  const texts = isObject(data.texts)
+    ? Object.fromEntries(Object.entries(data.texts).filter(([, e]) => isObject(e) && Array.isArray(e.verses) && e.verses.every((v) => isObject(v) && typeof v.t === 'string')))
+    : null;
+  return { ...data, texts };
 }

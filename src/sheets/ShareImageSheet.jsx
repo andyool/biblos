@@ -53,7 +53,7 @@ export default function ShareImageSheet({ id, tr, text, onClose }) {
           </div>
         )}
       </div>
-      <p className="small-print center">In your theme, frame and lettering. Change them in the Treasury.</p>
+      <p className="small-print center">In your theme, frame and lettering.</p>
       <div className="sheet-actions">
         <button className="btn btn-gold btn-block" onClick={share} disabled={!file}>
           <Glyph name="share" size={18} /> Share

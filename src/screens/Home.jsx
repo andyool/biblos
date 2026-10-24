@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useStore } from '../lib/store.js';
+import { useSaving, useStore } from '../lib/store.js';
 import { useApp } from '../AppContext.js';
 import { TopBar } from '../components/Chrome.jsx';
 import Glyph from '../components/Glyph.jsx';
@@ -12,13 +12,15 @@ import { isDue } from '../lib/srs.js';
 import { prefetch, useYouVersionReady } from '../lib/bible.js';
 import { getTranslation } from '../data/translations.js';
 import { androidBrowser, backupDue, exportBackup, isAndroid, isIOS, isStandalone, useInstallPrompt } from '../lib/device.js';
-import { snoozeBackup, updateSettings } from '../lib/actions.js';
+import { sessionsDone, snoozeBackup, updateSettings } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
 import { DAY, dayKey, startOfDay } from '../lib/dates.js';
 import { bookProgress, readingTr, sectionRef, useBook } from '../lib/reading.js';
 import { planProgress, planStatus } from '../lib/plans.js';
 import { BOOK_BY_CODE } from '../data/books.js';
 import Woolly from '../components/Woolly.jsx';
+import { SHORT_SCREEN, useMedia } from '../lib/hooks.js';
+import { useUpdateReady } from '../lib/update.js';
 
 const SWAY = [0, 54, 82, 54, 0, -54, -82, -54];
 const GAP = 118;
@@ -92,12 +94,8 @@ const ANDROID_STEPS = {
 };
 
 function InstallHint() {
-  const dismissed = useStore((s) => s.settings.installDismissed);
   const promptInstall = useInstallPrompt();
-  if (dismissed || isStandalone()) return null;
   const ios = isIOS();
-  const android = isAndroid();
-  if (!ios && !android && !promptInstall) return null;
   return (
     <div className="hint-card">
       <Glyph name="phone" size={26} />
@@ -127,9 +125,7 @@ function InstallHint() {
 
 /** Progress lives only on this phone, so suggest a backup now and then. */
 function BackupHint() {
-  const due = useStore((s) => backupDue(s));
   const last = useStore((s) => s.settings.lastBackup);
-  if (!due) return null;
   const weeks = last ? Math.max(1, Math.round((Date.now() - last) / (7 * DAY))) : 0;
   const save = async () => {
     const result = await exportBackup();
@@ -156,10 +152,8 @@ function BackupHint() {
 
 function NivCard() {
   const translation = useStore((s) => s.settings.translation);
-  const ready = useYouVersionReady();
   const { openSheet } = useApp();
   const t = getTranslation(translation);
-  if (t.source !== 'yv' || ready) return null;
   return (
     <button className="hint-card is-action" onClick={() => openSheet({ type: 'niv' })}>
       <Glyph name="key" size={26} />
@@ -170,6 +164,23 @@ function NivCard() {
       <Glyph name="chevron" size={18} />
     </button>
   );
+}
+
+/** One note at a time above Today, the most pressing first. */
+function HomeHint() {
+  const state = useStore();
+  const nivReady = useYouVersionReady();
+  const promptInstall = useInstallPrompt();
+  const update = useUpdateReady();
+  const saving = useSaving();
+  // The app shows these above every tab, so nothing more here.
+  if (update || !saving) return null;
+  if (backupDue(state)) return <BackupHint />;
+  if (getTranslation(state.settings.translation).source === 'yv' && !nivReady) return <NivCard />;
+  // Once there is some progress worth keeping.
+  const canInstall = isIOS() || isAndroid() || promptInstall;
+  if (sessionsDone(state.stats) > 0 && !state.settings.installDismissed && !isStandalone() && canInstall) return <InstallHint />;
+  return null;
 }
 
 /** Did anything happen today? Memory practice and reading each count. */
@@ -233,7 +244,11 @@ const bedtime = () => {
 export default function Home() {
   const state = useStore();
   const { start, openVerse, openSheet } = useApp();
+  const short = useMedia(SHORT_SCREEN);
   const plan = useMemo(() => planNext(state), [state]);
+  const begun = sessionsDone(state.stats) > 0;
+  // A verse not yet begun is learned in your Bible, which can be changed right here.
+  const newVerse = plan?.kind === 'learn' && !state.verses[plan.verseIds[0]];
   const path = getPath(state, state.settings.activePath);
   // Where the path goes on: the verse today's lesson is for, when it is on this path, otherwise
   // this path's own next. None when nothing on it can grow until tomorrow.
@@ -254,13 +269,11 @@ export default function Home() {
   return (
     <div className="screen home">
       <TopBar />
-      <InstallHint />
-      <NivCard />
-      <BackupHint />
+      <HomeHint />
 
       <Frame className="today" size={40}>
         <Woolly
-          size={132}
+          size={short ? 96 : 132}
           listen
           base={bedtime() ? 'sleep' : plan ? 'idle' : 'breathe'}
           // Someone new is welcomed and shown where to begin.
@@ -280,13 +293,20 @@ export default function Home() {
         {plan ? (
           <>
             <h2 className="today-title gold-text">{plan.title}</h2>
-            <p className="today-detail">{plan.detail}</p>
+            <p className="today-detail">
+              {plan.detail}
+              {newVerse && (
+                <button className="today-tr" onClick={() => openSheet({ type: 'translation' })} aria-label={`Bible: ${state.settings.translation}. Change`}>
+                  {state.settings.translation} <Glyph name="down" size={12} strokeWidth={2} />
+                </button>
+              )}
+            </p>
             <button className="btn btn-gold btn-block btn-shine" onClick={() => start(plan)}>
               {plan.kind === 'review' ? 'Begin review' : plan.kind === 'practice' ? 'Practise' : 'Begin'}
             </button>
             <p className="today-time">
               About {plan.kind === 'review' ? plan.verseIds.length : 2}–3 minutes
-              {!state.stats.days[dayKey()] && <span className="today-bonus"> · first fruits: double XP</span>}
+              {begun && !state.stats.days[dayKey()] && <span className="today-bonus"> · double XP for today’s first</span>}
             </p>
           </>
         ) : (
@@ -323,7 +343,7 @@ export default function Home() {
         </div>
       )}
 
-      {path.verses.length > 1 && (
+      {path.verses.length > 1 && memorised > 0 && (
         <div className={`recite-card ${complete ? 'is-ready' : ''}`}>
           <Glyph name="crown" size={30} />
           <div>

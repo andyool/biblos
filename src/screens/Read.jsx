@@ -13,6 +13,7 @@ import { updateReady } from '../lib/update.js';
 import { planProgress, planStatus } from '../lib/plans.js';
 import { FIRST_BOOKS } from '../data/guides/index.js';
 import Woolly from '../components/Woolly.jsx';
+import { SHORT_SCREEN, useMedia } from '../lib/hooks.js';
 
 /** The reading plan you follow: how far through, and what is left for today. */
 function PlanCard({ code, sections }) {
@@ -94,9 +95,7 @@ function Welcome() {
       </h1>
       <Divider width={200} className="center" />
       <Woolly size={130} listen act="read" className="read-woolly" />
-      <p className="lead read-lead">
-        Read the Bible in order, one passage at a time — for the meaning, not just the words. Each reading has a focus, a few questions and a moment to take it to heart.
-      </p>
+      <p className="lead read-lead">Read the Bible in order, a passage at a time, with a few questions on the meaning.</p>
       <h2 className="section-heading">Where to begin</h2>
       <div className="path-list">
         {FIRST_BOOKS.map((s) => (
@@ -180,6 +179,7 @@ function ChapterMap({ code, sections, done, next, onSection }) {
 
 export default function Read() {
   const state = useStore();
+  const short = useMedia(SHORT_SCREEN);
   const { openSheet, read } = useApp();
   const nivReady = useYouVersionReady();
   const code = state.reading.book;
@@ -237,7 +237,7 @@ export default function Read() {
 
       <Frame className="today" size={40}>
         <Woolly
-          size={132}
+          size={short ? 96 : 132}
           listen
           base={failed ? (navigator.onLine === false ? 'offline' : 'idle') : ready ? 'read' : 'loading'}
           intro={failed && navigator.onLine !== false ? 'error' : undefined}
@@ -300,7 +300,6 @@ export default function Read() {
           <span className="mini-bar-done" style={{ width: `${pct}%` }} />
         </div>
       )}
-      {guide && progress.count === 0 && <p className="read-intro">{guide.intro}</p>}
       <Divider width={240} className="center" />
 
       {ready && <ChapterMap key={code} code={code} sections={sections} done={progress.done} next={next} onSection={(s) => openSheet({ type: 'section', id: s.id })} />}

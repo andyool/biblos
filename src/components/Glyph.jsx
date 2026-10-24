@@ -17,6 +17,18 @@ const sunRays = Array.from({ length: 12 }, (_, i) => {
   return `M${(12 + r1 * Math.cos(a)).toFixed(2)} ${(12 + r1 * Math.sin(a)).toFixed(2)} L${(12 + r2 * Math.cos(a)).toFixed(2)} ${(12 + r2 * Math.sin(a)).toFixed(2)}`;
 }).join(' ');
 
+// Eight cogs round a ring, for settings.
+const gearPath = (() => {
+  const at = (r, a) => `${(12 + r * Math.cos(a)).toFixed(2)} ${(12 + r * Math.sin(a)).toFixed(2)}`;
+  const step = Math.PI / 4;
+  const d = [];
+  for (let i = 0; i < 8; i += 1) {
+    const a = i * step - Math.PI / 2;
+    d.push(`${i ? 'L' : 'M'}${at(7, a - 0.3)} L${at(9.6, a - 0.17)} L${at(9.6, a + 0.17)} L${at(7, a + 0.3)} A7 7 0 0 1 ${at(7, a + step - 0.3)}`);
+  }
+  return `${d.join(' ')} Z`;
+})();
+
 export const GLYPHS = {
   // ── Emblems ──
   cross: () => (
@@ -247,6 +259,12 @@ export const GLYPHS = {
     </>
   ),
   sparkle: () => <path d="M12 2.4c.5 5.4 4.2 9.1 9.6 9.6-5.4.5-9.1 4.2-9.6 9.6-.5-5.4-4.2-9.1-9.6-9.6 5.4-.5 9.1-4.2 9.6-9.6z" />,
+  gear: () => (
+    <>
+      <path d={gearPath} />
+      <circle cx="12" cy="12" r="2.8" />
+    </>
+  ),
   info: () => (
     <>
       <circle cx="12" cy="12" r="8.6" />

@@ -58,6 +58,40 @@
   color: var(--gold);
 }
 
+/* The Bible a new verse is learned in, changed with a tap. */
+.today-tr {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 10px;
+  padding: 3px 8px 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  vertical-align: 0.12em;
+  font-family: var(--font-display);
+  font-size: calc(11.5px * var(--text-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--gold);
+}
+
+/* A small phone: the title on one line, and Begin above the fold. */
+@media (max-width: 360px) {
+  .today-title {
+    font-size: calc(36px * var(--text-scale, 1));
+  }
+}
+
+@media (max-height: 720px) {
+  .today {
+    padding-top: 18px;
+  }
+
+  .today-detail {
+    margin-bottom: 14px;
+  }
+}
+
 /* The day's reading, under the memory practice. */
 .today-read {
   display: flex;
@@ -833,6 +867,10 @@
   gap: 18px 8px;
 }
 
+.seal-more {
+  margin-top: 26px;
+}
+
 .seal-cell {
   display: flex;
   flex-direction: column;
@@ -1108,10 +1146,8 @@
 }
 
 .garden-cell span {
-  font-family: var(--font-display);
-  font-size: calc(8.5px * var(--text-scale, 1));
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: calc(12.5px * var(--text-scale, 1));
+  line-height: 1.2;
   color: var(--ink-faint);
 }
 
@@ -1162,32 +1198,6 @@
   margin: 0 auto;
 }
 
-.onboarding-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.dots {
-  display: flex;
-  gap: 8px;
-}
-
-.dots i {
-  width: 8px;
-  height: 8px;
-  transform: rotate(45deg);
-  background: var(--surface-3);
-  border: 1px solid var(--line-strong);
-}
-
-.dots i.is-on {
-  background: var(--grad-gold);
-  border-color: var(--matt-deep);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--g2) 55%, transparent);
-}
-
 .ob-page {
   display: grid;
   gap: 16px;
@@ -1236,72 +1246,6 @@
   color: var(--gold);
 }
 
-.ob-title {
-  font-family: var(--font-script);
-  font-weight: 400;
-  font-size: calc(42px * var(--text-scale, 1));
-  line-height: 1.2;
-  text-align: center;
-  margin-top: 8px;
-}
-
-.ob-sub {
-  text-align: center;
-  color: var(--ink-soft);
-  font-size: calc(18px * var(--text-scale, 1));
-  font-style: italic;
-}
-
-.ob-skip {
-  display: block;
-  margin: 0 auto;
-  padding: 10px 16px;
-  border-radius: 12px;
-  color: var(--ink-faint);
-  font-style: italic;
-}
-
-.ob-skip.is-on {
-  color: var(--gold);
-}
-
-.ob-note {
-  text-align: center;
-  color: var(--ink-faint);
-  font-size: calc(14px * var(--text-scale, 1));
-}
-
-.emblem-pick {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-}
-
-.emblem-choice {
-  display: grid;
-  justify-items: center;
-  gap: 6px;
-  padding: 10px;
-  border-radius: 20px;
-  border: 1px solid transparent;
-  font-family: var(--font-display);
-  font-size: calc(12px * var(--text-scale, 1));
-  letter-spacing: 0.1em;
-  color: var(--ink-faint);
-}
-
-.emblem-choice.is-on {
-  --selected-tint: var(--surface);
-  color: var(--gold);
-  box-shadow: 0 0 20px color-mix(in srgb, var(--g2) 18%, transparent);
-}
-
-.sticky-cta {
-  position: sticky;
-  bottom: calc(var(--safe-bottom) + 12px);
-  z-index: 3;
-}
-
 /* ─── Lesson complete ────────────────────────────────────────────────────── */
 
 .complete {
@@ -1339,12 +1283,58 @@
   margin-top: 4px;
 }
 
-.complete-stats {
+.complete-facts {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-top: 14px;
+  font-family: var(--font-display);
+  font-size: calc(15px * var(--text-scale, 1));
+  font-weight: 700;
+  color: var(--ink-soft);
+  animation: screen-in 0.5s 0.25s ease both;
+}
+
+.complete-facts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.complete-facts .glyph {
+  color: var(--ink-faint);
+}
+
+.complete-facts .is-glow {
+  color: var(--gold);
+}
+
+.complete-first {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-top: 18px;
-  animation: screen-in 0.5s 0.25s ease both;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: calc(16px * var(--text-scale, 1));
+  line-height: 1.35;
+  text-align: left;
+  animation: screen-in 0.5s 0.35s ease both;
+}
+
+.complete-first p {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.complete-first .glyph {
+  flex: none;
+  margin-top: 2px;
+  color: var(--gold);
 }
 
 .complete-list {

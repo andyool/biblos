@@ -5,14 +5,13 @@ import Glyph from '../components/Glyph.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
 import { LevelBar } from '../components/XpLevel.jsx';
-import TranslationPicker from '../components/TranslationPicker.jsx';
 import { GOALS, LEVELS, titleFor } from '../data/levels.js';
-import { TRANSLATIONS, getTranslation } from '../data/translations.js';
+import { getTranslation } from '../data/translations.js';
 import { FONTS, TEXT_SIZES, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
-import { addTalents, lockNiv, resetEverything, restoreBackup, setAutoTheme, unlockNiv, unlockTalents, updateProfile, updateSettings, equip } from '../lib/actions.js';
+import { addTalents, lockNiv, resetEverything, restoreBackup, sessionsDone, setAutoTheme, unlockNiv, unlockTalents, updateProfile, updateSettings, equip } from '../lib/actions.js';
 import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
-import { hasYouVersion, useYouVersionReady } from '../lib/bible.js';
+import { useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
 import { SKILLS, weakestSkill } from '../lib/adapt.js';
@@ -104,9 +103,7 @@ function Skills({ skills }) {
         })}
       </div>
       <p className="small-print">
-        {weakest
-          ? `Lessons lean towards ${SKILLS[weakest].name.toLowerCase()} for now — ${SKILLS[weakest].desc.toLowerCase()} — and aim at the words you stumble on.`
-          : 'Lessons give every kind of exercise its turn, and aim at the words you stumble on.'}
+        {weakest ? `Lessons lean towards ${SKILLS[weakest].name.toLowerCase()} for now, and the words you stumble on.` : 'Lessons give every exercise its turn, and aim at the words you stumble on.'}
       </p>
     </>
   );
@@ -167,8 +164,8 @@ function Offline({ tr }) {
       <h2 className="section-heading">Use it offline</h2>
       <p className="small-print">
         {niv
-          ? 'The NIV can’t be downloaded, because YouVersion only lets Biblos fetch it a little at a time. NIV memory verses you have already opened stay on this phone. To read the whole Bible offline, choose another translation, then download it here.'
-          : 'Save the whole Bible and every memory verse on this phone, so Biblos works with no signal. Each translation takes about 6 MB, and you can keep several. Best done on Wi-Fi; it takes a few minutes.'}
+          ? 'The NIV can’t be downloaded, but NIV verses you’ve opened stay on this phone. To read offline, choose another Bible and download it here.'
+          : 'Keep the whole Bible on this phone for when there’s no signal: about 6 MB, best on Wi‑Fi.'}
       </p>
       {(current || ids.length > 0) && (
         <div className="rows">
@@ -195,6 +192,7 @@ export default function Profile() {
   const { profile, stats, settings, verses } = state;
   const nivReady = useYouVersionReady();
   const [editingName, setEditingName] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [sheet, setSheet] = useState(null);
   const [word, setWord] = useState('');
   const [wrongWord, setWrongWord] = useState(false);
@@ -205,6 +203,10 @@ export default function Profile() {
   const title = titleFor(memorised);
   const since = new Date(profile.since).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const ownedThemes = THEMES.filter((t) => state.owned.theme.includes(t.id));
+  const begun = sessionsDone(stats) > 0;
+  const lastBackup = settings.lastBackup ? `Last ${new Date(settings.lastBackup).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Never';
+  // The notices for the Bibles in use here; each verse shows its own.
+  const notices = [...new Set([settings.translation, bibleTr(state)])].map((tr) => getTranslation(tr).copyright).filter((c) => c !== 'Public domain.');
 
   const onImport = async (e) => {
     const file = e.target.files?.[0];
@@ -243,7 +245,7 @@ export default function Profile() {
     }
   };
 
-  // The flourish above Settings is another: after the same word is given once, each tap adds five talents.
+  // The flourish above the settings is another: after the same word is given once, each tap adds five talents.
   const onFlourish = () => {
     if (settings.talentsUnlocked) {
       addTalents(5);
@@ -305,107 +307,97 @@ export default function Profile() {
         <LevelBar xp={stats.xp} />
       </Frame>
 
-      <div className="stat-grid">
-        <Stat icon="lamp" lit value={stats.streak} label="day streak" />
-        <Stat icon="crown" value={stats.bestStreak} label="best streak" />
-        <Stat icon="heart" value={memorised} label="memorised" />
-        <Stat icon="sparkle" value={stats.xp.toLocaleString()} label="total XP" />
-        <Stat icon="star" value={stats.perfect} label="flawless" />
-        <Stat icon="book" value={stats.lessons} label="lessons" />
-      </div>
-
-      <h2 className="section-heading">Faithfulness</h2>
-      <Heatmap days={stats.days} />
-
-      <h2 className="section-heading">Your garden</h2>
-      <div className="garden">
-        {LEVELS.slice(1).map((l) => (
-          <div key={l.n} className={`garden-cell level-${l.n}`}>
-            <Glyph name={l.icon} size={22} />
-            <strong>{counts[l.n]}</strong>
-            <span>{l.short || l.name}</span>
+      {begun ? (
+        <>
+          <div className="stat-grid">
+            <Stat icon="lamp" lit value={stats.streak} label="day streak" />
+            <Stat icon="crown" value={stats.bestStreak} label="best streak" />
+            <Stat icon="heart" value={memorised} label="memorised" />
+            <Stat icon="sparkle" value={stats.xp.toLocaleString()} label="total XP" />
+            <Stat icon="star" value={stats.perfect} label="flawless" />
+            <Stat icon="book" value={stats.lessons} label="lessons" />
           </div>
-        ))}
-      </div>
 
-      <Skills skills={stats.skills} />
+          <h2 className="section-heading">Faithfulness</h2>
+          <Heatmap days={stats.days} />
+
+          <h2 className="section-heading">Your garden</h2>
+          <div className="garden">
+            {LEVELS.slice(1).map((l) => (
+              <div key={l.n} className={`garden-cell level-${l.n}`}>
+                <Glyph name={l.icon} size={22} />
+                <strong>{counts[l.n]}</strong>
+                <span>{l.short || l.name}</span>
+              </div>
+            ))}
+          </div>
+
+          <Skills skills={stats.skills} />
+        </>
+      ) : (
+        <p className="empty">Your streak and the verses you learn will gather here after your first lesson.</p>
+      )}
 
       <Divider width={200} className="center spaced" onClick={onFlourish} />
 
-      <h2 className="section-heading">Settings</h2>
       <div className="rows">
-        <Row icon="book" label="Bible translation" value={settings.translation} onClick={() => setSheet('translation')} />
-        {settings.nivUnlocked && <Row icon="key" label="NIV access" value={nivReady ? 'Connected' : 'Not connected'} onClick={() => openSheet({ type: 'niv' })} />}
-        <Row icon="target" label="Daily goal" value={`${GOALS.find((g) => g.xp === settings.dailyGoal)?.name || ''} · ${settings.dailyGoal} XP`} onClick={() => setSheet('goal')} />
-        <Row icon="sparkle" label="Theme" value={settings.autoTheme ? 'Matches your phone' : THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
-        <Row icon="eye" label="Text size" value={(TEXT_SIZES.find((t) => t.scale === settings.textSize) || TEXT_SIZES[0]).name} onClick={() => setSheet('text')} />
-        <label className="row">
-          <Glyph name="heart" size={20} />
-          <span className="row-label">Woolly the lamb</span>
-          <input type="checkbox" className="switch" checked={settings.woolly !== false} onChange={(e) => updateSettings({ woolly: e.target.checked })} />
-        </label>
-        {settings.woolly !== false && (
-          <div className="row row-woolly">
-            <WoollyPicker size={52} />
+        <Row icon="gear" label="Settings" onClick={() => setSettingsOpen(true)} />
+        <Row icon="share" label="Save a backup" value={lastBackup} onClick={onExport} />
+      </div>
+
+      {settingsOpen && (
+        <Sheet title="Settings" onClose={() => setSettingsOpen(false)}>
+          <div className="rows">
+            <Row icon="book" label="Bible translation" value={settings.translation} onClick={() => openSheet({ type: 'translation' })} />
+            {settings.nivUnlocked && <Row icon="key" label="NIV access" value={nivReady ? 'Connected' : 'Not connected'} onClick={() => openSheet({ type: 'niv' })} />}
+            <Row icon="target" label="Daily goal" value={`${GOALS.find((g) => g.xp === settings.dailyGoal)?.name || ''} · ${settings.dailyGoal} XP`} onClick={() => setSheet('goal')} />
+            <Row icon="sparkle" label="Theme" value={settings.autoTheme ? 'Matches your phone' : THEMES.find((t) => t.id === settings.theme)?.name} onClick={() => setSheet('look')} />
+            <Row icon="eye" label="Text size" value={(TEXT_SIZES.find((t) => t.scale === settings.textSize) || TEXT_SIZES[0]).name} onClick={() => setSheet('text')} />
+            <label className="row">
+              <Glyph name="heart" size={20} />
+              <span className="row-label">Woolly the lamb</span>
+              <input type="checkbox" className="switch" checked={settings.woolly !== false} onChange={(e) => updateSettings({ woolly: e.target.checked })} />
+            </label>
+            {settings.woolly !== false && (
+              <div className="row row-woolly">
+                <WoollyPicker size={52} />
+              </div>
+            )}
+            <label className="row">
+              <Glyph name="speaker" size={20} />
+              <span className="row-label">Sound effects</span>
+              <input type="checkbox" className="switch" checked={settings.sound} onChange={(e) => updateSettings({ sound: e.target.checked })} />
+            </label>
+            <div className="row row-slider">
+              <Glyph name="speaker" size={20} />
+              <span className="row-label">Reading voice speed</span>
+              <input type="range" min="0.6" max="1.2" step="0.05" value={settings.speechRate} onChange={(e) => updateSettings({ speechRate: Number(e.target.value) })} />
+            </div>
           </div>
-        )}
-        <label className="row">
-          <Glyph name="speaker" size={20} />
-          <span className="row-label">Sound effects</span>
-          <input type="checkbox" className="switch" checked={settings.sound} onChange={(e) => updateSettings({ sound: e.target.checked })} />
-        </label>
-        <div className="row row-slider">
-          <Glyph name="speaker" size={20} />
-          <span className="row-label">Reading voice speed</span>
-          <input type="range" min="0.6" max="1.2" step="0.05" value={settings.speechRate} onChange={(e) => updateSettings({ speechRate: Number(e.target.value) })} />
-        </div>
-      </div>
 
-      {offlineSupported() && <Offline tr={bibleTr(state)} />}
+          {offlineSupported() && <Offline tr={bibleTr(state)} />}
 
-      <h2 className="section-heading">Keep your progress safe</h2>
-      <p className="small-print">Progress is stored on this phone. Save a backup now and then — you can restore it on any device.</p>
-      <div className="rows">
-        <Row
-          icon="share"
-          label="Save a backup"
-          value={settings.lastBackup ? `Last ${new Date(settings.lastBackup).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}` : 'Never'}
-          onClick={onExport}
-        />
-        <Row icon="upload" label="Restore from a backup" onClick={() => fileRef.current?.click()} />
-        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImport} />
-        {!isStandalone() && <Row icon="phone" label="Add to Home Screen" onClick={() => setSheet('install')} />}
-      </div>
+          <h2 className="section-heading">Backup</h2>
+          <p className="small-print">Progress is kept only on this phone. A backup brings it back on any device.</p>
+          <div className="rows">
+            <Row icon="share" label="Save a backup" value={lastBackup} onClick={onExport} />
+            <Row icon="upload" label="Restore from a backup" onClick={() => fileRef.current?.click()} />
+            <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImport} />
+            {!isStandalone() && <Row icon="phone" label="Add to Home Screen" onClick={() => setSheet('install')} />}
+          </div>
 
-      <h2 className="section-heading" onClick={onAbout}>
-        About
-      </h2>
-      <div className="about">
-        <p>
-          <em>Biblos</em> helps you hide God’s word in your heart, a few minutes at a time. Verses grow from <strong>Sown</strong> to <strong>Hidden in the Heart</strong> as you recall them across days and weeks.
-        </p>
-        <p className="small-print">
-          Bible text loads from bolls.life and, for the NIV, the YouVersion Platform.{' '}
-          {TRANSLATIONS.filter((t) => t.copyright !== 'Public domain.')
-            .map((t) => t.copyright)
-            .join(' ')}
-        </p>
-      </div>
-      <button className="btn btn-ghost btn-block btn-danger-text" onClick={onReset}>
-        <Glyph name="trash" size={16} /> Erase all progress
-      </button>
-
-      {sheet === 'translation' && (
-        <Sheet title="Your Bible" onClose={() => setSheet(null)}>
-          <p className="lead">New verses use this translation. Verses you have already begun keep their own — change one from its page.</p>
-          <TranslationPicker
-            value={settings.translation}
-            onPick={(id) => {
-              updateSettings({ translation: id });
-              setSheet(null);
-              if (getTranslation(id).source === 'yv' && !hasYouVersion()) openSheet({ type: 'niv' });
-            }}
-          />
+          <h2 className="section-heading" onClick={onAbout}>
+            About
+          </h2>
+          <div className="about">
+            <p>
+              <em>Biblos</em> helps you hide God’s word in your heart, a few minutes at a time.
+            </p>
+            <p className="small-print">Bible text loads from bolls.life and, for the NIV, the YouVersion Platform. {notices.join(' ')}</p>
+          </div>
+          <button className="btn btn-ghost btn-block btn-danger-text" onClick={onReset}>
+            <Glyph name="trash" size={16} /> Erase all progress
+          </button>
         </Sheet>
       )}
       {(sheet === 'unlock' || sheet === 'talents') && (
@@ -455,13 +447,12 @@ export default function Profile() {
       )}
       {sheet === 'look' && (
         <Sheet title="Appearance" onClose={() => setSheet(null)}>
-          <p className="small-print">Your themes and lettering. More wait in the Treasury.</p>
           <div className="rows">
             <label className="row">
               <Glyph name="sun" size={20} />
               <span className="row-label">
                 Match my phone
-                <small className="row-note">Light when your phone is light, dark when it is dark</small>
+                <small className="row-note">Light by day, dark by night, as your phone is</small>
               </span>
               <input type="checkbox" className="switch" checked={Boolean(settings.autoTheme)} onChange={(e) => setAutoTheme(e.target.checked)} />
             </label>
@@ -487,16 +478,16 @@ export default function Profile() {
             className="btn btn-gold btn-block"
             onClick={() => {
               setSheet(null);
+              setSettingsOpen(false);
               go('treasury');
             }}
           >
-            Visit the Treasury
+            More in the Treasury
           </button>
         </Sheet>
       )}
       {sheet === 'text' && (
         <Sheet title="Text size" onClose={() => setSheet(null)}>
-          <p className="small-print">Every word in Biblos grows with it, verses included.</p>
           <div className="goal-list">
             {TEXT_SIZES.map((t) => (
               <button key={t.scale} className={`goal-item ${(settings.textSize || 1) === t.scale ? 'is-on' : ''}`} onClick={() => updateSettings({ textSize: t.scale })} aria-pressed={(settings.textSize || 1) === t.scale}>
@@ -523,11 +514,8 @@ export default function Profile() {
               </li>
             )}
             <li>Open Biblos from the new icon. It runs full-screen and works offline.</li>
-            <li>
-              On Wi-Fi, go to <strong>Me → Use it offline</strong> and download your Bible, so it works with no signal.
-            </li>
           </ol>
-          {!isAndroid() && <p className="small-print">On iPhone the Home Screen app keeps its own progress, separate from Safari — so start using it from the icon.</p>}
+          {!isAndroid() && <p className="small-print">On iPhone the Home Screen app keeps its own progress, apart from Safari, so use it from the icon.</p>}
         </Sheet>
       )}
     </div>

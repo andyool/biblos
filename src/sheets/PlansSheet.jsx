@@ -35,7 +35,7 @@ export default function PlansSheet({ onClose }) {
 
   return (
     <Sheet title="Reading plans" onClose={onClose} woolly="present">
-      <p className="small-print">A plan sets a pace through the books, one passage after another, and shows whether you are on track. Whatever you have already read in its books counts.</p>
+      <p className="small-print">A steady pace through the books. What you’ve already read counts.</p>
       <div className="path-list">
         {PLANS.map((plan) => {
           const verses = plan.books(catholic).reduce((sum, code) => sum + versesInBook(code, catholic), 0);
