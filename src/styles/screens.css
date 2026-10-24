@@ -1354,6 +1354,19 @@
   border: 1px solid var(--line);
 }
 
+.complete-journal {
+  width: 100%;
+  text-align: left;
+}
+
+.complete-journal .complete-verse-text {
+  flex: 1;
+}
+
+.complete-journal .row-chev {
+  color: var(--ink-faint);
+}
+
 .complete-verse-medal {
   position: relative;
   width: 46px;

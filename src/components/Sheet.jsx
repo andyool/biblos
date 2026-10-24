@@ -151,13 +151,14 @@ function useSwipeDown({ panel, scrim, sheet, onClose }) {
 /**
  * A bottom sheet that slides up over the app, and back down when it closes. With `woolly`
  * (a clip such as 'wave', or a loop such as 'pray'), the lamb peeks up over its top edge.
+ * With `guard`, onClose may decide not to close (e.g. after asking), and back still works after.
  */
-export default function Sheet({ title, onClose, children, className = '', flourish = true, woolly }) {
+export default function Sheet({ title, onClose, children, className = '', flourish = true, woolly, guard = false }) {
   const root = useRef(null);
   const scrim = useRef(null);
   const panel = useRef(null);
   const ref = useRef(null);
-  useBack(onClose, { active: Boolean(onClose) });
+  useBack(onClose, { active: Boolean(onClose), guard });
   useFocusTrap(ref);
   useLeave(root, slideAway);
   const handle = useSwipeDown({ panel, scrim, sheet: ref, onClose });

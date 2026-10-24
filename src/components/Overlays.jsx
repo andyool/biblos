@@ -55,6 +55,11 @@ export default function Overlays() {
         <div className="toast" key={toast.id} role="status">
           {toast.icon && <Glyph name={toast.icon} size={18} />}
           <span>{toast.message}</span>
+          {toast.action && (
+            <button className="toast-action" onClick={toast.action.run}>
+              {toast.action.label}
+            </button>
+          )}
         </div>
       )}
     </>,

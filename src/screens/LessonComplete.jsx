@@ -11,6 +11,8 @@ import { LevelProgress } from '../components/XpLevel.jsx';
 import { useBack } from '../lib/nav.js';
 import Woolly from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
+import { useApp } from '../AppContext.js';
+import { useStore } from '../lib/store.js';
 
 function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
@@ -23,6 +25,9 @@ function headline(summary) {
 }
 
 export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
+  const { openSheet } = useApp();
+  // What you wrote after the reading, while it is still in the journal.
+  const entry = useStore((s) => s.journal[summary.reading?.entry]);
   const levelled = summary.changes.filter((c) => c.to > c.from);
   // The very first lesson or reading: all the XP there is came from it.
   const first = summary.totalXp === summary.xp;
@@ -131,6 +136,18 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
               <span>{summary.reading.title ? summary.reading.ref : 'Read and reflected on'}</span>
             </div>
           </div>
+        )}
+        {entry && (
+          <button className="complete-verse complete-journal" onClick={() => openSheet({ type: 'journalEntry', id: entry.id })}>
+            <div className="complete-verse-medal">
+              <Glyph name="quill" size={24} />
+            </div>
+            <div className="complete-verse-text">
+              <strong>Saved to your journal</strong>
+              <small>With its question. Tap to read it or change it.</small>
+            </div>
+            <Glyph name="chevron" size={16} className="row-chev" />
+          </button>
         )}
         {summary.reading?.bookDone && (
           <div className="complete-banner">

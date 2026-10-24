@@ -961,6 +961,23 @@
   stroke: url(#glyph-shine);
 }
 
+.toast-action {
+  flex: none;
+  margin: -6px -8px -6px 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-family: var(--font-display);
+  font-size: calc(12px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.toast-action:active {
+  background: var(--surface-3);
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

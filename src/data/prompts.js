@@ -1,0 +1,45 @@
+// Questions to write from, for a journal entry that doesn't come from a reading. Readings bring
+// their own (each passage's `reflect` in its guide).
+export const PROMPTS = {
+  thought: [
+    'Where have you noticed God at work this week?',
+    'What has been on your heart today?',
+    'What is one thing you sense God teaching you at the moment?',
+    'Which promise of God do you most need to hold on to right now?',
+    'What is worrying you? Write it down, and then write what is true about God.',
+    'Who has God put in your path lately, and how could you love them well?',
+    'What would it look like to trust God a little more tomorrow?',
+    'Is there something you need to confess, or someone you need to forgive?',
+    'What has surprised you about God recently?',
+    'Where do you feel weak just now, and how might his strength meet you there?',
+    'What do you want to remember about this season of your life?',
+    'What is one step of obedience you could take this week?',
+  ],
+  prayer: [
+    'What do you want to bring to God today?',
+    'Who would you like to pray for, and what for?',
+    'What are you waiting on God for?',
+    'Pray for someone who is hard to love.',
+    'Ask God for wisdom in a decision in front of you.',
+    'Pray for your church, your family and your friends by name.',
+    'What fear can you hand over to him?',
+    'Pray the words of a verse you know back to God.',
+  ],
+  thanks: [
+    'Name three gifts from today, however small.',
+    'Who are you thankful for, and why?',
+    'What prayer has God answered lately?',
+    'What is something good you might have overlooked this week?',
+    'How has God been faithful to you in the past?',
+    'What about Jesus are you most grateful for today?',
+    'What beauty did you see today?',
+  ],
+  verse: [
+    'What does this verse show you about God?',
+    'What does it ask of you today?',
+    'Why does this verse matter to you?',
+    'Where in your life do you need this verse most?',
+    'Put the verse into your own words.',
+    'Turn this verse into a prayer.',
+  ],
+};

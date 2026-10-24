@@ -61,8 +61,7 @@ function PlanCard({ code, sections }) {
 function ReadLinks() {
   const { openSheet } = useApp();
   const planned = useStore((s) => Boolean(s.reading.plan));
-  const notes = useStore((s) => Object.values(s.reading.notes).filter((n) => n?.note).length);
-  if (planned && !notes) return null;
+  const entries = Object.keys(useStore((s) => s.journal)).length;
   return (
     <div className="rows read-links">
       {!planned && (
@@ -72,16 +71,12 @@ function ReadLinks() {
           <Glyph name="chevron" size={16} className="row-chev" />
         </button>
       )}
-      {notes > 0 && (
-        <button className="row" onClick={() => openSheet({ type: 'journal' })}>
-          <Glyph name="quill" size={20} />
-          <span className="row-label">Your journal</span>
-          <span className="row-value">
-            {notes} note{notes === 1 ? '' : 's'}
-          </span>
-          <Glyph name="chevron" size={16} className="row-chev" />
-        </button>
-      )}
+      <button className="row" onClick={() => openSheet({ type: 'journal' })}>
+        <Glyph name="quill" size={20} />
+        <span className="row-label">Your journal</span>
+        <span className="row-value">{entries ? `${entries} entr${entries === 1 ? 'y' : 'ies'}` : 'Start writing'}</span>
+        <Glyph name="chevron" size={16} className="row-chev" />
+      </button>
     </div>
   );
 }

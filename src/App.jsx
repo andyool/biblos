@@ -22,6 +22,7 @@ import BooksSheet from './sheets/BooksSheet.jsx';
 import SectionSheet from './sheets/SectionSheet.jsx';
 import PlansSheet from './sheets/PlansSheet.jsx';
 import JournalSheet from './sheets/JournalSheet.jsx';
+import JournalEntrySheet from './sheets/JournalEntrySheet.jsx';
 import TranslationSheet from './sheets/TranslationSheet.jsx';
 import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
@@ -228,6 +229,8 @@ export default function App() {
         return <PlansSheet key="plans" onClose={close} />;
       case 'journal':
         return <JournalSheet key="journal" onClose={close} />;
+      case 'journalEntry':
+        return <JournalEntrySheet key={`journalEntry-${s.id || 'new'}`} id={s.id} draft={s.draft} onClose={close} />;
       case 'translation':
         return <TranslationSheet key="translation" onClose={close} />;
       default:

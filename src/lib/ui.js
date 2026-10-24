@@ -27,15 +27,23 @@ export function ask({ title, message, confirm = 'Yes', cancel = 'Cancel', danger
 }
 
 let toastTimer = null;
-export function toast(message, icon = null) {
-  toastItem = { message, icon, id: Date.now() };
+const hideToast = () => {
+  clearTimeout(toastTimer);
+  toastItem = null;
+  emit();
+};
+
+/** A note at the top of the screen. With an action ({ label, run }), it offers a button too, e.g. Undo. */
+export function toast(message, icon = null, action = null) {
+  const run = () => {
+    hideToast();
+    action.run();
+  };
+  toastItem = { message, icon, id: Date.now(), action: action && { label: action.label, run } };
   emit();
   clearTimeout(toastTimer);
-  // Long enough to read.
-  toastTimer = setTimeout(() => {
-    toastItem = null;
-    emit();
-  }, Math.max(2800, message.length * 55));
+  // Long enough to read, and longer when there is something to tap.
+  toastTimer = setTimeout(hideToast, Math.max(action ? 6000 : 2800, message.length * 55));
 }
 
 export function useOverlays() {

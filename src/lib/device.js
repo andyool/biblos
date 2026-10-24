@@ -102,6 +102,24 @@ export async function shareFile(file, title) {
   return 'downloaded';
 }
 
+/** Hand some words to the phone's share sheet, or copy them. Resolves to 'shared', 'copied', 'cancelled' or 'failed'. */
+export async function shareText(text, title) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title, text });
+      return 'shared';
+    } catch (err) {
+      if (err?.name === 'AbortError') return 'cancelled';
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    return 'copied';
+  } catch {
+    return 'failed';
+  }
+}
+
 const isObject = (x) => Boolean(x) && typeof x === 'object' && !Array.isArray(x);
 
 /** Read a backup file, and make sure it is one before anything is replaced. */

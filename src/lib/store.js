@@ -69,9 +69,13 @@ export function freshState() {
     },
     verses: {},
     custom: [],
-    // Reading whole books in order: the current book, which sections are done, your notes,
-    // and the reading plan you follow ({ id, started }).
-    reading: { book: null, books: {}, notes: {}, plan: null },
+    // Reading whole books in order: the current book, which sections are done, and the reading
+    // plan you follow ({ id, started }).
+    reading: { book: null, books: {}, plan: null },
+    // What you have written, each entry on its own (see lib/journal.js): { [id]: { id, kind,
+    // text, created, edited?, starred?, passage? (a reading's section), verse?, title?, prompt?
+    // (the question it answers), tr?, quotes? ([{ v, t }]), answered? ({ at, note? }) } }.
+    journal: {},
     owned: {
       theme: ['midnight', 'parchment'],
       font: ['cormorant', 'garamond'],
@@ -119,9 +123,33 @@ function merge(base, data) {
   return out;
 }
 
+const KINDS = new Set(['thought', 'prayer', 'thanks']);
+
+/**
+ * The journal, kept well formed. Notes from before it kept each entry on its own (one per
+ * passage, in reading.notes as { note, at }) become entries; their questions are filled in
+ * once the passages' guides have loaded (see fillJournalContext).
+ */
+function journalFrom(data) {
+  const journal = {};
+  if (isObject(data.journal)) {
+    for (const [id, e] of Object.entries(data.journal)) {
+      if (isObject(e) && typeof e.text === 'string') journal[id] = { ...e, id, kind: KINDS.has(e.kind) ? e.kind : 'thought', created: Number(e.created) || 0 };
+    }
+  }
+  const notes = isObject(data.reading) && isObject(data.reading.notes) ? data.reading.notes : {};
+  for (const [passage, n] of Object.entries(notes)) {
+    const id = `note-${passage}`;
+    if (n?.note && !journal[id]) journal[id] = { id, kind: 'thought', text: String(n.note), created: Number(n.at) || 0, passage, legacy: true };
+  }
+  return journal;
+}
+
 export function migrate(data) {
   const base = freshState();
   if (!isObject(data)) return base;
+  // The old notes are in the journal now (see journalFrom).
+  const { notes, ...reading } = merge(base.reading, data.reading); // eslint-disable-line no-unused-vars
   return withoutNiv({
     ...base,
     ...data,
@@ -131,7 +159,8 @@ export function migrate(data) {
     owned: merge(base.owned, data.owned),
     verses: isObject(data.verses) ? data.verses : {},
     custom: Array.isArray(data.custom) ? data.custom : [],
-    reading: merge(base.reading, data.reading),
+    reading,
+    journal: journalFrom(data),
     achievements: isObject(data.achievements) ? data.achievements : {},
   });
 }

@@ -1,4 +1,5 @@
 import { PATH_BY_ID } from './paths.js';
+import { dayKey, daysBetween } from '../lib/dates.js';
 
 const count = (s, min) => Object.values(s.verses).filter((v) => v.level >= min).length;
 const pathDone = (s, id) => PATH_BY_ID[id].verses.every((v) => (s.verses[v]?.level || 0) >= 4);
@@ -6,6 +7,19 @@ const anyPathDone = (s) => Object.keys(PATH_BY_ID).some((id) => pathDone(s, id))
 const pathCount = (s, id) => PATH_BY_ID[id].verses.filter((v) => (s.verses[v]?.level || 0) >= 4).length;
 
 const n = (value, target) => ({ value: Math.min(value, target), target });
+
+const entries = (s) => Object.values(s.journal || {});
+/** The most days in a row with something written in the journal. */
+function journalRun(s) {
+  const days = [...new Set(entries(s).filter((e) => e.created).map((e) => dayKey(e.created)))].sort();
+  let best = 0;
+  let run = 0;
+  days.forEach((d, i) => {
+    run = i && daysBetween(days[i - 1], d) === 1 ? run + 1 : 1;
+    best = Math.max(best, run);
+  });
+  return best;
+}
 
 // Seals: each has a test, a progress reading and a reward in talents.
 export const ACHIEVEMENTS = [
@@ -36,6 +50,11 @@ export const ACHIEVEMENTS = [
   { id: 'reader_1', name: 'Take Up and Read', desc: 'Finish your first reading.', icon: 'scroll', reward: 10, progress: (s) => n(s.stats.readings || 0, 1) },
   { id: 'reader_30', name: 'Like the Bereans', desc: 'Finish thirty readings.', icon: 'book', reward: 40, progress: (s) => n(s.stats.readings || 0, 30) },
   { id: 'reader_100', name: 'Delight in the Law', desc: 'Finish a hundred readings.', icon: 'olive', reward: 100, progress: (s) => n(s.stats.readings || 0, 100) },
+  // Small, once-only rewards: the journal is for writing what is true, not for earning.
+  { id: 'journal_1', name: 'Write the Vision', desc: 'Write your first journal entry.', icon: 'quill', reward: 10, progress: (s) => n(entries(s).length, 1) },
+  { id: 'journal_10', name: 'Pondered in the Heart', desc: 'Write ten journal entries.', icon: 'scroll', reward: 25, progress: (s) => n(entries(s).length, 10) },
+  { id: 'journal_7', name: 'Book of Remembrance', desc: 'Write in your journal seven days in a row.', icon: 'vine', reward: 30, progress: (s) => n(journalRun(s), 7) },
+  { id: 'answered_1', name: 'Ebenezer', desc: 'Mark a prayer as answered.', icon: 'dove', reward: 15, progress: (s) => n(entries(s).filter((e) => e.answered).length, 1) },
   { id: 'book_1', name: 'Whole Counsel', desc: 'Read a whole book of the Bible, start to finish.', icon: 'crown', reward: 50, progress: (s) => n(s.stats.booksRead || 0, 1) },
   { id: 'own_verse', name: 'Treasure Seeker', desc: 'Add a verse of your own.', icon: 'key', reward: 10, progress: (s) => n(s.custom.length, 1) },
   { id: 'xp_1000', name: 'Talents Multiplied', desc: 'Earn 1,000 XP.', icon: 'wheat', reward: 40, progress: (s) => n(s.stats.xp, 1000) },

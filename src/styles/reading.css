@@ -98,11 +98,17 @@
 
 /* ─── Journal ────────────────────────────────────────────────────────────── */
 
+.journal-summary {
+  margin: -6px 0 2px;
+  text-align: center;
+  font-size: calc(15px * var(--text-scale, 1));
+  color: var(--ink-faint);
+}
+
 .journal-search {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 14px;
   color: var(--ink-faint);
 }
 
@@ -110,20 +116,80 @@
   flex: 1;
 }
 
+.journal-filters .filters {
+  margin: 0;
+}
+
+.journal-filters .filters + .filters {
+  margin-top: 8px;
+}
+
+.journal-order {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: calc(14px * var(--text-scale, 1));
+  color: var(--ink-faint);
+}
+
+.journal-order .btn-link {
+  padding: 4px 0;
+}
+
+.sheet-body > .journal-order {
+  margin-top: 6px;
+}
+
 .journal-list {
   display: grid;
+  gap: 18px;
+}
+
+.journal-month {
+  display: grid;
   gap: 10px;
+}
+
+.journal-month-name {
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: -2px;
 }
 
 .journal-entry {
   display: grid;
   gap: 4px;
   width: 100%;
+  min-width: 0;
   text-align: left;
   padding: 12px 14px;
   border-radius: 14px;
   border: 1px solid var(--line);
   background: linear-gradient(180deg, var(--surface-2), var(--surface));
+}
+
+.journal-entry:active {
+  background: var(--surface-3);
+}
+
+.journal-label {
+  font-family: var(--font-display);
+  font-size: calc(10.5px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+/* Something from a while ago, set apart a little. */
+.journal-back .journal-entry {
+  border-color: var(--trim);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--g1) 14%, transparent);
 }
 
 .journal-head {
@@ -134,10 +200,26 @@
 }
 
 .journal-head strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
   font-family: var(--font-display);
   font-size: calc(13.5px * var(--text-scale, 1));
   letter-spacing: 0.04em;
   color: var(--gold);
+}
+
+.journal-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.journal-star {
+  color: var(--gold);
+  align-self: center;
 }
 
 .journal-head small {
@@ -151,11 +233,252 @@
   font-style: italic;
 }
 
+/* The question, so what you wrote still makes sense on its own. */
+.journal-prompt {
+  padding-left: 10px;
+  border-left: 2px solid var(--trim);
+  font-size: calc(15.5px * var(--text-scale, 1));
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
 .journal-note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
   font-size: calc(17px * var(--text-scale, 1));
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.journal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.journal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: calc(10.5px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.journal-tag.is-answered {
+  color: var(--gold);
+  border-color: var(--trim);
+}
+
+/* Thought, prayer or thanks. */
+.segmented.is-three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.journal-kinds {
+  margin-bottom: 0;
+}
+
+.journal-kinds button {
+  height: 38px;
+  font-size: calc(11px * var(--text-scale, 1));
+  letter-spacing: 0.1em;
+}
+
+.journal-quote {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-family: var(--font-verse);
+  font-size: calc(18px * var(--verse-scale) * var(--text-scale, 1));
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.journal-quote p {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.journal-quote-words {
+  flex: 1;
+  min-width: 0;
+}
+
+.journal-quote sup {
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--text-scale, 1));
+  font-weight: 700;
+  color: var(--gold);
+  padding-top: 5px;
+}
+
+.journal-quote-remove {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  margin: -2px -6px 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--ink-faint);
+}
+
+.journal-quote cite {
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--text-scale, 1));
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: right;
+}
+
+.journal-room {
+  justify-content: flex-end;
+  margin-top: -6px;
+}
+
+/* One entry */
+
+.journal-chips {
+  justify-content: center;
+}
+
+.journal-question-text {
+  font-style: italic;
+}
+
+.journal-question-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.journal-question-actions .btn-link {
+  padding: 4px 0;
+}
+
+.journal-text {
+  font-size: calc(18.5px * var(--text-scale, 1));
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.journal-answered .context-kicker {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.journal-answered-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.journal-answered .btn-link {
+  padding: 6px 0 0;
+}
+
+.journal-answer-input {
+  min-height: 70px;
+  margin: 6px 0 10px;
+  font-size: calc(17px * var(--text-scale, 1));
+}
+
+.journal-answered .sheet-actions-row {
+  justify-content: flex-end;
+}
+
+.journal-ask {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.journal-ask-input {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  font-family: var(--font-verse);
+  font-size: calc(17px * var(--text-scale, 1));
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.journal-ask .btn-round {
+  min-height: 50px;
+  height: 50px;
+  width: 50px;
+}
+
+.journal-textarea {
+  min-height: 180px;
+}
+
+/* What you wrote last time you read the passage. */
+.journal-before {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  font-size: calc(16px * var(--text-scale, 1));
+  color: var(--ink-soft);
+}
+
+.journal-before summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.journal-before summary::-webkit-details-marker {
+  display: none;
+}
+
+.journal-before p {
+  padding: 0 14px 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* On a passage's or verse's own sheet. */
+.section-sheet-journal,
+.verse-sheet-journal {
+  display: grid;
+  gap: 8px;
+}
+
+.verse-sheet-journal {
+  margin-top: 18px;
 }
 
 .chapters {
@@ -391,12 +714,8 @@
   line-height: 1.45;
 }
 
-.section-sheet-note {
-  white-space: pre-wrap;
-}
-
-.section-sheet .context-card {
-  margin-top: 12px;
+.section-sheet-journal {
+  margin-top: 16px;
 }
 
 /* ─── A reading ──────────────────────────────────────────────────────────── */
@@ -649,6 +968,27 @@
 
 .reflect-note {
   min-height: 96px;
+}
+
+.ex-reflect .journal-kinds {
+  margin: 0;
+}
+
+.reflect-actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ex-reflect .ex-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.reflect-saves {
+  text-align: center;
+  font-size: calc(14px * var(--text-scale, 1));
+  color: var(--ink-faint);
 }
 
 .keep-verse-note {

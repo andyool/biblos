@@ -426,9 +426,21 @@ export function finishReading(session, results) {
     const bookDone = !book.finished && session.sectionIds.every((id) => done[id]);
     if (bookDone) talents += BOOK_BONUS;
 
-    const notes = { ...s0.reading.notes };
+    // What you wrote, kept with the question it answers. Each reading's note is its own entry,
+    // so reading a passage again adds to what you wrote before rather than replacing it.
     const note = results.find((r) => r.note)?.note;
-    if (note) notes[sec.id] = { ...notes[sec.id], note, at: now };
+    const entry = note && {
+      id: entryId(),
+      kind: note.kind || 'thought',
+      text: note.text,
+      created: now,
+      passage: sec.id,
+      title: sec.title,
+      prompt: sec.reflect,
+      tr: session.tr,
+      ...(note.quotes?.length && { quotes: note.quotes }),
+    };
+    const journal = entry ? { ...s0.journal, [entry.id]: entry } : s0.journal;
 
     const day = creditDay(stats, xp, s0.settings.dailyGoal, at);
     talents += day.talents;
@@ -443,9 +455,8 @@ export function finishReading(session, results) {
       ...s0.reading,
       book: sec.book,
       books: { ...s0.reading.books, [sec.book]: { ...book, done, ...(bookDone && { finished: now }) } },
-      notes,
     };
-    const awarded = awardAchievements({ ...s0, stats, reading });
+    const awarded = awardAchievements({ ...s0, stats, reading, journal });
     summary = {
       kind: 'reading',
       xp: day.xp,
@@ -456,7 +467,7 @@ export function finishReading(session, results) {
       accuracy: correct + mistakes ? correct / (correct + mistakes) : 1,
       perfect,
       changes: [],
-      reading: { id: sec.id, ref: session.ref, title: session.title, bookDone, book: sec.book },
+      reading: { id: sec.id, ref: session.ref, title: session.title, bookDone, book: sec.book, entry: entry?.id },
       streak: day.streak,
       streakExtended: day.streakExtended,
       goalReached: day.goalReached,
@@ -467,6 +478,68 @@ export function finishReading(session, results) {
     return awarded.state;
   });
   return summary;
+}
+
+// ── Journal ────────────────────────────────────────────────────────────────────
+
+const entryId = () => `j-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+
+/** Keep a new journal entry. Returns its id, and the seals it earned. */
+export function addJournalEntry(fields) {
+  const id = entryId();
+  let earned = [];
+  setState((s) => {
+    const awarded = awardAchievements({ ...s, journal: { ...s.journal, [id]: { kind: 'thought', ...fields, id, created: Date.now() } } });
+    earned = awarded.earned;
+    return awarded.state;
+  });
+  return { id, earned };
+}
+
+/** Change an entry (its words, its star, whether a prayer is answered…). Returns the seals it earned. */
+export function updateJournalEntry(id, patch) {
+  let earned = [];
+  setState((s) => {
+    if (!s.journal[id]) return s;
+    const awarded = awardAchievements({ ...s, journal: { ...s.journal, [id]: { ...s.journal[id], ...patch } } });
+    earned = awarded.earned;
+    return awarded.state;
+  });
+  return earned;
+}
+
+/** Take an entry out of the journal. Returns it, so it can be put back with restoreJournalEntry. */
+export function deleteJournalEntry(id) {
+  const entry = getState().journal[id];
+  if (!entry) return null;
+  setState((s) => {
+    const journal = { ...s.journal };
+    delete journal[id];
+    return { ...s, journal };
+  });
+  return entry;
+}
+
+export function restoreJournalEntry(entry) {
+  setState((s) => ({ ...s, journal: { ...s.journal, [entry.id]: entry } }));
+}
+
+/**
+ * Give notes from before the journal kept questions their passage's title and question.
+ * contextOf(passage) is null while that passage's guide hasn't loaded (see passageContext).
+ */
+export function fillJournalContext(contextOf) {
+  setState((s) => {
+    let journal = null;
+    for (const e of Object.values(s.journal)) {
+      const found = e.legacy && e.passage && contextOf(e.passage);
+      if (!found) continue;
+      const { legacy, ...rest } = e; // eslint-disable-line no-unused-vars
+      journal = journal || { ...s.journal };
+      journal[e.id] = { ...rest, ...(found.title && { title: found.title }), ...(found.prompt && { prompt: found.prompt }) };
+    }
+    return journal ? { ...s, journal } : s;
+  });
 }
 
 // ── Treasury ───────────────────────────────────────────────────────────────────

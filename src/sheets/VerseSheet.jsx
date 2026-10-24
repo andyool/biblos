@@ -5,6 +5,7 @@ import { VerseText } from '../components/VerseText.jsx';
 import TranslationPicker from '../components/TranslationPicker.jsx';
 import PasteText from './PasteText.jsx';
 import ShareImageSheet from './ShareImageSheet.jsx';
+import { JournalCard } from '../components/Journal.jsx';
 import { useStore } from '../lib/store.js';
 import { useApp } from '../AppContext.js';
 import { useVerseText } from '../lib/hooks.js';
@@ -20,6 +21,7 @@ import { formatRef } from '../data/books.js';
 import { LEVELS, LESSON_NAMES } from '../data/levels.js';
 import { getTranslation } from '../data/translations.js';
 import { CURATED_IDS } from '../data/paths.js';
+import { entriesAbout } from '../lib/journal.js';
 
 function ErrorNote({ error, retry, tr, onConnect }) {
   return (
@@ -106,6 +108,10 @@ export default function VerseSheet({ id, onClose }) {
     }
   };
 
+  // What you have written about the verse, and a way to write more.
+  const written = entriesAbout(state.journal, id);
+  const write = () => openSheet({ type: 'journalEntry', draft: { verse: id, tr, quotes: entry?.verses?.map((x) => ({ v: x.v, t: x.t })) } });
+
   const restoreText = () => {
     removeText(tr, id);
     retry();
@@ -186,6 +192,15 @@ export default function VerseSheet({ id, onClose }) {
         </div>
       )}
 
+      {written.length > 0 && (
+        <div className="verse-sheet-journal">
+          <p className="context-kicker">In your journal</p>
+          {written.map((e) => (
+            <JournalCard key={e.id} entry={e} compact onOpen={(entryId) => openSheet({ type: 'journalEntry', id: entryId })} />
+          ))}
+        </div>
+      )}
+
       <div className="sheet-actions">
         <button className="btn btn-gold btn-block btn-shine" onClick={begin} disabled={status !== 'ready'}>
           {primary}
@@ -201,6 +216,9 @@ export default function VerseSheet({ id, onClose }) {
               <Glyph name="share" size={16} /> Picture
             </button>
           )}
+          <button className="btn btn-ghost btn-small" onClick={write}>
+            <Glyph name="quill" size={16} /> Write about it
+          </button>
           {status === 'ready' && mode !== 'edit' && (
             <button className="btn btn-ghost btn-small" onClick={() => setMode('edit')}>
               <Glyph name="pen" size={16} /> Edit text
