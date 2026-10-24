@@ -1,15 +1,15 @@
 // Everything that can be bought with talents (or unlocked by seals).
 export const THEMES = [
   { id: 'midnight', name: 'Midnight & Gold', price: 0, colors: ['#0a0f1d', '#17223a', '#ecc04e'] },
-  { id: 'parchment', name: 'Parchment', price: 0, light: true, colors: ['#f3ead3', '#fbf5e6', '#cf9d30'] },
+  { id: 'parchment', name: 'Parchment', price: 0, light: true, colors: ['#f3ead3', '#fbf5e6', '#d39a1a'] },
   { id: 'royal', name: 'Royal Purple', price: 120, colors: ['#170c22', '#2a1840', '#efc455'] },
-  { id: 'ivory', name: 'Ivory Palace', price: 140, light: true, colors: ['#eef0f4', '#ffffff', '#d0a038'] },
+  { id: 'ivory', name: 'Ivory Palace', price: 140, light: true, colors: ['#eef0f4', '#ffffff', '#d9a222'] },
   { id: 'emerald', name: 'Garden of Eden', price: 160, colors: ['#08170f', '#123022', '#e6bd52'] },
-  { id: 'lily', name: 'Lily of the Field', price: 180, light: true, colors: ['#dce7d3', '#f4f8ef', '#c99e36'] },
+  { id: 'lily', name: 'Lily of the Field', price: 180, light: true, colors: ['#dce7d3', '#f4f8ef', '#cc981c'] },
   { id: 'galilee', name: 'Sea of Galilee', price: 200, colors: ['#061518', '#102b31', '#e9bf50'] },
-  { id: 'rose', name: 'Rose of Sharon', price: 220, light: true, colors: ['#f3d9dc', '#fdf2f3', '#d99a9c'] },
+  { id: 'rose', name: 'Rose of Sharon', price: 220, light: true, colors: ['#f3d9dc', '#fdf2f3', '#d9857f'] },
   { id: 'cedar', name: 'Cedar of Lebanon', price: 240, colors: ['#140d08', '#2a1d13', '#eabd55'] },
-  { id: 'desert', name: 'Desert in Bloom', price: 260, light: true, colors: ['#f0d2b6', '#fcefe2', '#c98a52'] },
+  { id: 'desert', name: 'Desert in Bloom', price: 260, light: true, colors: ['#f0d2b6', '#fcefe2', '#cf7c32'] },
   { id: 'crimson', name: 'Crimson & Gold', price: 280, colors: ['#1a080c', '#34121b', '#efc35c'] },
   { id: 'silver', name: 'Refined Silver', price: 0, unlock: 'perfect_25', colors: ['#0d0f12', '#1c2129', '#b9c0ca'] },
 ];

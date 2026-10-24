@@ -56,17 +56,17 @@
   --ink: #2c2115;
   --ink-soft: rgba(44, 33, 21, 0.76);
   --ink-faint: rgba(44, 33, 21, 0.64);
-  --g0: #fff8de;
-  --g1: #f5da84;
-  --g2: #cf9d30;
-  --g3: #966816;
-  --g4: #5a3c06;
-  --gold: #8e6513;
+  --g0: #fff4cf;
+  --g1: #f4cb55;
+  --g2: #d39a1a;
+  --g3: #92600a;
+  --g4: #553503;
+  --gold: #8a5a06;
   --gold-ink: #2a1d05;
-  --matt: #a58b55;
-  --matt-deep: #7a6337;
-  --line: rgba(140, 112, 58, 0.28);
-  --line-strong: rgba(140, 112, 58, 0.56);
+  --matt: #a0844a;
+  --matt-deep: #725a2c;
+  --line: rgba(140, 112, 58, 0.36);
+  --line-strong: rgba(140, 112, 58, 0.64);
   --accent: #8c2330;
   --ok: #367347;
   --bad: #ad3b2a;
@@ -75,13 +75,6 @@
   --logo-lines: rgba(255, 248, 230, 0.65);
   --grain: 0.13;
   --emboss: rgba(255, 250, 235, 0.85);
-  --t0: var(--g3);
-  --t1: var(--g2);
-  --t2: var(--g3);
-  --t3: var(--g4);
-  --t4: var(--g3);
-  --t5: var(--g2);
-  color-scheme: light;
 }
 
 [data-theme='royal'] {
@@ -162,17 +155,17 @@
   --ink: #1c2230;
   --ink-soft: rgba(28, 34, 48, 0.74);
   --ink-faint: rgba(28, 34, 48, 0.62);
-  --g0: #fff9e2;
-  --g1: #f3d886;
-  --g2: #d0a038;
-  --g3: #997018;
-  --g4: #5d4209;
-  --gold: #93701c;
+  --g0: #fff6d4;
+  --g1: #f6d05a;
+  --g2: #d9a222;
+  --g3: #9a6808;
+  --g4: #573800;
+  --gold: #8c5f00;
   --gold-ink: #261b04;
-  --matt: #a99060;
-  --matt-deep: #7c6740;
-  --line: rgba(150, 124, 70, 0.26);
-  --line-strong: rgba(150, 124, 70, 0.52);
+  --matt: #a2884f;
+  --matt-deep: #735c2e;
+  --line: rgba(150, 124, 70, 0.36);
+  --line-strong: rgba(150, 124, 70, 0.64);
   --accent: #1f3a5f;
   --ok: #2f6e43;
   --bad: #a83a2b;
@@ -181,13 +174,6 @@
   --logo-lines: rgba(255, 255, 255, 0.7);
   --grain: 0.05;
   --emboss: rgba(255, 255, 255, 0.9);
-  --t0: var(--g3);
-  --t1: var(--g2);
-  --t2: var(--g3);
-  --t3: var(--g4);
-  --t4: var(--g3);
-  --t5: var(--g2);
-  color-scheme: light;
 }
 
 /* Rose gold. */
@@ -200,17 +186,17 @@
   --ink: #3a2328;
   --ink-soft: rgba(58, 35, 40, 0.76);
   --ink-faint: rgba(58, 35, 40, 0.64);
-  --g0: #fff4ef;
-  --g1: #f7d6c8;
-  --g2: #d99a9c;
-  --g3: #a2606a;
-  --g4: #5f2f39;
-  --gold: #9a5361;
+  --g0: #fff0ea;
+  --g1: #f4bfae;
+  --g2: #d9857f;
+  --g3: #a24c58;
+  --g4: #5c2230;
+  --gold: #8f3e4c;
   --gold-ink: #3a1a21;
-  --matt: #b8918d;
-  --matt-deep: #86605f;
-  --line: rgba(150, 100, 100, 0.26);
-  --line-strong: rgba(150, 100, 100, 0.52);
+  --matt: #b08580;
+  --matt-deep: #7d5452;
+  --line: rgba(150, 100, 100, 0.34);
+  --line-strong: rgba(150, 100, 100, 0.62);
   --accent: #7a2f45;
   --ok: #3d7350;
   --bad: #b2402f;
@@ -219,13 +205,6 @@
   --logo-lines: rgba(255, 246, 242, 0.7);
   --grain: 0.08;
   --emboss: rgba(255, 250, 248, 0.85);
-  --t0: var(--g3);
-  --t1: var(--g2);
-  --t2: var(--g3);
-  --t3: var(--g4);
-  --t4: var(--g3);
-  --t5: var(--g2);
-  color-scheme: light;
 }
 
 /* Deep water at dusk. */
@@ -314,17 +293,17 @@
   --ink: #1d2a1a;
   --ink-soft: rgba(29, 42, 26, 0.76);
   --ink-faint: rgba(29, 42, 26, 0.64);
-  --g0: #fff9e0;
-  --g1: #f2d985;
-  --g2: #c99e36;
-  --g3: #8f6c18;
-  --g4: #54400a;
-  --gold: #85661a;
+  --g0: #fff6d0;
+  --g1: #f1cb52;
+  --g2: #cc981c;
+  --g3: #8a610b;
+  --g4: #4d3504;
+  --gold: #7c5a08;
   --gold-ink: #241c05;
-  --matt: #a0925f;
-  --matt-deep: #736840;
-  --line: rgba(104, 112, 62, 0.28);
-  --line-strong: rgba(104, 112, 62, 0.54);
+  --matt: #988954;
+  --matt-deep: #6a5f36;
+  --line: rgba(104, 112, 62, 0.38);
+  --line-strong: rgba(104, 112, 62, 0.64);
   --accent: #4b6a3a;
   --ok: #2f6b3f;
   --bad: #a83a2b;
@@ -333,13 +312,6 @@
   --logo-lines: rgba(255, 255, 248, 0.7);
   --grain: 0.08;
   --emboss: rgba(255, 255, 248, 0.9);
-  --t0: var(--g3);
-  --t1: var(--g2);
-  --t2: var(--g3);
-  --t3: var(--g4);
-  --t4: var(--g3);
-  --t5: var(--g2);
-  color-scheme: light;
 }
 
 /* Sand and bronze. */
@@ -352,17 +324,17 @@
   --ink: #3a2416;
   --ink-soft: rgba(58, 36, 22, 0.76);
   --ink-faint: rgba(58, 36, 22, 0.64);
-  --g0: #fff2e4;
-  --g1: #f2c99e;
-  --g2: #c98a52;
-  --g3: #8f5528;
-  --g4: #522d10;
-  --gold: #8a4f24;
+  --g0: #ffefdc;
+  --g1: #f4bc7c;
+  --g2: #cf7c32;
+  --g3: #8e4a12;
+  --g4: #4c2605;
+  --gold: #86450f;
   --gold-ink: #2e1a0a;
-  --matt: #ad8a66;
-  --matt-deep: #7d5f42;
-  --line: rgba(150, 105, 70, 0.26);
-  --line-strong: rgba(150, 105, 70, 0.52);
+  --matt: #a6825c;
+  --matt-deep: #765539;
+  --line: rgba(150, 105, 70, 0.34);
+  --line-strong: rgba(150, 105, 70, 0.62);
   --accent: #96364a;
   --ok: #3b6e45;
   --bad: #ad3b2a;
@@ -371,13 +343,6 @@
   --logo-lines: rgba(255, 248, 240, 0.7);
   --grain: 0.11;
   --emboss: rgba(255, 250, 242, 0.85);
-  --t0: var(--g3);
-  --t1: var(--g2);
-  --t2: var(--g3);
-  --t3: var(--g4);
-  --t4: var(--g3);
-  --t5: var(--g2);
-  color-scheme: light;
 }
 
 :root {
@@ -428,6 +393,8 @@
   --glint: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.75) 50%, transparent 62%);
   /* Matt gold, for trim. */
   --trim: color-mix(in srgb, var(--matt) 78%, transparent);
+  /* How much gold washes over whatever is selected. */
+  --pick: 10%;
   --font-display: 'Cinzel', Georgia, serif;
   --font-deco: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
   --font-script: 'Pinyon Script', 'Snell Roundhand', cursive;
@@ -437,6 +404,25 @@
   --radius: 18px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/*
+  Light themes. Gold cannot glow against a pale page the way it does against a dark one, so
+  here each theme's gold is drawn deeper and richer, lettering takes its darker bands, rims and
+  trim lose their palest highlights, and whatever is selected is washed with more gold (and
+  ringed, in components.css) rather than only hinted at.
+*/
+[data-scheme='light'] {
+  --t0: var(--g3);
+  --t1: var(--g2);
+  --t2: var(--g3);
+  --t3: var(--g4);
+  --t4: var(--g3);
+  --t5: var(--g2);
+  --grad-rim: linear-gradient(135deg, var(--g4) 0%, var(--g2) 24%, var(--g1) 34%, var(--g3) 50%, var(--g4) 68%, var(--g2) 100%);
+  --trim: var(--matt);
+  --pick: 28%;
+  color-scheme: light;
 }
 
 /* ─── Base ───────────────────────────────────────────────────────────────── */

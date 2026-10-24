@@ -30,7 +30,7 @@ import { checkStreak, claimUnlocks, finishReading, finishSession, setActivePath,
 import { planProgress } from './lib/plans.js';
 import { bookProgress, bookSections, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
 import { guideNow, loadGuide } from './data/guides/index.js';
-import { fontFor, themeFor, THEMES } from './data/shop.js';
+import { fontFor, isLightTheme, themeFor, THEMES } from './data/shop.js';
 import { toast } from './lib/ui.js';
 import { useBack } from './lib/nav.js';
 import { useUpdateReady } from './lib/update.js';
@@ -93,6 +93,8 @@ function useAppearance() {
   useEffect(() => {
     const root = document.documentElement;
     root.dataset.theme = theme;
+    // Gold is drawn deeper on a light page than on a dark one (see base.css).
+    root.dataset.scheme = isLightTheme(theme) ? 'light' : 'dark';
     const f = fontFor(font);
     root.style.setProperty('--font-verse', f.family);
     root.style.setProperty('--verse-scale', String(f.scale));

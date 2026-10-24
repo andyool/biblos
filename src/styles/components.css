@@ -1162,6 +1162,12 @@
   border-color: var(--trim);
 }
 
+/* On a light page the track needs more gold to read as on. */
+[data-scheme='light'] .switch:checked {
+  background: color-mix(in srgb, var(--g2) 58%, var(--surface));
+  border-color: var(--matt-deep);
+}
+
 .switch:checked::after {
   transform: translateX(20px);
   box-shadow:
@@ -1333,10 +1339,6 @@ input[type='range'] {
   transition:
     border-color 0.2s,
     background 0.2s;
-}
-
-.tr-item.is-on {
-  --selected: linear-gradient(color-mix(in srgb, var(--g2) 12%, var(--surface)), color-mix(in srgb, var(--g2) 12%, var(--surface)));
 }
 
 .tr-abbr {
@@ -1641,11 +1643,19 @@ button.row:active {
 .chapter-cell.is-on,
 .shop-item.is-equipped,
 .recite-card.is-ready {
-  --selected-tint: color-mix(in srgb, var(--g2) 10%, var(--surface));
+  --selected-tint: color-mix(in srgb, var(--g2) var(--pick), var(--surface));
   border-color: transparent;
   background:
     var(--selected, linear-gradient(var(--selected-tint), var(--selected-tint))) padding-box,
     var(--grad-rim) border-box;
+}
+
+/* A glow is lost on a light page, so there the chosen one is ringed in gold and lifted off it. */
+[data-scheme='light']
+  :is(.tr-item.is-on, .path-item.is-active, .goal-item.is-on, .book-cell.is-active, .verse-pick.is-kept, .verse-pick.is-on, .chapter-cell.is-on, .shop-item.is-equipped, .recite-card.is-ready, .woolly-option.is-on) {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--g2) 55%, transparent),
+    0 10px 22px -12px color-mix(in srgb, var(--g4) 60%, transparent);
 }
 
 /* ─── Woolly, the golden lamb ───────────────────────────────────────────── */
@@ -1772,7 +1782,7 @@ button.row:active {
 }
 
 .woolly-option.is-on {
-  --selected-tint: color-mix(in srgb, var(--g2) 10%, var(--surface));
+  --selected-tint: color-mix(in srgb, var(--g2) var(--pick), var(--surface));
   border-color: transparent;
   background:
     linear-gradient(var(--selected-tint), var(--selected-tint)) padding-box,

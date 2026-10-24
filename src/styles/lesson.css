@@ -636,7 +636,7 @@
 }
 
 .pair-card.is-matched {
-  background: color-mix(in srgb, var(--g2) 10%, var(--surface));
+  background: color-mix(in srgb, var(--g2) var(--pick), var(--surface));
   border-color: var(--trim);
   box-shadow: none;
   color: var(--gold);
