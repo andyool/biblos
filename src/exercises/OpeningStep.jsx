@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { play } from '../lib/sound.js';
+import { burst } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 import { useStore } from '../lib/store.js';
@@ -23,6 +24,7 @@ export default function OpeningStep({ step, locked, onComplete }) {
     if (opt.ok) {
       setDone(true);
       play('correct');
+      burst();
       setTimeout(() => onComplete({ correct: 1, mistakes: wrong.length, missed: missed.current }), 650);
     } else {
       if (opt.miss != null) missed.current.push(opt.miss);

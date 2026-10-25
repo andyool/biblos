@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { bare, norm, shuffleMixed, splitPunct } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -53,6 +54,7 @@ export default function GlimpseStep({ step, tokens, locked, onComplete }) {
     setFilled(next);
     setUsed((u) => [...u, tile.id]);
     play('tick');
+    pop();
     if (next < group.length) return;
     if (round === groups.length - 1) {
       done.current = true;

@@ -10,6 +10,7 @@ import { ask, toast } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
 import Woolly from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
+import { burst, glory, lastTap, pop } from '../lib/fx.js';
 
 function SealDetail({ id, onClose }) {
   const state = useStore();
@@ -72,10 +73,13 @@ function sealNeeded(sealId, state) {
 function useItemAction(kind) {
   const state = useStore();
   return async (item) => {
+    // Where the item was tapped, for the burst once the dialog has asked.
+    const at = lastTap();
     const owned = state.owned[kind].includes(item.id);
     if (owned) {
       equip(kind, item.id);
       play('tap');
+      pop(at);
       cue('equip');
       return;
     }
@@ -84,6 +88,7 @@ function useItemAction(kind) {
       claimUnlocks();
       equip(kind, item.id);
       play('tap');
+      burst(at);
       cue('equip');
       return;
     }
@@ -101,6 +106,7 @@ function useItemAction(kind) {
     if (ok && buy(kind, item.id)) {
       equip(kind, item.id);
       play('level');
+      glory(at);
       cue('purchase');
       toast(`${item.name} is yours`, 'sparkle');
     }
@@ -118,6 +124,7 @@ function Shop() {
   const onEmblem = useItemAction('emblem');
 
   const getOil = async () => {
+    const at = lastTap();
     if (stats.freezes >= OIL.max) return toast('Your flasks are full.', 'lamp');
     if (stats.talents < OIL.price) {
       cue('cantAfford');
@@ -126,6 +133,7 @@ function Shop() {
     const ok = await ask({ title: 'A flask of oil', message: `Spend ${OIL.price} talents? If you miss a day, the oil keeps your lamp — and your streak — burning.`, confirm: 'Buy', woolly: 'think' });
     if (ok && buyOil()) {
       play('level');
+      burst(at);
       cue('purchase');
       toast('Flask filled', 'lamp');
     }

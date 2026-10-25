@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { play } from '../lib/sound.js';
+import { burst } from '../lib/fx.js';
 
 const COPY = {
   question: { kicker: 'What does it mean?' },
@@ -18,6 +19,7 @@ export default function ChoiceStep({ step, locked, onComplete }) {
     if (opt.ok) {
       setDone(true);
       play('correct');
+      burst();
       setTimeout(() => onComplete({ correct: 1, mistakes: wrong.length }), 450);
     } else {
       setWrong((w) => [...w, i]);

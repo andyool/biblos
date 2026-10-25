@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { shuffleMixed } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -38,6 +39,7 @@ export default function PairsStep({ step, locked, onComplete }) {
     const next = { ...matched, [h]: t };
     setMatched(next);
     play('tick');
+    pop();
     if (Object.keys(next).length === pairs.length && !done.current) {
       done.current = true;
       setTimeout(() => onComplete({ correct: pairs.length, mistakes: mistakes.current, missed: missed.current }), 420);

@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { shuffleMixed } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 
 const COPY = {
@@ -22,6 +23,7 @@ export default function SequenceStep({ step, locked, onComplete }) {
       const next = [...placed, i];
       setPlaced(next);
       play('tick');
+      pop();
       if (next.length === step.items.length) setTimeout(() => onComplete({ correct: step.items.length, mistakes: mistakes.current }), 380);
     } else {
       mistakes.current += 1;

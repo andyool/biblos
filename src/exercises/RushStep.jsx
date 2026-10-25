@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { bare, norm, shuffleMixed, splitPunct } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { formatRef } from '../data/books.js';
@@ -52,6 +53,7 @@ export default function RushStep({ step, tokens, locked, onComplete }) {
     setFilled(next);
     setUsed((u) => [...u, tile.id]);
     play('tick');
+    pop();
     if (next === total) {
       const took = (Date.now() - began) / 1000;
       const pace = took <= seconds ? 1 : Math.max(0, 1 - (took - seconds) / seconds);

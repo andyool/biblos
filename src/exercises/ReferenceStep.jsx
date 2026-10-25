@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { play } from '../lib/sound.js';
+import { burst } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -13,6 +14,7 @@ export default function ReferenceStep({ step, tokens, locked, onComplete }) {
     if (id === step.verseId) {
       setDone(true);
       play('correct');
+      burst();
       setTimeout(() => onComplete({ correct: 1, mistakes: wrong.length }), 450);
     } else {
       setWrong((w) => [...w, id]);

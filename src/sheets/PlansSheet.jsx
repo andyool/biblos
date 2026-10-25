@@ -7,6 +7,7 @@ import { versesInBook } from '../lib/plans.js';
 import { leavePlan, startPlan } from '../lib/actions.js';
 import { ask, toast } from '../lib/ui.js';
 import { cueSoon } from '../mascot/bus.js';
+import { burst, lastTap } from '../lib/fx.js';
 
 /** Choose a reading plan: a pace through Read Through, book after book. */
 export default function PlansSheet({ onClose }) {
@@ -15,11 +16,13 @@ export default function PlansSheet({ onClose }) {
 
   const choose = async (plan) => {
     if (plan.id === current) return onClose();
+    const at = lastTap();
     if (current) {
       const ok = await ask({ title: `Start ${plan.name.replace(/^The /, 'the ')}?`, message: 'You will stop following your current plan. Everything you have read stays read.', confirm: 'Start', woolly: 'think' });
       if (!ok) return undefined;
     }
     startPlan(plan.id);
+    burst(at);
     toast(`${plan.name} begins today`, 'calendar');
     cueSoon('plan');
     return onClose();

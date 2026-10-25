@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { bare, norm, shuffleMixed, splitPunct } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -27,6 +28,7 @@ export default function BankStep({ step, tokens, locked, onComplete }) {
       setFilled(next);
       setUsed((u) => [...u, tile.id]);
       play('tick');
+      pop();
       if (next === total) setTimeout(() => onComplete({ correct: total, mistakes: mistakes.current }), 380);
     } else {
       mistakes.current += 1;

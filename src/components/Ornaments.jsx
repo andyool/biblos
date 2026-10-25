@@ -296,9 +296,9 @@ function laurelBranch(side) {
   );
 }
 
-export function Laurel({ size = 180, className = '', children }) {
+export function Laurel({ size = 180, className = '', children, style, ...rest }) {
   return (
-    <div className={`laurel ${className}`} style={{ width: size, height: size }}>
+    <div className={`laurel ${className}`} style={{ width: size, height: size, ...style }} {...rest}>
       <svg viewBox="0 0 180 180" width={size} height={size} aria-hidden="true">
         <circle cx="90" cy="90" r="62" fill="url(#gold-glow)" />
         {laurelBranch(-1)}
@@ -380,12 +380,24 @@ function arc(cx, cy, r, a0, a1) {
   return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 }
 
-/** Five gold arcs around a disc — one per level. */
-export function LevelRing({ level = 0, size = 80, due = false }) {
+/**
+ * Five gold arcs around a disc — one per level. Grown just now from `grewFrom`, the new arcs are
+ * drawn in one after another, the first `at` ms in and each `gap` ms after the last (fx.css).
+ */
+export function LevelRing({ level = 0, size = 80, due = false, grewFrom = null, at = 0, gap = 180 }) {
   const segments = [0, 1, 2, 3, 4].map((i) => {
     const a0 = i * 72 + 5;
     const a1 = (i + 1) * 72 - 5;
-    return <path key={i} d={arc(40, 40, 37, a0, a1)} className={i < level ? 'ring-on' : 'ring-off'} />;
+    const d = arc(40, 40, 37, a0, a1);
+    if (grewFrom !== null && i >= grewFrom && i < level) {
+      return (
+        <g key={i}>
+          <path d={d} className="ring-off" />
+          <path d={d} className="ring-on is-new" pathLength={1} style={{ '--at': `${at + (i - grewFrom) * gap}ms` }} />
+        </g>
+      );
+    }
+    return <path key={i} d={d} className={i < level ? 'ring-on' : 'ring-off'} />;
   });
   return (
     <svg className={`level-ring ${due ? 'is-due' : ''}`} viewBox="0 0 80 80" width={size} height={size} aria-hidden="true">
@@ -424,24 +436,5 @@ export function LogoMark({ size = 96, className = '' }) {
       <path d="M91 63.5 C 83 61.5, 75 62.5, 68 66 M 91 69.5 C 83 67.5, 75 68.5, 68 72 M 91 75.5 C 83 73.5, 75 74.5, 68 78" stroke="var(--logo-lines)" strokeWidth="1" fill="none" strokeLinecap="round" />
       <path d="M20 86 C 34 82, 48 84, 60 92 C 72 84, 86 82, 100 86" stroke="url(#gold-stroke)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
     </svg>
-  );
-}
-
-/** Burst of gold sparks for celebrations. */
-export function Sparkles({ count = 26 }) {
-  return (
-    <div className="sparkles" aria-hidden="true">
-      {Array.from({ length: count }, (_, i) => {
-        const angle = (360 / count) * i + Math.random() * 10;
-        const dist = 90 + Math.random() * 110;
-        const style = {
-          '--dx': `${Math.cos((angle * Math.PI) / 180) * dist}px`,
-          '--dy': `${Math.sin((angle * Math.PI) / 180) * dist}px`,
-          '--delay': `${Math.random() * 0.25}s`,
-          '--size': `${4 + Math.random() * 7}px`,
-        };
-        return <i key={i} style={style} className={i % 3 === 0 ? 'spark-star' : ''} />;
-      })}
-    </div>
   );
 }

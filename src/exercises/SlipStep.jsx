@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { splitPunct } from '../lib/text.js';
 import { renderWord } from '../components/VerseText.jsx';
 import Glyph from '../components/Glyph.jsx';
@@ -30,6 +31,7 @@ export default function SlipStep({ step, tokens, locked, onComplete }) {
       const next = [...found, i];
       setFound(next);
       play('tick');
+      pop();
       finish(next, shown);
     } else {
       mistakes.current += 1;

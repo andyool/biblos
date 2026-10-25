@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { shuffleMixed } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -17,6 +18,7 @@ export default function OrderStep({ step, tokens, locked, onComplete }) {
       const next = [...placed, i];
       setPlaced(next);
       play('tick');
+      pop();
       if (next.length === phrases.length) {
         setTimeout(() => onComplete({ correct: phrases.length, mistakes: mistakes.current }), 380);
       }

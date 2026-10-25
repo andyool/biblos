@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -27,6 +28,7 @@ export default function SortStep({ step, locked, onComplete }) {
       return;
     }
     play('tick');
+    pop();
     setWent(sides.indexOf(ref));
     setCounts((c) => ({ ...c, [ref]: c[ref] + 1 }));
     setTimeout(() => {

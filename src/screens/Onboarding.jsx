@@ -1,6 +1,7 @@
 import { Divider } from '../components/Ornaments.jsx';
 import { setReadingBook, updateProfile, updateSettings } from '../lib/actions.js';
 import { play } from '../lib/sound.js';
+import { glory } from '../lib/fx.js';
 import Woolly from '../components/Woolly.jsx';
 
 // Everything a new user would otherwise be asked starts with a good default, and each can be
@@ -15,6 +16,7 @@ export default function Onboarding() {
     updateSettings({ ...START, onboarded: true });
     setReadingBook(FIRST_BOOK);
     play('complete');
+    glory();
   };
 
   return (

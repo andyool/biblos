@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { play } from '../lib/sound.js';
+import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
 
@@ -35,6 +36,7 @@ export default function ChainStep({ step, tokens, locked, onComplete }) {
     }
     setChosen(k);
     play('tick');
+    pop();
     setTimeout(() => {
       if (round === rounds.length - 1) {
         onComplete({ correct: rounds.length, mistakes: mistakes.current, missed: missed.current });

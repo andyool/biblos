@@ -1461,48 +1461,6 @@
   margin-top: 26px;
 }
 
-.sparkles {
-  position: absolute;
-  left: 50%;
-  top: 140px;
-  width: 0;
-  height: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.sparkles i {
-  position: absolute;
-  width: var(--size);
-  height: var(--size);
-  border-radius: 50%;
-  background: var(--grad-dome);
-  box-shadow: 0 0 8px color-mix(in srgb, var(--g1) 70%, transparent);
-  opacity: 0;
-  animation: spark 1.5s cubic-bezier(0.1, 0.7, 0.3, 1) var(--delay) forwards;
-}
-
-.sparkles i.spark-star {
-  border-radius: 0;
-  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-  width: calc(var(--size) * 1.8);
-  height: calc(var(--size) * 1.8);
-}
-
-@keyframes spark {
-  0% {
-    opacity: 1;
-    transform: translate(0, 0) scale(0.4);
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(var(--dx), var(--dy)) scale(1);
-  }
-}
-
 /* ─── Levels ─────────────────────────────────────────────────────────────── */
 
 .level-medal {
@@ -1613,11 +1571,6 @@
 .level-progress.is-up .level-bar-head :is(strong, small) {
   color: var(--gold);
   font-style: normal;
-}
-
-.level-progress .sparkles {
-  top: 50%;
-  left: 42px;
 }
 
 .complete-seal-unlock {

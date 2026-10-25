@@ -11,6 +11,7 @@ import { toast } from '../lib/ui.js';
 import { KIND, MAX_TEXT, entriesAbout, shortDate } from '../lib/journal.js';
 import { getTranslation } from '../data/translations.js';
 import { cue } from '../mascot/bus.js';
+import { pop } from '../lib/fx.js';
 
 // What you are writing stays on the phone until the reading is finished, so leaving part-way
 // (or the app being closed) doesn't lose it: { text, kind, quotes: [verse numbers] }.
@@ -92,6 +93,7 @@ export default function ReflectStep({ step, session, onComplete }) {
     setText(tr, id, { verses: [{ v: v.v, t: v.t }], src: getTranslation(tr).source });
     addCustomVerses([id], tr);
     toast(`Verse ${v.v} added to My Verses — learn it from the Path tab.`, 'heart');
+    pop();
     cue('verseAdded');
   };
   const quote = (v) => change({ quotes: draft.quotes.includes(v.v) ? draft.quotes.filter((n) => n !== v.v) : [...draft.quotes, v.v].sort((a, b) => a - b) });

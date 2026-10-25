@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Glyph from '../components/Glyph.jsx';
 import Sheet from '../components/Sheet.jsx';
 import { ask } from '../lib/ui.js';
@@ -15,6 +15,7 @@ import ReflectStep from '../reading/ReflectStep.jsx';
 import PortionStep from '../reading/PortionStep.jsx';
 import Woolly from '../components/Woolly.jsx';
 import { feedbackAct } from '../mascot/reactions.js';
+import { bump, burst, pop, useGrowthGlint } from '../lib/fx.js';
 
 const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, reflect: ReflectStep, portion: PortionStep };
 const GRADED = new Set(['question', 'summary', 'flow', 'recap']);
@@ -33,12 +34,24 @@ export default function Reading({ session, onExit, onFinish }) {
   const [lookAgain, setLookAgain] = useState(false);
   // How far down a day's reading you have scrolled.
   const [scrolled, setScrolled] = useState(0);
+  const fillRef = useRef(null);
+  const iconRef = useRef(null);
   const step = session.steps[index];
   const Step = STEPS[step.type];
   const last = index + 1 >= session.steps.length;
   const passageAt = session.steps.findIndex((s) => s.type === 'passage');
   const passageSeen = passageAt >= 0 && passageAt < index;
   const progress = session.plain ? scrolled : (index + (feedback ? 1 : 0)) / session.steps.length;
+
+  // Not while a day's reading is scrolled through: the bar moves with every line.
+  useGrowthGlint(fillRef, progress, !session.plain);
+
+  useEffect(() => {
+    if (!feedback || feedback.tone === 'learning') return undefined;
+    bump(iconRef.current, { growing: true, size: 1.2, delay: 120 });
+    const t = setTimeout(() => (feedback.tone === 'perfect' ? burst : pop)(iconRef.current), 300);
+    return () => clearTimeout(t);
+  }, [feedback]);
 
   const advance = (all) => {
     if (last) onFinish(all);
@@ -76,7 +89,7 @@ export default function Reading({ session, onExit, onFinish }) {
           <Glyph name="close" size={22} />
         </button>
         <div className="lesson-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-          <div className="lesson-progress-fill" style={{ width: `${Math.max(4, progress * 100)}%` }} />
+          <div ref={fillRef} className="lesson-progress-fill" style={{ width: `${Math.max(4, progress * 100)}%` }} />
         </div>
         <button className={`icon-btn ${passageSeen ? '' : 'is-hidden'}`} onClick={() => setLookAgain(true)} disabled={!passageSeen} aria-label="Look at the passage again">
           <Glyph name="book" size={22} />
@@ -93,7 +106,7 @@ export default function Reading({ session, onExit, onFinish }) {
           <div className="feedback-inner">
             <Woolly act={feedbackAct(feedback.tone)} size={118} peek delay={200} className="feedback-woolly" />
             <div className="feedback-head">
-              <span className="feedback-icon">
+              <span ref={iconRef} className="feedback-icon">
                 <Glyph name={feedback.tone === 'learning' ? 'seed' : 'check'} size={22} strokeWidth={2} />
               </span>
               <div>

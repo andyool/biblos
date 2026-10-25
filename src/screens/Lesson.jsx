@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Glyph from '../components/Glyph.jsx';
 import { ask } from '../lib/ui.js';
 import { play } from '../lib/sound.js';
@@ -23,6 +23,7 @@ import SpellStep from '../exercises/SpellStep.jsx';
 import { ACTIVITY_NAMES, SKILLS } from '../lib/adapt.js';
 import Woolly from '../components/Woolly.jsx';
 import { feedbackAct } from '../mascot/reactions.js';
+import { bump, burst, pop, useGrowthGlint } from '../lib/fx.js';
 
 const EXERCISES = {
   read: ReadStep,
@@ -76,6 +77,9 @@ export default function Lesson({ session, onExit, onFinish }) {
   const [results, setResults] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [combo, setCombo] = useState(0);
+  const fillRef = useRef(null);
+  const iconRef = useRef(null);
+  const comboRef = useRef(null);
   const step = queue[index];
   const tokens = step.tokens || session.tokens[step.verseId];
   const Exercise = EXERCISES[step.type];
@@ -89,6 +93,25 @@ export default function Lesson({ session, onExit, onFinish }) {
     if (session.kind === 'practice') return 'Practice';
     return `Lesson ${(session.levels[session.verseIds[0]] || 0) + 1} of 4`;
   }, [session]);
+
+  useGrowthGlint(fillRef, progress);
+
+  // The check is struck as the feedback rises: a burst for a flawless step, a pop for a good one.
+  // A flawless run lights the flame beside the bar a little brighter each time.
+  useEffect(() => {
+    if (!feedback || feedback.tone === 'learning') return undefined;
+    bump(iconRef.current, { growing: true, size: 1.2, delay: 120 });
+    const timers = [setTimeout(() => (feedback.tone === 'perfect' ? burst : pop)(iconRef.current), 300)];
+    if (feedback.combo >= 2) {
+      timers.push(
+        setTimeout(() => {
+          bump(comboRef.current, { size: feedback.combo >= 5 ? 1.5 : 1.3 });
+          pop(comboRef.current);
+        }, 520),
+      );
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [feedback]);
 
   const finish = (all) => onFinish(all);
 
@@ -141,9 +164,9 @@ export default function Lesson({ session, onExit, onFinish }) {
           <Glyph name="close" size={22} />
         </button>
         <div className="lesson-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-          <div className="lesson-progress-fill" style={{ width: `${Math.max(4, progress * 100)}%` }} />
+          <div ref={fillRef} className="lesson-progress-fill" style={{ width: `${Math.max(4, progress * 100)}%` }} />
         </div>
-        <div className={`combo ${combo >= 2 ? 'is-on' : ''}`} aria-hidden={combo < 2}>
+        <div ref={comboRef} className={`combo ${combo >= 2 ? 'is-on' : ''}`} aria-hidden={combo < 2}>
           <Glyph name="flame" size={16} />
           {combo}
         </div>
@@ -173,7 +196,7 @@ export default function Lesson({ session, onExit, onFinish }) {
           <div className="feedback-inner">
             <Woolly act={feedbackAct(feedback.tone, feedback)} size={118} peek delay={200} className="feedback-woolly" />
             <div className="feedback-head">
-              <span className="feedback-icon">
+              <span ref={iconRef} className="feedback-icon">
                 <Glyph name={feedback.tone === 'learning' ? 'seed' : 'check'} size={22} strokeWidth={2} />
               </span>
               <div>

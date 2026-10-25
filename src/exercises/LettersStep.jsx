@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { splitPunct } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { glint } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import Glyph from '../components/Glyph.jsx';
 import Keyboard from './Keyboard.jsx';
@@ -50,6 +51,7 @@ export default function LettersStep({ step, tokens, locked, onComplete }) {
     if (i > end) return;
     if (ch === tokens[i].f) {
       play('tick');
+      glint();
       setFlash({ key: ch, kind: 'ok' });
       advance(i, 'ok');
     } else {

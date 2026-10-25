@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Laurel, Seal, Sparkles, Divider, LevelRing } from '../components/Ornaments.jsx';
+import { useEffect, useRef } from 'react';
+import { Laurel, Seal, Divider, LevelRing } from '../components/Ornaments.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { play } from '../lib/sound.js';
 import { LEVELS } from '../data/levels.js';
@@ -13,6 +13,7 @@ import Woolly from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
 import { useApp } from '../AppContext.js';
 import { useStore } from '../lib/store.js';
+import { burst, glory, pop, useCountUp } from '../lib/fx.js';
 
 function headline(summary) {
   if (summary.kind === 'reading') return summary.reading.bookDone ? 'The whole book!' : 'Well read';
@@ -24,11 +25,32 @@ function headline(summary) {
   return 'Well done';
 }
 
+// When each part of the page is marked, in ms: the laurel first, then the lamp, each verse's new
+// arcs (drawn one after another), the banners and the seals, so the gold runs down the page.
+const LAUREL_AT = 150;
+const LAMP_AT = 800;
+const GROW_AT = 700;
+const ARC_GAP = 180;
+const VERSE_GAP = 420;
+const BANNER_AT = 1100;
+const SEAL_AT = 1300;
+const SEAL_GAP = 240;
+const FX = { pop, burst, glory };
+
+/** Marks an element to be struck by a burst `ms` in (see the effect below), and times its CSS by it. */
+const strike = (fx, ms, css = ms) => ({ 'data-fx': fx, 'data-fx-at': ms, style: { '--at': `${css}ms` } });
+
 export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
   const { openSheet } = useApp();
   // What you wrote after the reading, while it is still in the journal.
   const entry = useStore((s) => s.journal[summary.reading?.entry]);
   const levelled = summary.changes.filter((c) => c.to > c.from);
+  const growAt = Object.fromEntries(levelled.map((c, i) => [c.id, GROW_AT + i * VERSE_GAP]));
+  const failed = summary.changes.some((c) => c.note === 'almost' || c.note === 'faded');
+  // After the book's banner, when there is one.
+  const goalAt = BANNER_AT + (summary.reading?.bookDone ? 500 : 0);
+  const xp = useCountUp(summary.xp, { delay: 250, duration: 800 });
+  const page = useRef(null);
   // The very first lesson or reading: all the XP there is came from it.
   const first = summary.totalXp === summary.xp;
   useBack(onDone);
@@ -38,7 +60,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
     // Give the lamb a moment to appear, then react to how it went.
     const t = setTimeout(() => {
       if (summary.kind === 'reading') cue('readFinish', { bookDone: summary.reading.bookDone });
-      else if (summary.changes.some((c) => c.note === 'almost' || c.note === 'faded')) cue('fail');
+      else if (failed) cue('fail');
       else
         cue('pass', {
           mastered: levelled.some((c) => c.to >= 4),
@@ -47,17 +69,19 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
           streak: summary.streakExtended,
         });
     }, 350);
-    return () => clearTimeout(t);
+    // Each marked part of the page is struck in its turn.
+    const timers = [...page.current.querySelectorAll('[data-fx]')].map((el) => setTimeout(() => FX[el.dataset.fx](el), Number(el.dataset.fxAt)));
+    return () => [t, ...timers].forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="complete">
-      <Sparkles />
+    <div className="complete" ref={page}>
       <div className="complete-hero">
         <Woolly size={168} listen base={summary.kind === 'reading' ? 'read' : 'idle'} className="complete-woolly" />
-        <Laurel size={150}>
+        {/* Not quite there: a little light, not the whole shower. */}
+        <Laurel size={150} {...strike(failed ? 'burst' : 'glory', LAUREL_AT)}>
           <div className="complete-xp">
-            <span className="complete-xp-num gold-text">+{summary.xp}</span>
+            <span className="complete-xp-num gold-text">+{xp}</span>
             <span className="complete-xp-label">XP</span>
           </div>
         </Laurel>
@@ -75,7 +99,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
         <span>
           <Glyph name="coin" size={16} className="coin" /> +{summary.talents}
         </span>
-        <span className={summary.streakExtended ? 'is-glow' : ''}>
+        <span className={summary.streakExtended ? 'is-glow' : ''} {...(summary.streakExtended && strike('pop', LAMP_AT + 120, LAMP_AT))}>
           <Glyph name="lamp" size={17} lit /> {summary.streak} day{summary.streak === 1 ? '' : 's'}
         </span>
       </p>
@@ -100,8 +124,8 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
       <div className="complete-list">
         {summary.changes.map((c) => (
           <div key={c.id} className="complete-verse">
-            <div className="complete-verse-medal">
-              <LevelRing level={c.to} size={46} />
+            <div className="complete-verse-medal" {...(c.id in growAt && strike('pop', growAt[c.id] + (c.to - c.from - 1) * ARC_GAP + 300))}>
+              <LevelRing level={c.to} size={46} grewFrom={c.id in growAt ? c.from : null} at={growAt[c.id]} gap={ARC_GAP} />
               <Glyph name={LEVELS[Math.max(1, c.to)].icon} size={18} />
             </div>
             <div className="complete-verse-text">
@@ -153,12 +177,12 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
           </button>
         )}
         {summary.reading?.bookDone && (
-          <div className="complete-banner">
+          <div className="complete-banner" {...strike('burst', BANNER_AT + 200, BANNER_AT)}>
             <Glyph name="crown" size={20} /> You have read all of {BOOK_BY_CODE[summary.reading.book].name} — +{BOOK_BONUS} talents
           </div>
         )}
         {summary.goalReached && (
-          <div className="complete-banner">
+          <div className="complete-banner" {...strike('pop', goalAt + 200, goalAt)}>
             <Glyph name="target" size={20} /> Daily goal reached — +5 talents
           </div>
         )}
@@ -168,9 +192,12 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
         <div className="complete-seals">
           <p className="ex-kicker">New seal{summary.earned.length > 1 ? 's' : ''}</p>
           <div className="complete-seals-row">
-            {summary.earned.map((a) => (
+            {summary.earned.map((a, i) => (
               <div key={a.id} className="complete-seal">
-                <Seal icon={a.icon} size={70} />
+                {/* Struck as the wax is pressed down. */}
+                <span className="complete-seal-press" {...strike('burst', SEAL_AT + i * SEAL_GAP + 300, SEAL_AT + i * SEAL_GAP)}>
+                  <Seal icon={a.icon} size={70} />
+                </span>
                 <strong>{a.name}</strong>
                 <small>+{a.reward} talents</small>
                 {unlocksFor(a.id).map((u) => (

@@ -10,6 +10,7 @@ import { readingTr, useBook } from '../lib/reading.js';
 import { shareText } from '../lib/device.js';
 import { ask, toast } from '../lib/ui.js';
 import { cue, cueSoon } from '../mascot/bus.js';
+import { burst, pop } from '../lib/fx.js';
 
 // The parts of an entry that can be changed while writing it.
 const formOf = (e) => ({
@@ -44,6 +45,7 @@ function Answered({ entry }) {
 
   const mark = () => {
     announce(updateJournalEntry(entry.id, { answered: { at: Date.now(), ...(note.trim() && { note: note.trim() }) } }), 'Marked as answered');
+    burst();
     cue('journal');
     setNote(null);
   };
@@ -165,6 +167,7 @@ export default function JournalEntrySheet({ id, draft, onClose }) {
     if (!id) {
       const { earned } = addJournalEntry(tidy(done));
       announce(earned, 'Saved to your journal');
+      pop();
       cueSoon('journal');
       onClose();
       return;

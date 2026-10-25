@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { splitPunct } from '../lib/text.js';
 import { play } from '../lib/sound.js';
+import { glint, pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import Glyph from '../components/Glyph.jsx';
 import Keyboard from './Keyboard.jsx';
@@ -65,7 +66,11 @@ export default function SpellStep({ step, tokens, locked, onComplete }) {
       const np = p + 1;
       state.current = { k: wk, pos: np };
       setPos(np);
-      if (np >= target.n.length) nextWord(wordSlips.current >= 3 ? 'miss' : 'ok');
+      // A letter glints under the finger; a whole word, more.
+      if (np >= target.n.length) {
+        pop();
+        nextWord(wordSlips.current >= 3 ? 'miss' : 'ok');
+      } else glint();
     } else {
       mistakes.current += 1;
       misses.current += 1;

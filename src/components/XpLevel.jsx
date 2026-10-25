@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { xpLevel } from '../data/levels.js';
 import { play } from '../lib/sound.js';
-import { Sparkles } from './Ornaments.jsx';
+import { glory } from '../lib/fx.js';
 
 /** A gold medallion with the level on it. */
 function LevelMedal({ level, size = 46, className = '' }) {
@@ -42,8 +42,7 @@ export function LevelProgress({ xp, totalXp, levelUp }) {
   const after = xpLevel(totalXp);
   // 0: as it was, 1: filling, 2: the new level, 3: filling the new level.
   const [phase, setPhase] = useState(0);
-  // Made once, so the sparks keep their course while the bar moves on.
-  const burst = useMemo(() => <Sparkles count={18} />, []);
+  const root = useRef(null);
 
   useEffect(() => {
     const timers = [setTimeout(() => setPhase(1), 700)];
@@ -52,6 +51,7 @@ export function LevelProgress({ xp, totalXp, levelUp }) {
         setTimeout(() => {
           setPhase(2);
           play('level');
+          glory(root.current?.querySelector('.level-medal'));
         }, 1700),
         setTimeout(() => setPhase(3), 1800),
       );
@@ -64,8 +64,7 @@ export function LevelProgress({ xp, totalXp, levelUp }) {
   const fill = phase === 0 ? before.into / before.span : phase === 1 ? (levelUp ? 1 : after.into / after.span) : phase === 2 ? 0 : after.into / after.span;
 
   return (
-    <div className={`level-progress ${reached ? 'is-up' : ''}`}>
-      {reached && burst}
+    <div ref={root} className={`level-progress ${reached ? 'is-up' : ''}`}>
       <LevelMedal key={shown.level} level={shown.level} size={52} className={reached ? 'is-new' : ''} />
       <div className="level-bar-text">
         <div className="level-bar-head">

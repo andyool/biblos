@@ -16,6 +16,7 @@ import { addCustomVerses, setActivePath } from '../lib/actions.js';
 import { useBack } from '../lib/nav.js';
 import { toast } from '../lib/ui.js';
 import { cueSoon } from '../mascot/bus.js';
+import { burst } from '../lib/fx.js';
 
 // Find a verse the way you would in a printed Bible: a book, then a chapter, then the verses.
 // You can also type a reference, which opens its chapter with those verses chosen, or some of
@@ -303,6 +304,7 @@ export default function AddVerseSheet({ onClose }) {
     addCustomVerses(ids, tr);
     setActivePath('mine');
     toast(fresh.length ? `${label} added to My Verses` : 'Already in My Verses', 'check');
+    if (fresh.length) burst();
     if (fresh.length && !andStart) cueSoon('verseAdded');
     onClose();
     const first = fresh[0] || ids[0];
