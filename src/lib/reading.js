@@ -73,6 +73,17 @@ export function sectionRef(sec) {
   return formatRef(sec.id);
 }
 
+/** Several passages in a row: "Mark 1:1–2:12", "Mark 4:1–34", or "Psalms 23–25" for whole chapters. */
+export function portionRef(secs) {
+  const first = secs[0];
+  const last = secs[secs.length - 1];
+  if (secs.length === 1) return sectionRef(first);
+  if (first.chapter === last.chapter) return formatRef(`${first.book}.${first.chapter}.${first.start}-${last.end}`);
+  const name = first.book === 'PSA' ? 'Psalms' : bookLabel(first.book);
+  if (first.start === 1 && last.whole) return `${name} ${first.chapter}–${last.chapter}`;
+  return `${name} ${first.chapter}:${first.start}–${last.chapter}:${last.end}`;
+}
+
 /**
  * Readings done before a book had its guide (or in another Bible) have other section ids.
  * Returns the done map with every section they cover in full marked as read, or null if
@@ -116,9 +127,10 @@ export function readingTr(state, code = state.reading.book) {
 
 // ── Passage text ───────────────────────────────────────────────────────────────
 
-// The last few passages stay on the phone, so the current and next readings open offline.
+// The last few passages stay on the phone, so the current and next readings open offline
+// (a day's reading in a plan can be a dozen passages).
 const KEY = 'biblos.passages.v1';
-const KEEP = 8;
+const KEEP = 24;
 
 let kept = [];
 try {
@@ -231,6 +243,28 @@ export function buildReading({ sec, sections, guide, verses, tr }) {
     previous: prev ? { ref: sectionRef(prev), text: prev.summary } : null,
     sectionIds: sections.map((s) => s.id),
     steps: steps.map((s, i) => ({ ...s, key: `${i}-${s.type}` })),
+    startedAt: Date.now(),
+  };
+}
+
+/**
+ * A day's reading in a plan: its passages one after another, with nothing to answer. A plan
+ * can ask for many passages a day, so a guided reading of each would take far too long.
+ * Each passage is worth less than a guided one, as there is less to do.
+ */
+export function buildPortion({ secs, ahead, sections, guide, verses, tr }) {
+  return {
+    kind: 'reading',
+    plain: true,
+    sec: secs[0],
+    secs,
+    tr,
+    passages: secs.map((sec, i) => ({ sec, verses: verses[i] })),
+    ref: portionRef(secs),
+    title: ahead ? 'Reading ahead' : 'Today’s reading',
+    intro: secs[0].index === 0 ? guide.intro : null,
+    sectionIds: sections.map((s) => s.id),
+    steps: [{ type: 'portion', key: '0-portion', xp: Math.min(30, 4 * secs.length) }],
     startedAt: Date.now(),
   };
 }

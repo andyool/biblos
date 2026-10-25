@@ -9,7 +9,8 @@ import { useApp } from '../AppContext.js';
 import { BOOK_BY_CODE, NEW_TESTAMENT, chaptersIn, findBook, formatRef, makeId, oldTestament, parseId, parseReference } from '../data/books.js';
 import { versesIn } from '../data/chapters.js';
 import { getTranslation } from '../data/translations.js';
-import { loadRange } from '../lib/bible.js';
+import { loadRange, searchVerses } from '../lib/bible.js';
+import { cleanVerseText } from '../lib/text.js';
 import { getText, setText, useTextsVersion } from '../lib/texts.js';
 import { addCustomVerses, setActivePath } from '../lib/actions.js';
 import { useBack } from '../lib/nav.js';
@@ -17,7 +18,8 @@ import { toast } from '../lib/ui.js';
 import { cueSoon } from '../mascot/bus.js';
 
 // Find a verse the way you would in a printed Bible: a book, then a chapter, then the verses.
-// You can also type a reference, which opens its chapter with those verses chosen.
+// You can also type a reference, which opens its chapter with those verses chosen, or some of
+// its words, which finds the verses that have them.
 
 const squash = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -64,6 +66,122 @@ function useChapter(tr, book, chapter) {
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const current = result.key === key ? result : { status: 'loading' };
   return { ...current, retry: () => setAttempt((n) => n + 1) };
+}
+
+// A search waits until typing pauses.
+const SEARCH_DELAY = 400;
+
+/**
+ * The verses with the words typed in them (see searchVerses): { status, found, error }. While a
+ * new search runs, the last one's verses stay in view.
+ */
+function useVerseSearch(tr, words) {
+  const key = words ? `${tr}|${words}` : null;
+  const [result, setResult] = useState({ key: null });
+  useEffect(() => {
+    if (!key) return undefined;
+    let alive = true;
+    const timer = setTimeout(() => {
+      searchVerses(tr, words)
+        .then((found) => alive && setResult({ key, status: 'ready', found }))
+        .catch((error) => alive && setResult({ key, status: 'error', error }));
+    }, SEARCH_DELAY);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!key) return { status: 'idle' };
+  if (result.key === key) return result;
+  return { status: 'loading', found: result.found };
+}
+
+const OPEN = '';
+const CLOSE = '';
+
+/** A found verse's words in pieces, with the words searched for marked: [{ t, hit }]. */
+function hitPieces(hit, tr) {
+  // The marks are swapped for characters the cleaning leaves alone, and back again after it.
+  const raw = String(hit.text).replace(/<mark>/gi, OPEN).replace(/<\/mark>/gi, CLOSE);
+  const clean = cleanVerseText(raw, { book: hit.book, chapter: hit.chapter, verse: hit.verse, boldHeadings: getTranslation(tr).boldHeadings });
+  const pieces = [];
+  let depth = 0;
+  for (const part of clean.split(/([])/)) {
+    if (part === OPEN) depth += 1;
+    else if (part === CLOSE) depth = Math.max(0, depth - 1);
+    else if (part) pieces.push({ t: part, hit: depth > 0 });
+  }
+  return pieces;
+}
+
+function SearchHits({ hits, tr, mine, onPick }) {
+  return (
+    <div className="verse-pick-list">
+      {hits.map((h) => {
+        const kept = mine.some((r) => r.book === h.book && r.chapter === h.chapter && h.verse >= r.start && h.verse <= r.end);
+        return (
+          <button key={h.id} className="verse-pick is-tile search-hit" onClick={() => onPick(h)}>
+            <span className="verse-pick-text">
+              <strong className="search-hit-ref gold-soft">{formatRef(h.id)}</strong>
+              {hitPieces(h, tr).map((p, i) => (p.hit ? <mark key={i}>{renderWord(p.t)}</mark> : <span key={i}>{renderWord(p.t)}</span>))}
+              {kept && (
+                <small className="verse-pick-saved">
+                  <Glyph name="check" size={12} strokeWidth={2} /> In My Verses
+                </small>
+              )}
+            </span>
+            <Glyph name="chevron" size={16} className="search-hit-chev" />
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Verses found by their words: the whole phrase first, then those with some of the words. */
+function SearchResults({ search, words, tr, mine, onPick }) {
+  const { found } = search;
+  if (!found) {
+    if (search.status === 'error') {
+      return (
+        <p className="empty">
+          {search.error?.kind === 'offline' ? 'Finding verses by their words needs a connection.' : 'The search could not be reached just now.'} You can still type a reference like John 3:16, or clear this to choose a book.
+        </p>
+      );
+    }
+    return (
+      <div className="verse-pick-list">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="verse-pick is-tile is-loading">
+            <div className="loading-lines">
+              <span />
+              <span />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  const exact = found.results.slice(0, found.exact);
+  const some = found.results.slice(found.exact);
+  return (
+    <div className={`search-results ${search.status === 'loading' ? 'is-stale' : ''}`} aria-busy={search.status === 'loading'}>
+      {found.tr !== tr && <p className="small-print pick-hint">The {tr} can’t be searched, so these are the words of the {found.tr}. Tap a verse to see it in the {tr}.</p>}
+      {!found.results.length && <p className="empty">No verse has those words. Try fewer of them, or another Bible.</p>}
+      {exact.length > 0 && (
+        <>
+          <h3 className="section-heading">“{words}”</h3>
+          <SearchHits hits={exact} tr={found.tr} mine={mine} onPick={onPick} />
+        </>
+      )}
+      {some.length > 0 && (
+        <>
+          <h3 className="section-heading">{exact.length ? 'With some of the words' : 'With these words'}</h3>
+          <SearchHits hits={some} tr={found.tr} mine={mine} onPick={onPick} />
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function AddVerseSheet({ onClose }) {
@@ -127,6 +245,14 @@ export default function AddVerseSheet({ onClose }) {
     { title: 'New Testament', books: NEW_TESTAMENT.filter((b) => matchesBook(b, key)) },
   ];
   const found = testaments.flatMap((t) => t.books);
+  // Words that are no book's name: find the verses that have them.
+  const words = query.trim().replace(/\s+/g, ' ');
+  const searchFor = step === 'book' && !parsed && !found.length && /\p{L}{3}/u.test(words) ? words : '';
+  const search = useVerseSearch(tr, searchFor);
+  const openHit = (hit) => {
+    goTo(hit.book, hit.chapter, [hit.verse]);
+    setScrollTo(hit.verse);
+  };
   const goTyped = () => {
     if (!typed) {
       // Just a book: open it (the one named, or else the first that matches).
@@ -213,9 +339,10 @@ export default function AddVerseSheet({ onClose }) {
               className="input pick-search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && goTyped()}
-              placeholder="Find a book, or John 3:16"
-              aria-label="Find a book or type a reference"
+              // With words to find, Enter just puts the keyboard away so the verses can be seen.
+              onKeyDown={(e) => e.key === 'Enter' && (searchFor ? e.currentTarget.blur() : goTyped())}
+              placeholder="A book, John 3:16, or some words"
+              aria-label="Find a book, type a reference, or search for words"
               autoCapitalize="words"
               autoCorrect="off"
               enterKeyHint="go"
@@ -258,7 +385,11 @@ export default function AddVerseSheet({ onClose }) {
               </div>
             );
           })}
-          {!found.length && <p className="empty">No book by that name.</p>}
+          {searchFor ? (
+            <SearchResults search={search} words={searchFor} tr={tr} mine={mine} onPick={openHit} />
+          ) : (
+            !found.length && <p className="empty">No book by that name.</p>
+          )}
         </>
       )}
 

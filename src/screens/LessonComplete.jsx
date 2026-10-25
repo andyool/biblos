@@ -66,9 +66,12 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
       </div>
 
       <p className="complete-facts">
-        <span>
-          <Glyph name="target" size={16} /> {Math.round(summary.accuracy * 100)}%
-        </span>
+        {/* Just reading has nothing to be right or wrong about. */}
+        {!summary.plain && (
+          <span>
+            <Glyph name="target" size={16} /> {Math.round(summary.accuracy * 100)}%
+          </span>
+        )}
         <span>
           <Glyph name="coin" size={16} className="coin" /> +{summary.talents}
         </span>

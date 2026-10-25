@@ -88,8 +88,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Bible chapters from bolls.life never change — keep them for offline use.
-  if (url.hostname === 'bolls.life') {
+  // Bible chapters from bolls.life never change — keep them for offline use. (Not searches:
+  // there's no end to those, and they need a connection anyway.)
+  if (url.hostname === 'bolls.life' && url.pathname.startsWith('/get-text/')) {
     event.respondWith(cacheFirst(request, TEXTS));
   }
 });

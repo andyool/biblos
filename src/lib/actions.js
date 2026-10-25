@@ -404,12 +404,14 @@ export function carryOverReading(code, sections) {
 export const BOOK_BONUS = 25;
 
 /**
- * Apply a finished reading. results: [{ type, correct, mistakes, xp, note? }]
+ * Apply a finished reading: one passage with its questions, or a day's passages in a plan
+ * (session.secs), just read. results: [{ type, correct, mistakes, xp, note? }]
  * Returns a summary for the celebration screen.
  */
 export function finishReading(session, results) {
   const now = Date.now();
   const { sec } = session;
+  const secs = session.secs || [sec];
   let summary = null;
 
   setState((s0) => {
@@ -417,12 +419,14 @@ export function finishReading(session, results) {
     let { stats } = reconcileStats(s0.stats, dayKey(at));
     const correct = results.reduce((a, r) => a + (r.correct || 0), 0);
     const mistakes = results.reduce((a, r) => a + (r.mistakes || 0), 0);
-    const perfect = mistakes === 0;
+    // With nothing to answer, there is nothing to be flawless at.
+    const perfect = !session.plain && mistakes === 0;
     const xp = results.reduce((sum, r) => sum + (r.xp || 0), 0) + 5 + (perfect ? 5 : 0);
     let talents = 3 + (perfect ? 2 : 0);
 
     const book = s0.reading.books[sec.book] || { done: {}, started: now };
-    const done = { ...book.done, [sec.id]: book.done[sec.id] || now };
+    const done = { ...book.done };
+    for (const s of secs) done[s.id] ||= now;
     const bookDone = !book.finished && session.sectionIds.every((id) => done[id]);
     if (bookDone) talents += BOOK_BONUS;
 
@@ -447,7 +451,8 @@ export function finishReading(session, results) {
     stats = {
       ...day.stats,
       talents: stats.talents + talents,
-      readings: (stats.readings || 0) + 1,
+      // Each passage read counts as a reading.
+      readings: (stats.readings || 0) + secs.length,
       booksRead: (stats.booksRead || 0) + (bookDone ? 1 : 0),
     };
 
@@ -466,6 +471,7 @@ export function finishReading(session, results) {
       talents: talents + awarded.earned.reduce((a, e) => a + e.reward, 0),
       accuracy: correct + mistakes ? correct / (correct + mistakes) : 1,
       perfect,
+      plain: Boolean(session.plain),
       changes: [],
       reading: { id: sec.id, ref: session.ref, title: session.title, bookDone, book: sec.book, entry: entry?.id },
       streak: day.streak,

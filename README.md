@@ -2,9 +2,9 @@
 
 Biblos is a phone app for learning Bible verses by heart, a few minutes at a time. You add it to your Home Screen from the web, so there's no App Store involved.
 
-- **Paths**: 16 curated collections (Foundations, Psalm 23, the Lord's Prayer, the Beatitudes, the Armour of God…), plus any verse you add yourself.
+- **Paths**: 16 curated collections (Foundations, Psalm 23, the Lord's Prayer, the Beatitudes, the Armour of God…), plus any verse you add yourself. Find it by book and chapter, by typing a reference, or by some of its words.
 - **Lessons**: each verse grows through *Sown → Rooted → Growing → Fruitful → Hidden in the Heart*. The exercises are reading, ordering phrases, filling gaps, a word bank and first-letter recall on a gold keyboard.
-- **Read through**: read whole books of the Bible in order, one passage at a sitting, for the meaning rather than the words. Every book is guided: each passage has a focus, questions on the meaning (with an explanation after each answer), a summary to choose and something to reflect on. A new chapter starts by recalling the story so far, and any verse you read can be added to your memory path.
+- **Read through**: read whole books of the Bible in order, one passage at a sitting, for the meaning rather than the words. Every book is guided: each passage has a focus, questions on the meaning (with an explanation after each answer), a summary to choose and something to reflect on. A new chapter starts by recalling the story so far, and any verse you read can be added to your memory path. A reading plan (the Gospels in 30 days, the New Testament in 90, the Psalms in 60, the whole Bible in a year) gives each day's passages to read in one sitting, just the text, since a guided reading of each would take too long; any passage can still be read with its questions.
 - **Spaced review**: memorised verses come back just before you'd forget them. A verse is *Hidden in the Heart* once its reviews go well enough that the next one is three weeks away: at least three good reviews after it is Fruitful. The verse sheet shows how many are left.
 - **Rewards**: XP, a daily goal, a streak lamp (with "flasks of oil" that keep a streak alive if you miss a day), talents to spend, and 27 seals to earn.
 - **Customisation**: 12 themes, 8 verse letterings, 8 card frames and 21 emblems.

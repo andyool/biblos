@@ -818,6 +818,58 @@
   font-size: calc(19px * var(--verse-scale) * var(--text-scale, 1));
 }
 
+/* A day's reading in a plan: each passage under its own heading. */
+.portion-part {
+  display: grid;
+  gap: 8px;
+}
+
+.portion-part + .portion-part {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.portion-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 12px;
+  font-family: var(--font-verse);
+  font-size: calc(19px * var(--text-scale, 1));
+  font-weight: 600;
+  font-style: italic;
+  line-height: 1.3;
+  color: var(--gold);
+}
+
+.portion-head small {
+  font-family: var(--font-display);
+  font-size: calc(11px * var(--text-scale, 1));
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.today-title .nowrap {
+  white-space: nowrap;
+}
+
+/* On the Read page, the guided way in when a plan's day is read without questions. */
+.today-alt {
+  display: block;
+  margin: 8px auto 0;
+  padding: 4px 8px;
+  font-size: calc(15px * var(--text-scale, 1));
+  font-style: italic;
+  color: var(--gold);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--gold) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
 .ex-question {
   font-family: var(--font-verse);
   font-size: calc(24px * var(--verse-scale) * var(--text-scale, 1));
@@ -1177,6 +1229,41 @@
 .verse-pick.is-loading {
   display: block;
   padding: 2px 14px;
+}
+
+/* Verses found by their words: the reference, then the verse with those words picked out. */
+.search-results.is-stale {
+  opacity: 0.55;
+  transition: opacity 0.2s;
+}
+
+.search-hit {
+  align-items: center;
+  padding-left: 14px;
+}
+
+.search-hit-ref {
+  display: block;
+  margin-bottom: 2px;
+  font-family: var(--font-display);
+  font-size: calc(12px * var(--text-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.search-hit mark {
+  background: none;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.search-hit-chev {
+  color: var(--ink-faint);
 }
 
 .verse-pick-saved {

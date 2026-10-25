@@ -17,18 +17,22 @@ if (typeof window !== 'undefined' && window.speechSynthesis) {
 
 export const canSpeak = () => typeof window !== 'undefined' && 'speechSynthesis' in window;
 
+/** Read text aloud: one piece, or several in turn (a long reading is spoken passage by passage). */
 export function speak(text, { onEnd } = {}) {
   if (!canSpeak()) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(speakable(text));
-  if (voice) u.voice = voice;
-  u.rate = getState().settings.speechRate || 0.92;
-  u.pitch = 1;
-  if (onEnd) {
-    u.onend = onEnd;
-    u.onerror = onEnd;
-  }
-  window.speechSynthesis.speak(u);
+  const parts = Array.isArray(text) ? text : [text];
+  parts.forEach((part, i) => {
+    const u = new SpeechSynthesisUtterance(speakable(part));
+    if (voice) u.voice = voice;
+    u.rate = getState().settings.speechRate || 0.92;
+    u.pitch = 1;
+    if (onEnd) {
+      if (i === parts.length - 1) u.onend = onEnd;
+      u.onerror = onEnd;
+    }
+    window.speechSynthesis.speak(u);
+  });
 }
 
 export function stopSpeaking() {

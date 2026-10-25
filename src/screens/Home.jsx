@@ -15,8 +15,8 @@ import { androidBrowser, backupDue, exportBackup, isAndroid, isIOS, isStandalone
 import { sessionsDone, snoozeBackup, updateSettings } from '../lib/actions.js';
 import { toast } from '../lib/ui.js';
 import { DAY, dayKey, startOfDay } from '../lib/dates.js';
-import { bookProgress, readingTr, sectionRef, useBook } from '../lib/reading.js';
-import { planProgress, planStatus } from '../lib/plans.js';
+import { bookProgress, portionRef, readingTr, sectionRef, useBook } from '../lib/reading.js';
+import { planPortion, planProgress, planStatus, readingMinutes } from '../lib/plans.js';
 import { BOOK_BY_CODE } from '../data/books.js';
 import Woolly from '../components/Woolly.jsx';
 import { SHORT_SCREEN, useMedia } from '../lib/hooks.js';
@@ -194,12 +194,22 @@ function ReadingToday({ state }) {
   const { ready, sections } = useBook(code, readingTr(state));
   const next = ready ? bookProgress(state, code, sections).next : null;
   const plan = planProgress(state);
+  const portion = ready ? planPortion(state, code, sections) : null;
   const done = readToday(state);
 
   let title;
   let detail;
   let action;
-  if (!code) {
+  if (portion?.ahead) {
+    // In a plan, today's passages are read together.
+    title = 'Today’s reading is done';
+    detail = [planStatus(plan), `Next: ${portionRef(portion.secs)}`].join(' · ');
+    action = { label: 'Read on', run: () => read(portion) };
+  } else if (portion) {
+    title = `Read ${portionRef(portion.secs)}`;
+    detail = [`About ${readingMinutes(portion.verses)} min`, planStatus(plan)].join(' · ');
+    action = { label: 'Read', run: () => read(portion) };
+  } else if (!code) {
     title = 'Read the Bible through';
     detail = 'A passage at a time, with questions on the meaning';
     action = { label: 'Choose', run: () => go('read') };

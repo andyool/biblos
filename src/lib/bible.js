@@ -1,4 +1,4 @@
-import { BOOK_BY_CODE, parseId } from '../data/books.js';
+import { BOOKS, BOOK_BY_CODE, chaptersIn, parseId } from '../data/books.js';
 import { CATHOLIC_BIBLE, getTranslation } from '../data/translations.js';
 import { cleanVerseText } from './text.js';
 import { getText, setText } from './texts.js';
@@ -279,6 +279,34 @@ export async function loadRange(tr, book, chapter, start, end) {
   if (!rows.length) throw new BibleError('not-found', 'That chapter is not available in this translation.');
   if (rows.some((r) => /prohibited me from using/i.test(r.text))) throw new BibleError('needs-key', 'This translation needs a YouVersion key.');
   return rows.map((r) => ({ v: r.verse, t: cleanVerseText(r.text, { book, chapter, verse: r.verse, boldHeadings: translation.boldHeadings }) })).filter((r) => r.t);
+}
+
+const BOOK_BY_NUMBER = Object.fromEntries(BOOKS.map((b) => [b.number, b]));
+
+/**
+ * Verses with these words in them, from bolls.life: the whole phrase first, then verses with
+ * some of the words. The NIV can't be searched, so its words are looked for in the ESV (a
+ * verse is the same verse in any Bible). Resolves to { tr (the Bible searched), exact (how
+ * many match the whole phrase), total, results: [{ id, book, chapter, verse, text }] }, where
+ * text still has the <mark>s around the words found.
+ */
+export async function searchVerses(tr, words, limit = 24) {
+  const chosen = getTranslation(tr);
+  const translation = chosen.source === 'bolls' ? chosen : getTranslation('ESV');
+  const query = new URLSearchParams({ search: words, match_case: 'false', match_whole: 'false', limit: String(limit), page: '1' });
+  const data = await fetchJSON(`${BOLLS_BASE}/v2/find/${translation.code}?${query}`);
+  const catholic = Boolean(translation.catholic);
+  const rows = Array.isArray(data?.results) ? data.results : [];
+  const results = [];
+  let exact = 0;
+  rows.forEach((r, i) => {
+    const book = BOOK_BY_NUMBER[r.book];
+    // Only books and chapters this Bible has (some services number other books too).
+    if (!book || (book.deutero && !catholic) || r.chapter > chaptersIn(book.code, catholic)) return;
+    if (i < (data.exact_matches || 0)) exact += 1;
+    results.push({ id: `${book.code}.${r.chapter}.${r.verse}`, book: book.code, chapter: r.chapter, verse: r.verse, text: r.text });
+  });
+  return { tr: translation.id, exact, total: Number(data?.total) || results.length, results };
 }
 
 /** Check a YouVersion key by fetching one NIV verse. */

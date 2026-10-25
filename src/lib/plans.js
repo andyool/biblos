@@ -80,6 +80,34 @@ export function planProgress(state, now = Date.now()) {
   };
 }
 
+/**
+ * A day's share of the plan in this book, to read in one sitting: the unread passages from the
+ * next on, until about a day's verses are covered (at least one passage). Once today's share
+ * is read (ahead), the next day's. { secs, verses, ahead }, or null when the plan isn't on this book.
+ */
+export function planPortion(state, code, sections, now = Date.now()) {
+  const p = planProgress(state, now);
+  if (!p || p.finished || p.book !== code || !sections.length) return null;
+  const done = state.reading.books[code]?.done || {};
+  const day = Math.ceil(p.daily);
+  // However far behind, one sitting is a day's share: the rest can follow straight after.
+  const target = p.today ? Math.min(p.today, day) : day;
+  const secs = [];
+  let verses = 0;
+  for (const s of sections) {
+    if (done[s.id]) continue;
+    const n = s.end - s.start + 1;
+    // Stop at the end of whichever passage comes nearest the day's share.
+    if (secs.length && verses + n - target > target - verses) break;
+    secs.push(s);
+    verses += n;
+  }
+  return secs.length ? { secs, verses, ahead: !p.today } : null;
+}
+
+/** About how many minutes some verses take to read: nine or so a minute. */
+export const readingMinutes = (verses) => Math.max(2, Math.round(verses / 9));
+
 /** "On track", "2 days behind", "3 days ahead". */
 export function planStatus(p) {
   if (p.finished) return 'Plan complete';

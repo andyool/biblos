@@ -12,10 +12,11 @@ import PassageStep from '../reading/PassageStep.jsx';
 import ChoiceStep from '../reading/ChoiceStep.jsx';
 import SequenceStep from '../reading/SequenceStep.jsx';
 import ReflectStep from '../reading/ReflectStep.jsx';
+import PortionStep from '../reading/PortionStep.jsx';
 import Woolly from '../components/Woolly.jsx';
 import { feedbackAct } from '../mascot/reactions.js';
 
-const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, reflect: ReflectStep };
+const STEPS = { passage: PassageStep, question: ChoiceStep, summary: ChoiceStep, flow: SequenceStep, recap: SequenceStep, reflect: ReflectStep, portion: PortionStep };
 const GRADED = new Set(['question', 'summary', 'flow', 'recap']);
 
 const PRAISE = {
@@ -24,17 +25,20 @@ const PRAISE = {
   learning: ['Read it again', 'Line upon line', 'Keep looking', 'Now you know'],
 };
 
-/** One reading: the passage, then questions on its meaning, then reflection. */
+/** One reading: the passage, then questions on its meaning, then reflection. Or a day's passages in a plan, just to read. */
 export default function Reading({ session, onExit, onFinish }) {
   const [index, setIndex] = useState(0);
   const [results, setResults] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [lookAgain, setLookAgain] = useState(false);
+  // How far down a day's reading you have scrolled.
+  const [scrolled, setScrolled] = useState(0);
   const step = session.steps[index];
   const Step = STEPS[step.type];
   const last = index + 1 >= session.steps.length;
-  const passageSeen = session.steps.findIndex((s) => s.type === 'passage') < index;
-  const progress = (index + (feedback ? 1 : 0)) / session.steps.length;
+  const passageAt = session.steps.findIndex((s) => s.type === 'passage');
+  const passageSeen = passageAt >= 0 && passageAt < index;
+  const progress = session.plain ? scrolled : (index + (feedback ? 1 : 0)) / session.steps.length;
 
   const advance = (all) => {
     if (last) onFinish(all);
@@ -42,7 +46,7 @@ export default function Reading({ session, onExit, onFinish }) {
   };
 
   const complete = (result) => {
-    const r = { ...result, type: step.type, xp: result.xp ?? readingXp(step.type) };
+    const r = { ...result, type: step.type, xp: result.xp ?? step.xp ?? readingXp(step.type) };
     const all = [...results, r];
     setResults(all);
     if (!GRADED.has(step.type)) return advance(all);
@@ -81,7 +85,7 @@ export default function Reading({ session, onExit, onFinish }) {
       <div className="lesson-sub">{session.ref}</div>
 
       <main className="lesson-body" key={step.key}>
-        <Step step={step} session={session} locked={!!feedback} onComplete={complete} />
+        <Step step={step} session={session} locked={!!feedback} onComplete={complete} onProgress={setScrolled} />
       </main>
 
       {feedback && (

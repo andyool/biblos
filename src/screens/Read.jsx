@@ -4,27 +4,24 @@ import { useApp } from '../AppContext.js';
 import { TopBar } from '../components/Chrome.jsx';
 import Glyph from '../components/Glyph.jsx';
 import { Divider, EmblemBadge, Frame } from '../components/Ornaments.jsx';
-import { bookProgress, prefetchSection, readingTr, sectionRef, useBook } from '../lib/reading.js';
+import { bookProgress, portionRef, prefetchSection, readingTr, sectionRef, useBook } from '../lib/reading.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { carryOverReading, setReadingBook } from '../lib/actions.js';
 import { BOOK_BY_CODE } from '../data/books.js';
 import { getTranslation } from '../data/translations.js';
 import { updateReady } from '../lib/update.js';
-import { planProgress, planStatus } from '../lib/plans.js';
+import { planPortion, planProgress, planStatus, readingMinutes } from '../lib/plans.js';
 import { FIRST_BOOKS } from '../data/guides/index.js';
 import Woolly from '../components/Woolly.jsx';
 import { SHORT_SCREEN, useMedia } from '../lib/hooks.js';
 
 /** The reading plan you follow: how far through, and what is left for today. */
-function PlanCard({ code, sections }) {
+function PlanCard({ code }) {
   const state = useStore();
   const { openSheet } = useApp();
   const p = planProgress(state);
   if (!p) return null;
   const pct = (n) => `${Math.min(100, (n / p.total) * 100)}%`;
-  const verses = sections.reduce((sum, s) => sum + s.end - s.start + 1, 0);
-  const perReading = sections.length ? verses / sections.length : 15;
-  const readings = Math.max(1, Math.round(p.today / perReading));
   return (
     <div className="plan-card">
       <div className="plan-card-head">
@@ -45,7 +42,7 @@ function PlanCard({ code, sections }) {
           <p className="plan-status">
             Day {p.day} of {p.plan.days} · <em className={p.behind ? 'is-behind' : ''}>{planStatus(p)}</em>
           </p>
-          <p className="plan-today">{p.today ? `Today: about ${readings} more reading${readings === 1 ? '' : 's'} (${p.today} verses)` : 'Today’s reading is done.'}</p>
+          <p className="plan-today">{p.today ? `Today: ${p.today} verse${p.today === 1 ? '' : 's'} to go` : 'Today’s reading is done.'}</p>
         </>
       )}
       {p.book && p.book !== code && (
@@ -108,6 +105,17 @@ function Welcome() {
         <Glyph name="book" size={18} /> Choose any book
       </button>
       <ReadLinks />
+    </>
+  );
+}
+
+/** "Matthew 1:1–5:37", breaking after the book's name if it must, never inside the numbers. */
+function RefTitle({ text }) {
+  const m = text.match(/^(.*?) (\d[\d:–]*)$/);
+  if (!m) return text;
+  return (
+    <>
+      {m[1]} <span className="nowrap">{m[2]}</span>
     </>
   );
 }
@@ -183,16 +191,20 @@ export default function Read() {
   const progress = bookProgress(state, code, sections);
   const { next } = progress;
   const book = code ? BOOK_BY_CODE[code] : null;
+  // In a reading plan, a day's passages are read together, without the questions.
+  const portion = ready ? planPortion(state, code, sections) : null;
 
   // Keep what was read before the book had its guide.
   useEffect(() => {
     if (ready) carryOverReading(code, sections);
   }, [ready, code, sections]);
 
-  // Fetch the next passage quietly so it opens at once.
+  // Fetch what comes next quietly so it opens at once.
   useEffect(() => {
-    if (ready && next) prefetchSection(tr, next);
-  }, [ready, next?.id, tr]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!ready) return;
+    if (portion) portion.secs.forEach((sec) => prefetchSection(tr, sec));
+    else if (next) prefetchSection(tr, next);
+  }, [ready, next?.id, portion?.secs.length, tr]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!code) {
     return (
@@ -239,7 +251,25 @@ export default function Read() {
           key={failed ? 'failed' : 'ok'}
           className="today-woolly"
         />
-        <p className="today-kicker">{progress.finished ? 'Book complete' : progress.count ? 'Continue reading' : `Begin ${book.name}`}</p>
+        <p className="today-kicker">
+          {portion ? (
+            <>
+              Today’s reading
+              {portion.ahead && (
+                <span className="today-done">
+                  {' '}
+                  · <Glyph name="check" size={12} strokeWidth={2.4} /> done
+                </span>
+              )}
+            </>
+          ) : progress.finished ? (
+            'Book complete'
+          ) : progress.count ? (
+            'Continue reading'
+          ) : (
+            `Begin ${book.name}`
+          )}
+        </p>
         {!ready ? (
           failed ? (
             <>
@@ -255,6 +285,22 @@ export default function Read() {
               <span />
             </div>
           )
+        ) : portion ? (
+          <>
+            <h2 className="today-title gold-text">
+              <RefTitle text={portionRef(portion.secs)} />
+            </h2>
+            <p className="today-detail">
+              {portion.secs.length === 1 ? portion.secs[0].title : `${portion.secs.length} passages`} · about {readingMinutes(portion.verses)} min
+            </p>
+            <button className="btn btn-gold btn-block btn-shine" onClick={() => read(portion)}>
+              {portion.ahead ? 'Read ahead' : 'Read'}
+            </button>
+            <p className="today-time">Just the text · {tr}</p>
+            <button className="today-alt" onClick={() => read(next)}>
+              Or read {sectionRef(next)} with questions
+            </button>
+          </>
         ) : next ? (
           <>
             <h2 className="today-title gold-text">{next.title}</h2>
@@ -275,7 +321,7 @@ export default function Read() {
         )}
       </Frame>
 
-      <PlanCard code={code} sections={sections} />
+      <PlanCard code={code} />
       <ReadLinks />
 
       <div className="path-head">

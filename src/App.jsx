@@ -27,8 +27,8 @@ import TranslationSheet from './sheets/TranslationSheet.jsx';
 import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
 import { checkStreak, claimUnlocks, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
-import { planProgress } from './lib/plans.js';
-import { bookProgress, bookSections, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
+import { planPortion, planProgress } from './lib/plans.js';
+import { bookProgress, bookSections, buildPortion, buildReading, loadSection, prefetchSection, readingTr } from './lib/reading.js';
 import { guideNow, loadGuide } from './data/guides/index.js';
 import { fontFor, isLightTheme, themeFor, THEMES } from './data/shop.js';
 import { toast } from './lib/ui.js';
@@ -45,6 +45,13 @@ function nextReading(state) {
   const code = state.reading.book;
   const guide = code && guideNow(code);
   return guide ? bookProgress(state, code, bookSections(code, guide, readingTr(state, code))).next : null;
+}
+
+/** The next day's reading of the plan you follow, once its book's guide has loaded. */
+function nextPortion(state) {
+  const code = state.reading.book;
+  const guide = code && guideNow(code);
+  return guide ? planPortion(state, code, bookSections(code, guide, readingTr(state, code))) : null;
 }
 
 /** A new version has arrived: offer to reload (not in the middle of a lesson). */
@@ -181,17 +188,21 @@ export default function App() {
     [],
   );
 
-  // Open one passage of the book being read through.
-  const read = useCallback(async (sec) => {
+  // Open one passage of the book being read through, or a day's passages of a plan ({ secs, ahead }).
+  const read = useCallback(async (what) => {
+    const portion = what.secs ? what : null;
+    const secs = portion ? portion.secs : [what];
+    const code = secs[0].book;
     const state = getState();
-    const tr = readingTr(state, sec.book);
+    const tr = readingTr(state, code);
     setPreparing(true);
     try {
-      const verses = await loadSection(tr, sec);
-      const guide = guideNow(sec.book);
+      const verses = await Promise.all(secs.map((sec) => loadSection(tr, sec)));
+      const guide = guideNow(code);
+      const sections = bookSections(code, guide, tr);
       setSheets([]);
       setSummary(null);
-      setReading(buildReading({ sec, sections: bookSections(sec.book, guide, tr), guide, verses, tr }));
+      setReading(portion ? buildPortion({ ...portion, sections, guide, verses, tr }) : buildReading({ sec: what, sections, guide, verses: verses[0], tr }));
     } catch (error) {
       toast(error?.message || 'The passage could not be loaded.');
       if (['needs-key', 'auth', 'license'].includes(error?.kind)) setSheets([{ type: 'niv' }]);
@@ -271,14 +282,18 @@ export default function App() {
               .then(() => setSummary((s) => s && { ...s }))
               .catch(() => {});
           }
-          prefetchSection(readingTr(getState()), nextReading(getState()));
+          const tr = readingTr(getState());
+          if (reading.plain) nextPortion(getState())?.secs.forEach((sec) => prefetchSection(tr, sec));
+          else prefetchSection(tr, nextReading(getState()));
           setSummary(result);
           setReading(null);
         }}
       />
     );
   } else if (summary?.kind === 'reading') {
-    const next = nextReading(getState());
+    // After a day's reading, more only while there is still some due today.
+    const portion = summary.plain && nextPortion(getState());
+    const next = summary.plain ? (portion && !portion.ahead ? portion : null) : nextReading(getState());
     body = (
       <LessonComplete
         summary={summary}
@@ -287,7 +302,7 @@ export default function App() {
           mainRef.current?.scrollTo({ top: 0 });
         }}
         onMore={next ? () => read(next) : null}
-        moreLabel="Read the next passage"
+        moreLabel={summary.plain ? 'Keep reading' : 'Read the next passage'}
       />
     );
   } else if (summary) {
