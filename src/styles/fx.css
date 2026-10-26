@@ -53,6 +53,30 @@
   background: var(--grad-gold);
 }
 
+/* The seal drop: glass and dust (lib/fx.js shatter). Drawn pieces when the app has them. */
+.fx-shard {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(214, 222, 232, 0.55) 55%, rgba(255, 255, 255, 0.85));
+  clip-path: polygon(50% 0, 100% 72%, 62% 100%, 0 58%);
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
+.fx-shard.is-drawn {
+  clip-path: none;
+  box-shadow: none;
+  background: center / contain no-repeat;
+}
+
+.fx-dust {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(226, 220, 206, 0.6), rgba(205, 198, 184, 0.28) 42%, transparent 70%);
+  filter: blur(5px);
+}
+
+.fx-dust.is-drawn {
+  filter: none;
+  background: url(/fx/dust.webp) center / contain no-repeat;
+}
+
 /* On a light page, deeper gold and no halo, which would only muddy it. */
 [data-scheme='light'] .fx-spark {
   box-shadow: none;
@@ -135,5 +159,216 @@
   }
   100% {
     transform: none;
+  }
+}
+
+/* ─── The seal drop ──────────────────────────────────────────────────────── */
+
+/*
+  A seal just earned falls and strikes the screen (components/SealDrop.jsx). Above everything
+  but the sparks (.fx), which fly over it. The page beneath is dimmed, so the words are always
+  light and the gold — the lettering's and the sparks' — always the bright gold, whatever the theme.
+*/
+
+.drop,
+body.is-dropping .fx {
+  --gold: #f1cd66;
+  --g0: #fff8e2;
+  --g1: #fbe3a0;
+  --g2: #ecc04e;
+  --g3: #b9861f;
+  --g4: #6f4a0b;
+  --t0: var(--g0);
+  --t1: var(--g1);
+  --t2: var(--g2);
+  --t3: var(--g3);
+  --t4: var(--g2);
+  --t5: var(--g1);
+  --grad-text: linear-gradient(180deg, var(--t0) 0%, var(--t1) 26%, var(--t2) 47%, var(--t3) 56%, var(--t4) 68%, var(--t5) 100%);
+  --grad-gold: linear-gradient(135deg, var(--g3) 0%, var(--g1) 22%, var(--g0) 30%, var(--g2) 44%, var(--g3) 58%, var(--g2) 70%, var(--g1) 84%, var(--g3) 100%);
+  --grad-dome: radial-gradient(circle at 34% 26%, var(--g0) 0%, var(--g1) 20%, var(--g2) 46%, var(--g3) 78%, var(--g4) 100%);
+}
+
+body.is-dropping .fx-spark {
+  box-shadow: 0 0 6px color-mix(in srgb, var(--g1) 70%, transparent);
+}
+
+.drop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  color: #f5eddb;
+}
+
+.drop-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 5, 10, 0.64);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: fade-in 0.25s ease backwards;
+}
+
+.drop-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* The crack spreads out from where the seal lands (42% down, where the drawn cracks are centred). */
+.drop-crack {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  pointer-events: none;
+  animation: crack-spread 0.34s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+
+@keyframes crack-spread {
+  from {
+    clip-path: circle(0% at 50% 42%);
+  }
+  to {
+    clip-path: circle(140% at 50% 42%);
+  }
+}
+
+.drop-crack-under,
+.drop-crack-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.drop-crack-under {
+  stroke: rgba(0, 0, 0, 0.55);
+}
+
+.drop-crack-line {
+  stroke: rgba(255, 255, 255, 0.82);
+}
+
+.drop-flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 42%, #fff8e2 0%, rgba(236, 192, 78, 0.75) 28%, transparent 68%);
+  animation: drop-flash 0.42s ease-out both;
+}
+
+@keyframes drop-flash {
+  from {
+    opacity: 0.95;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Its shadow on the glass grows as it comes down (the same 560ms as the fall). */
+.drop-shadow {
+  position: absolute;
+  left: 50%;
+  top: calc(42% + 96px);
+  width: 190px;
+  height: 34px;
+  margin-left: -95px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.7), transparent 70%);
+  animation: shadow-grow 0.56s cubic-bezier(0.5, 0, 1, 0.6) both;
+}
+
+@keyframes shadow-grow {
+  from {
+    transform: scale(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+}
+
+.drop-seat {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+}
+
+.drop-seal {
+  width: 100%;
+  height: 100%;
+  will-change: transform;
+}
+
+.drop.is-still .drop-seal {
+  animation: fade-in 0.4s ease backwards;
+}
+
+.drop-words {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(42% + 126px);
+  padding: 0 24px;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 0.45s ease 0.3s,
+    transform 0.45s ease 0.3s;
+}
+
+.drop-words.is-shown {
+  opacity: 1;
+  transform: none;
+}
+
+.drop-words .ex-kicker {
+  color: var(--g1);
+}
+
+.drop-words h2 {
+  margin: 2px 0 0;
+}
+
+.drop-reward {
+  margin: 6px 0 0;
+  color: var(--gold);
+  font-size: calc(19px * var(--text-scale, 1));
+}
+
+.drop-unlock {
+  margin: 2px 0 0;
+  font-style: italic;
+  color: rgba(245, 237, 219, 0.78);
+}
+
+.drop-hint {
+  margin-top: 22px;
+  font-size: calc(12px * var(--text-scale, 1));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 237, 219, 0.5);
+  animation: drop-hint 1.5s ease-in-out 1s infinite alternate;
+}
+
+@keyframes drop-hint {
+  to {
+    color: rgba(245, 237, 219, 0.85);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-hint {
+    animation: none;
   }
 }

@@ -13,6 +13,7 @@ import { loadRange, searchVerses } from '../lib/bible.js';
 import { cleanVerseText } from '../lib/text.js';
 import { getText, setText, useTextsVersion } from '../lib/texts.js';
 import { addCustomVerses, setActivePath } from '../lib/actions.js';
+import { dropSeals } from '../lib/sealDrop.js';
 import { useBack } from '../lib/nav.js';
 import { toast } from '../lib/ui.js';
 import { cueSoon } from '../mascot/bus.js';
@@ -301,7 +302,8 @@ export default function AddVerseSheet({ onClose }) {
       ids = [pastedId];
     } else return;
     const fresh = ids.filter((x) => !custom.includes(x));
-    addCustomVerses(ids, tr);
+    // A seal earned here falls once the sheet has gone.
+    dropSeals(addCustomVerses(ids, tr), 600);
     setActivePath('mine');
     toast(fresh.length ? `${label} added to My Verses` : 'Already in My Verses', 'check');
     if (fresh.length) burst();

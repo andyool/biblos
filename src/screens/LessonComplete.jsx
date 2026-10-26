@@ -11,6 +11,7 @@ import { LevelProgress } from '../components/XpLevel.jsx';
 import { useBack } from '../lib/nav.js';
 import Woolly from '../components/Woolly.jsx';
 import { cue } from '../mascot/bus.js';
+import { dropSeals } from '../lib/sealDrop.js';
 import { useApp } from '../AppContext.js';
 import { useStore } from '../lib/store.js';
 import { burst, glory, pop, useCountUp } from '../lib/fx.js';
@@ -71,6 +72,8 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
     }, 350);
     // Each marked part of the page is struck in its turn.
     const timers = [...page.current.querySelectorAll('[data-fx]')].map((el) => setTimeout(() => FX[el.dataset.fx](el), Number(el.dataset.fxAt)));
+    // Then each new seal comes down on the page (SealDrop), as its small one is pressed in.
+    dropSeals(summary.earned, SEAL_AT + 250);
     return () => [t, ...timers].forEach(clearTimeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -196,7 +199,7 @@ export default function LessonComplete({ summary, onDone, onMore, moreLabel }) {
               <div key={a.id} className="complete-seal">
                 {/* Struck as the wax is pressed down. */}
                 <span className="complete-seal-press" {...strike('burst', SEAL_AT + i * SEAL_GAP + 300, SEAL_AT + i * SEAL_GAP)}>
-                  <Seal icon={a.icon} size={70} />
+                  <Seal id={a.id} icon={a.icon} size={70} />
                 </span>
                 <strong>{a.name}</strong>
                 <small>+{a.reward} talents</small>

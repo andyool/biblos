@@ -6,6 +6,7 @@ import { useBack } from '../lib/nav.js';
 import { useFocusTrap } from '../lib/focus.js';
 import { useLeave } from '../lib/leave.js';
 import Woolly from './Woolly.jsx';
+import SealDrop from './SealDrop.jsx';
 
 // The dim fades and the card sinks back a little as it goes.
 function shrinkAway(copy) {
@@ -50,6 +51,7 @@ export default function Overlays() {
   const { dialog, toast } = useOverlays();
   return createPortal(
     <>
+      <SealDrop />
       {dialog && <Dialog dialog={dialog} />}
       {toast && (
         <div className="toast" key={toast.id} role="status">

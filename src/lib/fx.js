@@ -191,6 +191,39 @@ export function glory(at) {
   leaves(p, 30, 60);
 }
 
+/**
+ * Something heavy has struck the screen at the point: shards of glass flung out, falling as they
+ * go, and a puff of dust that drifts up and thins. With the drawn pieces (public/fx) when the app
+ * has them (`shards` how many, `dust` whether), else shapes made here.
+ */
+export function shatter(at, { shards = 0, dust = false } = {}) {
+  const p = ready(at);
+  if (!p) return;
+  const turn = Math.random() * Math.PI * 2;
+  const count = 14;
+  for (let i = 0; i < count; i += 1) {
+    const angle = turn + (Math.PI * 2 * i) / count + rand(-0.4, 0.4);
+    const size = rand(16, 38);
+    const el = bit('shard', p, size, size * rand(0.7, 1.3));
+    if (el && shards) {
+      el.classList.add('is-drawn');
+      el.style.backgroundImage = `url(/fx/shard-${1 + (i % shards)}.webp)`;
+    }
+    fling(el, angle, rand(90, 280), rand(140, 260), rand(750, 1150), rand(0, 50));
+  }
+  const cloud = bit('dust', p, 300);
+  if (cloud && dust) cloud.classList.add('is-drawn');
+  run(
+    cloud,
+    [
+      { transform: `${CENTRE} translateY(16px) scale(0.3)`, opacity: 0 },
+      { transform: `${CENTRE} translateY(-6px) scale(0.9)`, opacity: 0.8, offset: 0.22 },
+      { transform: `${CENTRE} translateY(-56px) scale(1.6)`, opacity: 0 },
+    ],
+    { duration: 1400, easing: 'ease-out' },
+  );
+}
+
 /** The element swells and settles, as if struck; or, `growing`, grows into its place from small. */
 export function bump(el, { size = 1.14, growing = false, delay = 0 } = {}) {
   if (!el?.animate || motionReduced()) return;

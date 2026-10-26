@@ -12,3 +12,9 @@ mascot-lab/refs/
 # scripts/build-woolly.py makes from them, in src/mascot/sheets.
 biblos-generated-frame-core/
 biblos-lambs-all-44/
+
+# The seals, emblems and pieces of the seal drop as drawn (1–10 MB each). The app uses the small
+# WebP files that scripts/art.mjs makes from them, in public/seals, public/emblems and public/fx.
+/seals/
+/emblems/
+/biblos-impact-assets/

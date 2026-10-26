@@ -20,7 +20,7 @@ function SealDetail({ id, onClose }) {
   return (
     <Sheet title={a.name} onClose={onClose} woolly={earnedAt ? 'reward' : 'encourage'}>
       <div className="seal-detail">
-        <Seal icon={a.icon} earned={!!earnedAt} size={110} />
+        <Seal id={id} icon={a.icon} earned={!!earnedAt} size={110} />
         <p className="lead">{a.desc}</p>
         {earnedAt ? (
           <p className="gold-soft">Earned {new Date(earnedAt).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}</p>
@@ -212,7 +212,7 @@ function SealCell({ a, onOpen }) {
   const p = a.progress(state);
   return (
     <button className="seal-cell" onClick={() => onOpen(a.id)}>
-      <Seal icon={a.icon} earned={got} size={74} />
+      <Seal id={a.id} icon={a.icon} earned={got} size={74} />
       <strong>{a.name}</strong>
       {!got && p.target > 1 && (
         <small>

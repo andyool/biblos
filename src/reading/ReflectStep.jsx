@@ -6,6 +6,7 @@ import { renderWord } from '../components/VerseText.jsx';
 import { KindPicker, Quotes, Room } from '../components/Journal.jsx';
 import { useStore } from '../lib/store.js';
 import { addCustomVerses } from '../lib/actions.js';
+import { dropSeals } from '../lib/sealDrop.js';
 import { setText } from '../lib/texts.js';
 import { toast } from '../lib/ui.js';
 import { KIND, MAX_TEXT, entriesAbout, shortDate } from '../lib/journal.js';
@@ -91,7 +92,7 @@ export default function ReflectStep({ step, session, onComplete }) {
     const id = idOf(v);
     if (verses[id]) return;
     setText(tr, id, { verses: [{ v: v.v, t: v.t }], src: getTranslation(tr).source });
-    addCustomVerses([id], tr);
+    dropSeals(addCustomVerses([id], tr), 500);
     toast(`Verse ${v.v} added to My Verses — learn it from the Path tab.`, 'heart');
     pop();
     cue('verseAdded');

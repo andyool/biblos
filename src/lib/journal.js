@@ -4,6 +4,7 @@ import { PROMPTS } from '../data/prompts.js';
 import { DAY, dayKey } from './dates.js';
 import { pick } from './text.js';
 import { toast } from './ui.js';
+import { dropSeals } from './sealDrop.js';
 
 // The journal: what you write after a reading, about a verse, or on its own. Each entry keeps
 // the question it answers, so it still makes sense when you read it back months later.
@@ -47,10 +48,9 @@ export function fillLegacy(journal, fill) {
   Promise.allSettled(books.map(loadGuide)).then(() => fill(passageContext));
 }
 
-/** Tell of a seal the journal earned, or else of what was done. */
+/** Let the seals the journal earned fall (SealDrop), or else tell of what was done. */
 export function announce(earned, done) {
-  const seal = earned[0];
-  if (seal) toast(`New seal: ${seal.name} — +${seal.reward} talents`, seal.icon);
+  if (earned.length) dropSeals(earned, 300);
   else if (done) toast(done, 'check');
 }
 

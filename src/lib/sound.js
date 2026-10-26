@@ -49,6 +49,38 @@ function thud(c, at) {
   osc.stop(at + 0.25);
 }
 
+/** A deep, short blow, felt more than heard. */
+function boom(c, at) {
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(95, at);
+  osc.frequency.exponentialRampToValueAtTime(32, at + 0.4);
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(0.6, at + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+  osc.connect(g).connect(c.destination);
+  osc.start(at);
+  osc.stop(at + 0.55);
+}
+
+/** A burst of bright noise, gone at once: glass giving way. */
+function crack(c, at) {
+  const length = Math.floor(c.sampleRate * 0.3);
+  const buffer = c.createBuffer(1, length, c.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < length; i += 1) data[i] = (Math.random() * 2 - 1) * (1 - i / length) ** 3;
+  const src = c.createBufferSource();
+  src.buffer = buffer;
+  const filter = c.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 2200;
+  const g = c.createGain();
+  g.gain.value = 0.16;
+  src.connect(filter).connect(g).connect(c.destination);
+  src.start(at);
+}
+
 export function play(name) {
   if (!getState().settings.sound) return;
   const c = audio();
@@ -74,6 +106,11 @@ export function play(name) {
       break;
     case 'level':
       [1568, 2093, 2637, 3136, 4186].forEach((f, i) => bell(c, f, t + i * 0.07, 1.1, 0.035));
+      break;
+    case 'impact':
+      boom(c, t);
+      crack(c, t + 0.02);
+      if (navigator.vibrate && navigator.userActivation?.hasBeenActive !== false) navigator.vibrate([40, 30, 70]);
       break;
     default:
       break;

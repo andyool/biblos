@@ -58,15 +58,20 @@ export function setActivePath(id) {
 
 // ── Verses ─────────────────────────────────────────────────────────────────────
 
+/** Add verses of your own. Returns the seals that earned (the first is "Treasure Seeker"). */
 export function addCustomVerses(ids, tr) {
+  let earned = [];
   setState((s) => {
     const verses = { ...s.verses };
     for (const id of ids) {
       if (!verses[id]) verses[id] = { id, tr, level: 0, added: Date.now() };
     }
     const custom = [...s.custom, ...ids.filter((id) => !s.custom.includes(id))];
-    return awardAchievements({ ...s, verses, custom }).state;
+    const awarded = awardAchievements({ ...s, verses, custom });
+    earned = awarded.earned;
+    return awarded.state;
   });
+  return earned;
 }
 
 export function removeCustomVerse(id) {

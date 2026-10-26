@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { EMBLEM_ART, SEAL_ART } from '../data/art.js';
 import Glyph from './Glyph.jsx';
 import { useStore } from '../lib/store.js';
 
@@ -326,31 +327,43 @@ function scallops(r, bumps, depth) {
 
 const SEAL_EDGE = scallops(42, 28, 5);
 
-/** A wax-seal style medallion for achievements and emblems. */
-export function Seal({ icon, earned = true, size = 76, className = '' }) {
+/**
+ * A wax-seal style medallion for achievements and emblems. Given an achievement's `id`, it is
+ * that seal's drawing (public/seals, made by `npm run art`) when there is one; otherwise, or
+ * for an emblem, a medallion drawn here with the `icon` glyph on its face.
+ */
+export function Seal({ id = null, icon, earned = true, size = 76, className = '' }) {
   const face = `${useId().replace(/:/g, '')}-face`;
+  const drawn = Boolean(id && SEAL_ART.has(id));
   return (
-    <div className={`seal ${earned ? 'is-earned' : 'is-locked'} ${className}`} style={{ width: size, height: size }}>
+    <div className={`seal ${earned ? 'is-earned' : 'is-locked'} ${drawn ? 'is-drawn' : ''} ${className}`} style={{ width: size, height: size }}>
+      {drawn && <img className="seal-art" src={`/seals/${id}.webp`} alt="" draggable="false" decoding="async" />}
       <svg viewBox="0 0 100 100" width={size} height={size} aria-hidden="true">
         <defs>
           <clipPath id={face}>
-            <circle cx="50" cy="50" r="31" />
+            <circle cx="50" cy="50" r={drawn ? 38 : 31} />
           </clipPath>
         </defs>
-        <path d={SEAL_EDGE} className="seal-edge" />
-        <circle cx="50" cy="50" r="36" className="seal-ring" />
-        <circle cx="50" cy="50" r="31" className="seal-inner" />
-        <circle cx="50" cy="50" r="33.5" className="seal-dots" />
+        {!drawn && (
+          <>
+            <path d={SEAL_EDGE} className="seal-edge" />
+            <circle cx="50" cy="50" r="36" className="seal-ring" />
+            <circle cx="50" cy="50" r="31" className="seal-inner" />
+            <circle cx="50" cy="50" r="33.5" className="seal-dots" />
+          </>
+        )}
         {/* The glare moves as the seal scrolls (metal.css), but never off its face. */}
         <g clipPath={`url(#${face})`}>
           <g className="seal-shine">
-            <ellipse cx="40" cy="34" rx="15" ry="8" transform="rotate(-32 40 34)" />
+            <ellipse cx="40" cy="34" rx={drawn ? 18 : 15} ry={drawn ? 9 : 8} transform="rotate(-32 40 34)" />
           </g>
         </g>
       </svg>
-      <span className="seal-icon">
-        <Glyph name={icon} size={Math.round(size * 0.4)} strokeWidth={earned ? 1.6 : 1.3} />
-      </span>
+      {!drawn && (
+        <span className="seal-icon">
+          <Glyph name={icon} size={Math.round(size * 0.4)} strokeWidth={earned ? 1.6 : 1.3} />
+        </span>
+      )}
       {!earned && (
         <span className="seal-lock">
           <Glyph name="lock" size={Math.max(12, Math.round(size * 0.18))} strokeWidth={1.6} />
@@ -360,7 +373,10 @@ export function Seal({ icon, earned = true, size = 76, className = '' }) {
   );
 }
 
-/** Small round emblem badge used for avatars. */
+/**
+ * Small round emblem badge used for avatars: the emblem's drawing (public/emblems, made by
+ * `npm run art`) on the badge when there is one, else its line glyph.
+ */
 export function EmblemBadge({ id, size = 44, className = '' }) {
   return (
     <span className={`emblem-badge ${className}`} style={{ width: size, height: size }}>
@@ -368,9 +384,15 @@ export function EmblemBadge({ id, size = 44, className = '' }) {
         <circle cx="24" cy="24" r="22.5" className="emblem-badge-rim" />
         <circle cx="24" cy="24" r="19.5" className="emblem-badge-bg" />
       </svg>
-      <Glyph name={id} size={Math.round(size * 0.52)} strokeWidth={1.5} />
+      <EmblemArt id={id} size={Math.round(size * 0.72)} fallback={<Glyph name={id} size={Math.round(size * 0.52)} strokeWidth={1.5} />} />
     </span>
   );
+}
+
+/** An emblem's drawing at `size` px, or `fallback` when it has none. */
+export function EmblemArt({ id, size, className = '', fallback = null }) {
+  if (!EMBLEM_ART.has(id)) return fallback;
+  return <img className={`emblem-art ${className}`} src={`/emblems/${id}.webp`} alt="" width={size} height={size} draggable="false" decoding="async" />;
 }
 
 function arc(cx, cy, r, a0, a1) {

@@ -4,7 +4,7 @@ import { dayKey } from '../lib/dates.js';
 import { toast } from '../lib/ui.js';
 import { sessionsDone } from '../lib/actions.js';
 import Glyph from './Glyph.jsx';
-import { EmblemBadge, GoalRing } from './Ornaments.jsx';
+import { EmblemArt, EmblemBadge, GoalRing } from './Ornaments.jsx';
 import { useApp } from '../AppContext.js';
 
 /** Streak, talents and daily goal along the top of the main screens. */
@@ -102,7 +102,7 @@ export function TabBar({ tab }) {
       {TABS.map((t) => (
         <button key={t.id} className={`tab ${tab === t.id ? 'is-active' : ''}`} onClick={() => go(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
           <span className="tab-gem" />
-          <Glyph name={t.icon || emblem} size={25} strokeWidth={1.4} />
+          {t.icon ? <Glyph name={t.icon} size={25} strokeWidth={1.4} /> : <EmblemArt id={emblem} size={27} className="tab-emblem" fallback={<Glyph name={emblem} size={25} strokeWidth={1.4} />} />}
           <span className="tab-label">{t.label}</span>
         </button>
       ))}
