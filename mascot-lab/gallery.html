@@ -1,0 +1,19 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lamb gallery</title>
+<style>
+body{margin:0;background:#0a0f1d;color:#e8dcc0;font:14px system-ui;padding:12px}
+h1{font-weight:500;font-size:18px;margin:4px 0 10px}
+.stage{display:flex;gap:12px;flex-wrap:wrap}
+canvas{width:260px;height:260px;background:#121a30;border-radius:14px}
+.bar{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+button{background:#1c2644;color:#f1c571;border:1px solid #33416b;border-radius:8px;padding:6px 10px;font:inherit;cursor:pointer}
+button.on{background:#f1c571;color:#0a0f1d}
+small{opacity:.6}
+</style></head>
+<body>
+<h1>The golden lambs <small>— tap a clip to play it on both; bases loop underneath</small></h1>
+<div class="stage"><canvas id="f"></canvas><canvas id="m"></canvas></div>
+<div class="bar" id="bases"></div>
+<div class="bar" id="clips"></div>
+<script type="module" src="./gallery.js"></script>
+</body></html>
