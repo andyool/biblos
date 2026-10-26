@@ -3,6 +3,7 @@ import { setReadingBook, updateProfile, updateSettings } from '../lib/actions.js
 import { play } from '../lib/sound.js';
 import { glory } from '../lib/fx.js';
 import Woolly from '../components/Woolly.jsx';
+import { useApp } from '../AppContext.js';
 
 // Everything a new user would otherwise be asked starts with a good default, and each can be
 // changed where it comes up: the Bible from the Today card or Me, the path from Paths, the book
@@ -11,6 +12,7 @@ const START = { translation: 'ESV', dailyGoal: 20, activePath: 'foundations', fo
 const FIRST_BOOK = 'MRK';
 
 export default function Onboarding() {
+  const { openSheet } = useApp();
   const begin = () => {
     updateProfile({ since: Date.now() });
     updateSettings({ ...START, onboarded: true });
@@ -32,6 +34,10 @@ export default function Onboarding() {
         </blockquote>
         <button className="btn btn-gold btn-block btn-shine" onClick={begin}>
           Begin
+        </button>
+        {/* Moving in from Safari (the Home Screen app keeps its own progress) or another phone. */}
+        <button className="btn btn-ghost btn-block ob-transfer" onClick={() => openSheet({ type: 'transfer' })}>
+          Paste your progress
         </button>
       </div>
     </div>

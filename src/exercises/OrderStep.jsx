@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { shuffleMixed } from '../lib/text.js';
+import { shuffleMixed, tileText } from '../lib/text.js';
 import { play } from '../lib/sound.js';
 import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
@@ -45,7 +45,7 @@ export default function OrderStep({ step, tokens, locked, onComplete }) {
       <div className="tiles tiles-phrases">
         {order.map((i) => (
           <button key={i} className={`tile tile-phrase ${placed.includes(i) ? 'is-used' : ''} ${shake === i ? 'is-wrong' : ''}`} onClick={() => tap(i)} disabled={placed.includes(i)}>
-            {renderWord(phrases[i])}
+            {renderWord(tileText(phrases[i]))}
           </button>
         ))}
       </div>

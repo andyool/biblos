@@ -2,6 +2,7 @@ import { DAY, dayAfter, dayKey, startOfDay } from './dates.js';
 
 // Spaced repetition (a gentle SM-2): each good review pushes the next one further away.
 export const HIDDEN_AFTER_DAYS = 21;
+const HIDDEN_AFTER_REPS = 3;
 
 // Of the days a review came late, how many count towards the next interval, by grade: a verse
 // recalled well after a longer gap than planned has shown it lasts that long.
@@ -33,11 +34,17 @@ export function review(schedule, accuracy, now = Date.now()) {
   } else {
     const elapsed = schedule?.last ? Math.round((startOfDay(now) - startOfDay(schedule.last)) / DAY) : interval;
     const stretch = 1 + (Math.max(0, elapsed - interval) * LATE_CREDIT[q]) / interval;
+    // A review that comes early (a shaky practice brings it forward) has only shown the verse
+    // lasts as long as it has been away, so the next interval grows from that.
+    const base = Math.min(interval, Math.max(1, elapsed));
     // The first two reviews come at set steps, unless a late recall has already carried it further.
     const step = [q === 5 ? 3 : 2, q === 5 ? 7 : q === 4 ? 6 : 4][reps];
-    interval = Math.round((step > interval ? step : interval * ease * (q === 5 ? 1.15 : q === 3 ? 0.8 : 1)) * stretch);
+    interval = Math.round((step > base ? step : base * ease * (q === 5 ? 1.15 : q === 3 ? 0.8 : 1)) * stretch);
     ease = Math.min(3, Math.max(1.3, ease + (q === 5 ? 0.1 : q === 3 ? -0.14 : 0)));
     reps += 1;
+    // Three good reviews in a row at least before a verse is hidden in the heart, however late
+    // they came: until then the next one stays inside the three weeks.
+    if (reps < HIDDEN_AFTER_REPS) interval = Math.min(interval, HIDDEN_AFTER_DAYS - 1);
   }
   interval = Math.max(1, Math.min(interval, 365));
   return { interval, ease, reps, lapses, last: now, due: dayAfter(now, interval), q };

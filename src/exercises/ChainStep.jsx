@@ -3,6 +3,7 @@ import { play } from '../lib/sound.js';
 import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
+import { tileText } from '../lib/text.js';
 
 /**
  * What comes next: the verse grows phrase by phrase, each chosen from near misses — the same
@@ -70,7 +71,7 @@ export default function ChainStep({ step, tokens, locked, onComplete }) {
       <div className="choices choices-list choices-phrases" key={round}>
         {current.options.map((opt, k) => (
           <button key={k} className={`choice ${wrong.includes(k) ? 'is-wrong' : ''} ${chosen === k ? 'is-right' : ''}`} onClick={() => choose(k)} disabled={wrong.includes(k)}>
-            {renderWord(opt.text)}
+            {renderWord(tileText(opt.text))}
           </button>
         ))}
       </div>

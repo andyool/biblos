@@ -608,11 +608,46 @@ export function snoozeBackup(days = 7) {
   updateSettings({ backupSnooze: Date.now() + days * DAY });
 }
 
-export function restoreBackup(data) {
+// Progress as it was before the last restore, so a restore can be undone for a week after.
+const BEFORE_RESTORE = 'biblos.state.beforeRestore';
+const UNDO_FOR = 7 * DAY;
+// Kept here too, in case storage has no room for it: then Undo still works until the app closes.
+let undo;
+
+function readUndo() {
+  if (undo === undefined) {
+    try {
+      undo = JSON.parse(localStorage.getItem(BEFORE_RESTORE)) || null;
+    } catch {
+      undo = null;
+    }
+  }
+  if (undo && !(Date.now() - undo.at < UNDO_FOR)) dropUndo();
+  return undo;
+}
+
+function dropUndo() {
+  undo = null;
+  try {
+    localStorage.removeItem(BEFORE_RESTORE);
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** When the last restore was made, while it can still be undone; otherwise null. */
+export const restoredAt = () => readUndo()?.at || null;
+
+/**
+ * Replace the progress on this phone with a backup's (or a transfer code's, with `transfer`: its
+ * words join the ones already here, and it doesn't count as a backup saved).
+ */
+export function restoreBackup(data, { transfer = false } = {}) {
   // The words first, so verses whose NIV words come with the backup keep the NIV. If the
   // progress can't be read after all, the words go back to how they were.
   const before = allTexts();
-  if (data.texts) replaceTexts(data.texts);
+  const snapshot = { at: Date.now(), state: getState(), texts: before };
+  if (data.texts) replaceTexts(transfer ? { ...before, ...data.texts } : data.texts);
   let next;
   try {
     next = migrate(data.state);
@@ -620,8 +655,24 @@ export function restoreBackup(data) {
     replaceTexts(before);
     throw err;
   }
+  undo = snapshot;
+  try {
+    localStorage.setItem(BEFORE_RESTORE, JSON.stringify(snapshot));
+  } catch {
+    /* no room: Undo works until the app closes */
+  }
   setState(next);
-  noteBackup(Date.parse(data.exported) || Date.now());
+  if (!transfer) noteBackup(Date.parse(data.exported) || Date.now());
+}
+
+/** Put back the progress the last restore replaced. False if there is none to put back. */
+export function undoRestore() {
+  const snapshot = readUndo();
+  if (!snapshot) return false;
+  replaceTexts(snapshot.texts || {});
+  setState(migrate(snapshot.state));
+  dropUndo();
+  return true;
 }
 
 export function resetEverything() {

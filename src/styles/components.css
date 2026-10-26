@@ -1128,6 +1128,16 @@
   line-height: 1.45;
 }
 
+/* A transfer code: a long run of letters, only ever copied or pasted whole. */
+.transfer-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: calc(13px * var(--text-scale, 1));
+  line-height: 1.35;
+  min-height: 0;
+  word-break: break-all;
+  resize: none;
+}
+
 .field-note {
   font-size: calc(16px * var(--text-scale, 1));
   color: var(--ink-faint);

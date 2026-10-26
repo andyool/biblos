@@ -1228,6 +1228,10 @@
   max-width: 320px;
 }
 
+.ob-transfer {
+  margin-top: -4px;
+}
+
 .ob-quote {
   margin: 12px 0 22px;
   font-family: var(--font-verse);

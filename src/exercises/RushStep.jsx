@@ -69,7 +69,7 @@ export default function RushStep({ step, tokens, locked, onComplete }) {
       <div className={`rush-oil ${began ? 'is-burning' : ''} ${late ? 'is-out' : ''}`} aria-hidden="true">
         <Glyph name="lamp" size={18} lit={!late} />
         <span className="rush-oil-bar">
-          <span style={{ animationDuration: `${seconds}s` }} />
+          <span style={{ '--drain': `${seconds}s` }} />
         </span>
       </div>
       <p className={`verse-text ex-verse rush-verse ${tokens.length > 48 ? 'is-long' : ''}`}>

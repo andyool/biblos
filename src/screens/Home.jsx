@@ -95,6 +95,7 @@ const ANDROID_STEPS = {
 
 function InstallHint() {
   const promptInstall = useInstallPrompt();
+  const { openSheet } = useApp();
   const ios = isIOS();
   return (
     <div className="hint-card">
@@ -105,7 +106,7 @@ function InstallHint() {
           <p>It opens full-screen, like an app, and works offline.</p>
         ) : ios ? (
           <p>
-            Tap <Glyph name="share" size={15} className="inline-glyph" /> Share, then <em>Add to Home Screen</em>.
+            It keeps its own progress, apart from Safari, so take yours with you: copy it here, then tap <Glyph name="share" size={15} className="inline-glyph" /> Share and <em>Add to Home Screen</em>.
           </p>
         ) : (
           <p>{ANDROID_STEPS[androidBrowser()]}</p>
@@ -113,6 +114,11 @@ function InstallHint() {
         {promptInstall && (
           <button className="btn btn-gold btn-small" onClick={promptInstall}>
             Install
+          </button>
+        )}
+        {ios && !promptInstall && (
+          <button className="btn btn-gold btn-small" onClick={() => openSheet({ type: 'transfer' })}>
+            Copy my progress
           </button>
         )}
       </div>

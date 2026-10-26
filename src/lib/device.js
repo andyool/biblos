@@ -122,6 +122,27 @@ export async function shareText(text, title) {
 
 const isObject = (x) => Boolean(x) && typeof x === 'object' && !Array.isArray(x);
 
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** What some saved progress holds, in a few words: "12 verses (3 memorised), 5 journal entries and a 9-day streak". */
+export function progressSummary(state) {
+  const verses = Object.values(isObject(state?.verses) ? state.verses : {}).filter((v) => v?.level >= 1);
+  const memorised = verses.filter((v) => v.level >= 4).length;
+  const entries = isObject(state?.journal) ? Object.keys(state.journal).length : 0;
+  const readings = Number(state?.stats?.readings) || 0;
+  const streak = Number(state?.stats?.streak) || 0;
+  const parts = [];
+  if (verses.length) parts.push(`${plural(verses.length, 'verse')}${memorised ? ` (${memorised} memorised)` : ''}`);
+  if (readings) parts.push(plural(readings, 'reading'));
+  if (entries) parts.push(plural(entries, 'journal entry', 'journal entries'));
+  if (streak) parts.push(`a ${streak}-day streak`);
+  if (!parts.length) return 'no lessons or readings yet';
+  return parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} and ${parts.at(-1)}`;
+}
+
+/** A saved-at date as people say it: "12 October 2026". */
+export const savedOn = (time) => new Date(time).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+
 /** Read a backup file, and make sure it is one before anything is replaced. */
 export async function readBackup(file) {
   const notBackup = new Error('That file is not a Biblos backup.');
@@ -131,6 +152,11 @@ export async function readBackup(file) {
   } catch {
     throw notBackup;
   }
+  return checkBackup(data, notBackup);
+}
+
+/** Make sure some saved progress (a backup's, or a transfer code's) is whole before anything is replaced. */
+export function checkBackup(data, notBackup = new Error('That is not Biblos progress.')) {
   const s = data?.state;
   // Every backup Biblos has saved has these, with progress in them.
   if (data?.app !== 'biblos' || !isObject(s) || !isObject(s.settings) || !isObject(s.stats) || !isObject(s.verses)) throw notBackup;

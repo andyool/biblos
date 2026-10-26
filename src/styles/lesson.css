@@ -578,13 +578,27 @@
   height: 100%;
   background: var(--grad-bar);
   transform-origin: left;
-  animation: drain linear both;
+  animation: drain var(--drain, 4s) linear both;
 }
 
 @keyframes drain {
   to {
     transform: scaleX(0);
   }
+}
+
+/* The bars that count time down (here and in Rush) still need to with reduced motion, which
+   otherwise ends every animation at once (base.css): theirs is slow and tells the time. */
+@media (prefers-reduced-motion: reduce) {
+  .glimpse-timer span,
+  .rush-oil.is-burning .rush-oil-bar span {
+    animation-duration: var(--drain, 4s) !important;
+  }
+}
+
+.glimpse-again {
+  align-self: center;
+  margin-top: 6px;
 }
 
 /* ─── Pair up ───────────────────────────────────────────────────────────── */
@@ -834,7 +848,7 @@
 }
 
 .rush-oil.is-burning .rush-oil-bar span {
-  animation: drain linear both;
+  animation: drain var(--drain, 30s) linear both;
 }
 
 .rush-oil.is-out {

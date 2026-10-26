@@ -57,6 +57,8 @@ export default async function handler(req, res) {
   try {
     const upstream = await fetch(`https://api.youversion.com/v1/${path}?format=${format}`, {
       headers: { 'X-YVP-App-Key': String(key), Accept: 'application/json' },
+      // Give up before Vercel does, so the app hears why.
+      signal: AbortSignal.timeout(8000),
     });
     const body = await upstream.text();
     res.setHeader('Content-Type', 'application/json');

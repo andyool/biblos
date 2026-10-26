@@ -4,11 +4,13 @@ import { play } from '../lib/sound.js';
 import { pop } from '../lib/fx.js';
 import { renderWord } from '../components/VerseText.jsx';
 import { formatRef } from '../data/books.js';
+import { useStore } from '../lib/store.js';
+import Glyph from '../components/Glyph.jsx';
 
 /**
  * Look, cover, rebuild: each phrase shows for a few moments, then is covered and rebuilt from
  * memory with word tiles (one of them a look-alike). Holding a whole phrase in mind and
- * producing it again lays it down as one piece.
+ * producing it again lays it down as one piece. A phrase that slipped away can be shown again.
  */
 export default function GlimpseStep({ step, tokens, locked, onComplete }) {
   const { groups, lures } = step;
@@ -21,7 +23,9 @@ export default function GlimpseStep({ step, tokens, locked, onComplete }) {
   const missed = useRef([]);
   const done = useRef(false);
   const group = groups[round];
-  const lookMs = 1800 + 450 * group.length;
+  // Longer with larger text, which takes longer to read.
+  const textScale = useStore((s) => s.settings.textSize) || 1;
+  const lookMs = Math.round((1800 + 450 * group.length) * textScale);
 
   const tiles = useMemo(
     () =>
@@ -70,6 +74,13 @@ export default function GlimpseStep({ step, tokens, locked, onComplete }) {
     }
   };
 
+  // Look again, and rebuild the phrase from its start.
+  const showAgain = () => {
+    setCovered(false);
+    setFilled(0);
+    setUsed([]);
+  };
+
   const first = groups[0][0];
   const last = group[group.length - 1];
 
@@ -109,17 +120,22 @@ export default function GlimpseStep({ step, tokens, locked, onComplete }) {
         ))}
       </div>
       {covered ? (
-        <div className="tiles">
-          {tiles.map((tile) => (
-            <button key={tile.id} className={`tile ${used.includes(tile.id) ? 'is-used' : ''} ${shake === tile.id ? 'is-wrong' : ''}`} onClick={() => tap(tile)} disabled={used.includes(tile.id)}>
-              {renderWord(tile.w)}
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="tiles">
+            {tiles.map((tile) => (
+              <button key={tile.id} className={`tile ${used.includes(tile.id) ? 'is-used' : ''} ${shake === tile.id ? 'is-wrong' : ''}`} onClick={() => tap(tile)} disabled={used.includes(tile.id)}>
+                {renderWord(tile.w)}
+              </button>
+            ))}
+          </div>
+          <button className="btn-link glimpse-again" onClick={showAgain} disabled={locked || filled >= group.length}>
+            <Glyph name="eye" size={18} /> Show it again
+          </button>
+        </>
       ) : (
         <div className="glimpse-look">
           <div className="glimpse-timer" key={round}>
-            <span style={{ animationDuration: `${lookMs}ms` }} />
+            <span style={{ '--drain': `${lookMs}ms` }} />
           </div>
           <button className="btn btn-ghost btn-block" onClick={() => setCovered(true)} disabled={locked}>
             I have it — cover it

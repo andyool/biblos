@@ -141,24 +141,41 @@ async function youVersionPassage(yvId, usfm, key, format = 'text') {
   const headers = key ? { 'X-YVP-App-Key': key, Accept: 'application/json' } : { Accept: 'application/json' };
 
   // 1) Through our own Vercel function (api/yv.js): no browser restrictions, real error codes.
-  let res = null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
   try {
-    res = await fetch(`/api/yv?path=${encodeURIComponent(path)}&format=${format}`, { headers });
-  } catch {
-    res = null;
-  }
-  if (res && (res.headers.get('content-type') || '').includes('json')) {
-    if (res.status === 401) {
-      throw key ? new BibleError('auth', 'YouVersion did not accept that key.') : new BibleError('needs-key', 'The NIV needs a free YouVersion key.');
+    let res;
+    try {
+      res = await fetch(`/api/yv?path=${encodeURIComponent(path)}&format=${format}`, { headers, signal: ctrl.signal });
+    } catch {
+      // No answer at all (the connection dropped, or it took too long), which no key would mend.
+      throw new BibleError('network', 'Could not reach the Bible service. Check your connection and try again.');
     }
-    if (res.status === 403) throw new BibleError('license', 'Your YouVersion app has not accepted the licence for this translation yet.');
-    if (res.status === 404) throw new BibleError('not-found', 'That passage could not be found.');
-    // YouVersion allows each key 200 requests an hour, shared by everyone using the app.
-    if (res.status === 429) throw new BibleError('network', 'Lots of people are reading the NIV right now. Please try again in a little while.');
-    if (!res.ok) throw new BibleError('network', `YouVersion answered with an error (${res.status}). Please try again.`);
-    const content = contentOf(await res.json());
-    if (!content) throw new BibleError('not-found', 'That passage came back empty.');
-    return content;
+    const json = (res.headers.get('content-type') || '').includes('json');
+    // Vercel's own error page when the function fails or times out.
+    if (!json && res.status >= 500) throw new BibleError('network', 'YouVersion took too long to answer. Please try again.');
+    if (json) {
+      if (res.status === 401) {
+        throw key ? new BibleError('auth', 'YouVersion did not accept that key.') : new BibleError('needs-key', 'The NIV needs a free YouVersion key.');
+      }
+      if (res.status === 403) throw new BibleError('license', 'Your YouVersion app has not accepted the licence for this translation yet.');
+      if (res.status === 404) throw new BibleError('not-found', 'That passage could not be found.');
+      // YouVersion allows each key 200 requests an hour, shared by everyone using the app.
+      if (res.status === 429) throw new BibleError('network', 'Lots of people are reading the NIV right now. Please try again in a little while.');
+      if (!res.ok) throw new BibleError('network', `YouVersion answered with an error (${res.status}). Please try again.`);
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        throw new BibleError('network', 'Could not reach the Bible service. Check your connection and try again.');
+      }
+      const content = contentOf(data);
+      if (!content) throw new BibleError('not-found', 'That passage came back empty.');
+      return content;
+    }
+    // Anything else (a 404, or the app's own page) means there is no function here.
+  } finally {
+    clearTimeout(timer);
   }
 
   // 2) Straight to YouVersion (when hosted somewhere without the /api function).

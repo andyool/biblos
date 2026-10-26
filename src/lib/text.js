@@ -136,6 +136,24 @@ export function phrases(tokens) {
   return groups;
 }
 
+// The mark that closes each opening quotation mark, and the one that opens each closing mark.
+// A ’ between letters is an apostrophe (God’s), not a closing mark.
+const CLOSER = { '“': /”/, '‘': /’(?!\p{L})/u, '"': /"/ };
+const OPENER = { '”': /“/, '’': /‘/, '"': /"/ };
+
+/**
+ * A phrase as a tile shows it, without a quotation mark at either edge that the phrase doesn't
+ * close or open itself, which would tell where it goes: a verse often opens a quotation it never
+ * closes (“For God so loved…). A closing mark only goes when it follows punctuation, so a
+ * possessive (the brothers’) keeps its apostrophe.
+ */
+export function tileText(text) {
+  let s = text;
+  while (CLOSER[s[0]] && !CLOSER[s[0]].test(s.slice(1))) s = s.slice(1);
+  for (let m = s.match(/[^\p{L}\p{N}\s]([”"’])$/u); m && !OPENER[m[1]].test(s.slice(0, -1)); m = s.match(/[^\p{L}\p{N}\s]([”"’])$/u)) s = s.slice(0, -1);
+  return s;
+}
+
 /** Phrases for the ordering exercise — at least three pieces when the verse allows it. */
 export function orderGroups(tokens) {
   let groups = phrases(tokens);

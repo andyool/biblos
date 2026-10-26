@@ -9,8 +9,8 @@ import { GOALS, LEVELS, titleFor } from '../data/levels.js';
 import { getTranslation } from '../data/translations.js';
 import { FONTS, TEXT_SIZES, THEMES } from '../data/shop.js';
 import { addDays, dayKey } from '../lib/dates.js';
-import { addTalents, lockNiv, resetEverything, restoreBackup, sessionsDone, setAutoTheme, unlockNiv, unlockTalents, updateProfile, updateSettings, equip } from '../lib/actions.js';
-import { exportBackup, readBackup, isAndroid, isIOS, isStandalone } from '../lib/device.js';
+import { addTalents, lockNiv, resetEverything, restoreBackup, restoredAt, sessionsDone, setAutoTheme, undoRestore, unlockNiv, unlockTalents, updateProfile, updateSettings, equip } from '../lib/actions.js';
+import { exportBackup, readBackup, isAndroid, isIOS, isStandalone, progressSummary, savedOn } from '../lib/device.js';
 import { useYouVersionReady } from '../lib/bible.js';
 import { bibleTr, downloadAll, offlineSupported, removeSaved, useOffline } from '../lib/offline.js';
 import { ask, toast } from '../lib/ui.js';
@@ -214,14 +214,35 @@ export default function Profile() {
     if (!file) return;
     try {
       const data = await readBackup(file);
-      const ok = await ask({ title: 'Restore this backup?', message: 'Your current progress on this device will be replaced.', confirm: 'Restore', woolly: 'unsure' });
+      // Say what the backup holds, beside what it would replace, so an old one isn't restored by mistake.
+      const saved = Date.parse(data.exported);
+      const ok = await ask({
+        title: 'Restore this backup?',
+        message: `${saved ? `Saved ${savedOn(saved)}, with` : 'It holds'} ${progressSummary(data.state)}. It replaces what is here now: ${progressSummary(state)}. You can undo that for a week.`,
+        confirm: 'Restore',
+        woolly: 'unsure',
+      });
       if (ok) {
         restoreBackup(data);
-        toast('Backup restored', 'check');
+        toast('Backup restored', 'check', { label: 'Undo', run: undoNow });
       }
     } catch (err) {
       toast(err.message || 'That file could not be read.');
     }
+  };
+
+  const undoNow = () => {
+    if (undoRestore()) toast('Your progress is back as it was', 'check');
+  };
+
+  const onUndoRestore = async () => {
+    const ok = await ask({
+      title: 'Undo the restore?',
+      message: `Your progress goes back to how it was before the restore on ${savedOn(restoredAt())}. Anything done since then is replaced.`,
+      confirm: 'Undo restore',
+      woolly: 'unsure',
+    });
+    if (ok) undoNow();
   };
 
   const onExport = async () => {
@@ -382,6 +403,8 @@ export default function Profile() {
           <div className="rows">
             <Row icon="share" label="Save a backup" value={lastBackup} onClick={onExport} />
             <Row icon="upload" label="Restore from a backup" onClick={() => fileRef.current?.click()} />
+            <Row icon="phone" label="Move your progress" onClick={() => openSheet({ type: 'transfer' })} />
+            {restoredAt() && <Row icon="refresh" label="Undo the last restore" value={new Date(restoredAt()).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })} onClick={onUndoRestore} />}
             <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onImport} />
             {!isStandalone() && <Row icon="phone" label="Add to Home Screen" onClick={() => setSheet('install')} />}
           </div>
@@ -516,6 +539,17 @@ export default function Profile() {
             <li>Open Biblos from the new icon. It runs full-screen and works offline.</li>
           </ol>
           {!isAndroid() && <p className="small-print">On iPhone the Home Screen app keeps its own progress, apart from Safari, so use it from the icon.</p>}
+          {!isAndroid() && begun && (
+            <button
+              className="btn btn-gold btn-block"
+              onClick={() => {
+                setSheet(null);
+                openSheet({ type: 'transfer' });
+              }}
+            >
+              Take your progress with you
+            </button>
+          )}
         </Sheet>
       )}
     </div>

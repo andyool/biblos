@@ -24,6 +24,7 @@ import PlansSheet from './sheets/PlansSheet.jsx';
 import JournalSheet from './sheets/JournalSheet.jsx';
 import JournalEntrySheet from './sheets/JournalEntrySheet.jsx';
 import TranslationSheet from './sheets/TranslationSheet.jsx';
+import TransferSheet from './sheets/TransferSheet.jsx';
 import { buildSession, learnPlan, planNext, verseTr } from './lib/lesson.js';
 import { checkServerKey, loadPassage } from './lib/bible.js';
 import { checkStreak, claimUnlocks, finishReading, finishSession, setActivePath, setReadingBook } from './lib/actions.js';
@@ -246,6 +247,8 @@ export default function App() {
         return <JournalEntrySheet key={`journalEntry-${s.id || 'new'}`} id={s.id} draft={s.draft} onClose={close} />;
       case 'translation':
         return <TranslationSheet key="translation" onClose={close} />;
+      case 'transfer':
+        return <TransferSheet key="transfer" onClose={close} />;
       default:
         return null;
     }
